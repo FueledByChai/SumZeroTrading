@@ -66,11 +66,12 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       <version>2.5.1</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>com.ib</groupId>
-      <artifactId>interactive-brokers-api</artifactId>
-      <version>9.73.01</version>
-    </dependency>
+<dependency>
+    <groupId>com.ib</groupId>
+    <artifactId>interactive-brokers-api</artifactId>
+    <version>10.30</version>
+</dependency>
+
     <dependency>
       <groupId>com.sumzerotrading</groupId>
       <artifactId>sumzero-market-data-api</artifactId>

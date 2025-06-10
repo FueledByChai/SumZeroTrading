@@ -19,63 +19,40 @@
  */
 package com.sumzerotrading.ib;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.ib.client.Bar;
-import com.ib.client.CommissionAndFeesReport;
+import com.ib.client.CommissionReport;
 import com.ib.client.Contract;
-import com.ib.client.ContractDescription;
 import com.ib.client.ContractDetails;
 import com.ib.client.Decimal;
 import com.ib.client.DeltaNeutralContract;
-import com.ib.client.DepthMktDataDescription;
-import com.ib.client.EClientSocket;
-import com.ib.client.EWrapper;
+import com.ib.client.EJavaSignal;
+import com.ib.client.EReader;
 import com.ib.client.Execution;
-import com.ib.client.FamilyCode;
-import com.ib.client.HistogramEntry;
-import com.ib.client.HistoricalSession;
-import com.ib.client.HistoricalTick;
-import com.ib.client.HistoricalTickBidAsk;
-import com.ib.client.HistoricalTickLast;
-import com.ib.client.NewsProvider;
 import com.ib.client.Order;
 import com.ib.client.OrderState;
-import com.ib.client.PriceIncrement;
-import com.ib.client.SoftDollarTier;
 import com.ib.client.TickAttrib;
-import com.ib.client.TickAttribBidAsk;
-import com.ib.client.TickAttribLast;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import org.apache.log4j.Logger;
 
 /**
  *
  * @author Rob Terpilowski
  */
-public class IBConnection implements IBConnectionInterface {
+public class IBConnection extends AbstractIBConnection {
 
-    protected Logger logger = Logger.getLogger(IBConnection.class);
+    protected static final Logger logger = LoggerFactory.getLogger(IBConnection.class);
     protected static IBConnection connection = null;
 
-    protected EClientSocket eclientSocket;
     protected List<IBConnectionInterface> ibConnectionDelegates = new ArrayList<>();
     protected int clientId;
     protected String host;
     protected int port;
 
-    public synchronized static EWrapper getInstance() {
-        if (connection == null) {
-            connection = new IBConnection();
-        }
-        return connection;
-    }
-
     public IBConnection() {
-        eclientSocket = new EClientSocket(this, this);
     }
 
     @Override
@@ -117,59 +94,73 @@ public class IBConnection implements IBConnectionInterface {
     public int getPort() {
         return port;
     }
-    
-    
-    
-    
 
-    // @Override
-    // public void tickPrice(int tickerId, int field, double price, int canAutoExecute) {
-    //     ibConnectionDelegates.stream().forEach((delegate) -> {
-    //         delegate.tickPrice(tickerId, field, price, canAutoExecute);
-    //     });
-    // }
-
-    // @Override
-    // public void tickSize(int tickerId, int field, int size) {
-    //     ibConnectionDelegates.stream().forEach((delegate) -> {
-    //         delegate.tickSize(tickerId, field, size);
-    //     });
-    // }
-
-    // @Override
-    // public void tickOptionComputation(int tickerId, int field, double impliedVol, double delta, double optPrice, double pvDividend, double gamma, double vega, double theta, double undPrice) {
-    //     ibConnectionDelegates.stream().forEach((delegate) -> {
-    //         delegate.tickOptionComputation(tickerId, field, impliedVol, delta, optPrice, pvDividend, gamma, vega, theta, undPrice);
-    //     });
-    // }
+    @Override
+    public void connectAck() {
+        logger.info("connectAck called.");
+        ibConnectionDelegates.stream().forEach((delegate) -> {
+            delegate.connectAck();
+        });
+    }
 
     @Override
     public void tickGeneric(int tickerId, int tickType, double value) {
+        logger.info("tickGeneric: " + tickerId + ", " + tickType + ", " + value);
         ibConnectionDelegates.stream().forEach((delegate) -> {
             delegate.tickGeneric(tickerId, tickType, value);
         });
     }
 
     @Override
+    public void tickPrice(int tickerId, int field, double price, TickAttrib attrib) {
+        logger.info("tickPrice: " + tickerId + ", " + field + ", " + price + ", " + attrib);
+        ibConnectionDelegates.stream().forEach((delegate) -> {
+            delegate.tickPrice(tickerId, field, price, attrib);
+        });
+    }
+
+    @Override
+    public void tickSize(int tickerId, int field, Decimal size) {
+        logger.info("tickSize: " + tickerId + ", " + field + ", " + size);
+        ibConnectionDelegates.stream().forEach((delegate) -> {
+            delegate.tickSize(tickerId, field, size);
+        });
+    }
+
+    @Override
+    public void tickOptionComputation(int tickerId, int field, int tickAttrib, double impliedVol, double delta,
+            double optPrice, double pvDividend, double gamma, double vega, double theta, double undPrice) {
+        ibConnectionDelegates.stream().forEach((delegate) -> {
+            delegate.tickOptionComputation(tickerId, field, tickAttrib, impliedVol, delta, optPrice, pvDividend, gamma,
+                    vega, theta, undPrice);
+        });
+    }
+
+    @Override
     public void tickString(int tickerId, int tickType, String value) {
+        logger.info("tickString: " + tickerId + ", " + tickType + ", " + value);
         ibConnectionDelegates.stream().forEach((delegate) -> {
             delegate.tickString(tickerId, tickType, value);
         });
     }
 
     @Override
-    public void tickEFP(int tickerId, int tickType, double basisPoints, String formattedBasisPoints, double impliedFuture, int holdDays, String futureExpiry, double dividendImpact, double dividendsToExpiry) {
+    public void tickEFP(int tickerId, int tickType, double basisPoints, String formattedBasisPoints,
+            double impliedFuture, int holdDays, String futureExpiry, double dividendImpact, double dividendsToExpiry) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.tickEFP(tickerId, tickType, basisPoints, formattedBasisPoints, impliedFuture, holdDays, futureExpiry, dividendImpact, dividendsToExpiry);
+            delegate.tickEFP(tickerId, tickType, basisPoints, formattedBasisPoints, impliedFuture, holdDays,
+                    futureExpiry, dividendImpact, dividendsToExpiry);
         });
     }
 
-    // @Override
-    // public void orderStatus(int orderId, String status, int filled, int remaining, double avgFillPrice, int permId, int parentId, double lastFillPrice, int clientId, String whyHeld) {
-    //     ibConnectionDelegates.stream().forEach((delegate) -> {
-    //         delegate.orderStatus(orderId, status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld);
-    //     });
-    // }
+    @Override
+    public void orderStatus(int orderId, String status, Decimal filled, Decimal remaining, double avgFillPrice,
+            int permId, int parentId, double lastFillPrice, int clientId, String whyHeld, double mktCapPrice) {
+        ibConnectionDelegates.stream().forEach((delegate) -> {
+            delegate.orderStatus(orderId, status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice,
+                    clientId, whyHeld, mktCapPrice);
+        });
+    }
 
     @Override
     public void openOrder(int orderId, Contract contract, Order order, OrderState orderState) {
@@ -192,12 +183,14 @@ public class IBConnection implements IBConnectionInterface {
         });
     }
 
-    // @Override
-    // public void updatePortfolio(Contract contract, int position, double marketPrice, double marketValue, double averageCost, double unrealizedPNL, double realizedPNL, String accountName) {
-    //     ibConnectionDelegates.stream().forEach((delegate) -> {
-    //         delegate.updatePortfolio(contract, position, marketPrice, marketValue, averageCost, unrealizedPNL, realizedPNL, accountName);
-    //     });
-    // }
+    @Override
+    public void updatePortfolio(Contract contract, Decimal position, double marketPrice, double marketValue,
+            double averageCost, double unrealizedPNL, double realizedPNL, String accountName) {
+        ibConnectionDelegates.stream().forEach((delegate) -> {
+            delegate.updatePortfolio(contract, position, marketPrice, marketValue, averageCost, unrealizedPNL,
+                    realizedPNL, accountName);
+        });
+    }
 
     @Override
     public void updateAccountTime(String timeStamp) {
@@ -255,24 +248,25 @@ public class IBConnection implements IBConnectionInterface {
         });
     }
 
-    // @Override
-    // public void updateMktDepth(int tickerId, int position, int operation, int side, double price, int size) {
-    //     ibConnectionDelegates.stream().forEach((delegate) -> {
-    //         delegate.updateMktDepth(tickerId, position, operation, side, price, size);
-    //     });
-    // }
-
-    // @Override
-    // public void updateMktDepthL2(int tickerId, int position, String marketMaker, int operation, int side, double price, int size) {
-    //     ibConnectionDelegates.stream().forEach((delegate) -> {
-    //         delegate.updateMktDepthL2(tickerId, position, marketMaker, operation, side, price, size);
-    //     });
-    // }
-
     @Override
     public void updateNewsBulletin(int msgId, int msgType, String message, String origExchange) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
             delegate.updateNewsBulletin(msgId, msgType, message, origExchange);
+        });
+    }
+
+    @Override
+    public void updateMktDepth(int tickerId, int position, int operation, int side, double price, Decimal size) {
+        ibConnectionDelegates.stream().forEach((delegate) -> {
+            delegate.updateMktDepth(tickerId, position, operation, side, price, size);
+        });
+    }
+
+    @Override
+    public void updateMktDepthL2(int tickerId, int position, String marketMaker, int operation, int side, double price,
+            Decimal size, boolean isSmartDepth) {
+        ibConnectionDelegates.stream().forEach((delegate) -> {
+            delegate.updateMktDepthL2(tickerId, position, marketMaker, operation, side, price, size, isSmartDepth);
         });
     }
 
@@ -290,13 +284,6 @@ public class IBConnection implements IBConnectionInterface {
         });
     }
 
-    // @Override
-    // public void historicalData(int reqId, String date, double open, double high, double low, double close, int volume, int count, double WAP, boolean hasGaps) {
-    //     ibConnectionDelegates.stream().forEach((delegate) -> {
-    //         delegate.historicalData(reqId, date, open, high, low, close, volume, count, WAP, hasGaps);
-    //     });
-    // }
-
     @Override
     public void scannerParameters(String xml) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
@@ -305,7 +292,29 @@ public class IBConnection implements IBConnectionInterface {
     }
 
     @Override
-    public void scannerData(int reqId, int rank, ContractDetails contractDetails, String distance, String benchmark, String projection, String legsStr) {
+    public void historicalData(int reqId, Bar bar) {
+        ibConnectionDelegates.stream().forEach((delegate) -> {
+            delegate.historicalData(reqId, bar);
+        });
+    }
+
+    @Override
+    public void historicalDataEnd(int reqId, String startDateStr, String endDateStr) {
+        ibConnectionDelegates.stream().forEach((delegate) -> {
+            delegate.historicalDataEnd(reqId, startDateStr, endDateStr);
+        });
+    }
+
+    @Override
+    public void historicalDataUpdate(int reqId, Bar bar) {
+        ibConnectionDelegates.stream().forEach((delegate) -> {
+            delegate.historicalDataUpdate(reqId, bar);
+        });
+    }
+
+    @Override
+    public void scannerData(int reqId, int rank, ContractDetails contractDetails, String distance, String benchmark,
+            String projection, String legsStr) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
             delegate.scannerData(reqId, rank, contractDetails, distance, benchmark, projection, legsStr);
         });
@@ -318,17 +327,19 @@ public class IBConnection implements IBConnectionInterface {
         });
     }
 
-    // @Override
-    // public void realtimeBar(int reqId, long time, double open, double high, double low, double close, long volume, double wap, int count) {
-    //     ibConnectionDelegates.stream().forEach((delegate) -> {
-    //         delegate.realtimeBar(reqId, time, open, high, low, close, volume, wap, count);
-    //     });
-    // }
-
     @Override
     public void currentTime(long time) {
+        logger.info("currentTime: " + time);
         ibConnectionDelegates.stream().forEach((delegate) -> {
             delegate.currentTime(time);
+        });
+    }
+
+    @Override
+    public void realtimeBar(int reqId, long time, double open, double high, double low, double close, Decimal volume,
+            Decimal wap, int count) {
+        ibConnectionDelegates.stream().forEach((delegate) -> {
+            delegate.realtimeBar(reqId, time, open, high, low, close, volume, wap, count);
         });
     }
 
@@ -339,45 +350,63 @@ public class IBConnection implements IBConnectionInterface {
         });
     }
 
-    // @Override
-    // public void deltaNeutralValidation(int reqId, UnderComp underComp) {
-    //     ibConnectionDelegates.stream().forEach((delegate) -> {
-    //         delegate.deltaNeutralValidation(reqId, underComp);
-    //     });
-    // }
-
     @Override
     public void tickSnapshotEnd(int reqId) {
+        logger.info("tickSnapshotEnd: " + reqId);
         ibConnectionDelegates.stream().forEach((delegate) -> {
             delegate.tickSnapshotEnd(reqId);
         });
     }
 
     @Override
+    public void deltaNeutralValidation(int reqId, DeltaNeutralContract deltaNeutralContract) {
+        ibConnectionDelegates.stream().forEach((delegate) -> {
+            delegate.deltaNeutralValidation(reqId, deltaNeutralContract);
+        });
+    }
+
+    @Override
     public void marketDataType(int reqId, int marketDataType) {
+        logger.info("marketDataType: " + reqId + ", " + marketDataType);
         ibConnectionDelegates.stream().forEach((delegate) -> {
             delegate.marketDataType(reqId, marketDataType);
         });
     }
 
-    // @Override
-    // public void commissionReport(CommissionReport commissionReport) {
-    //     ibConnectionDelegates.stream().forEach((delegate) -> {
-    //         delegate.commissionReport(commissionReport);
-    //     });
-    // }
-
-    // @Override
-    // public void position(String account, Contract contract, int pos, double avgCost) {
-    //     ibConnectionDelegates.stream().forEach((delegate) -> {
-    //         delegate.position(account, contract, pos, avgCost);
-    //     });
-    // }
-
     @Override
     public void positionEnd() {
         ibConnectionDelegates.stream().forEach((delegate) -> {
             delegate.positionEnd();
+        });
+    }
+
+    @Override
+    public void commissionReport(CommissionReport commissionReport) {
+        ibConnectionDelegates.stream().forEach((delegate) -> {
+            delegate.commissionReport(commissionReport);
+        });
+    }
+
+    @Override
+    public void position(String account, Contract contract, Decimal pos, double avgCost) {
+        logger.info("position: " + account + ", " + contract + ", " + pos + ", " + avgCost);
+        ibConnectionDelegates.stream().forEach((delegate) -> {
+            delegate.position(account, contract, pos, avgCost);
+        });
+    }
+
+    @Override
+    public void positionMulti(int reqId, String account, String modelCode, Contract contract, Decimal pos,
+            double avgCost) {
+        ibConnectionDelegates.stream().forEach((delegate) -> {
+            delegate.positionMulti(reqId, account, modelCode, contract, pos, avgCost);
+        });
+    }
+
+    @Override
+    public void positionMultiEnd(int reqId) {
+        ibConnectionDelegates.stream().forEach((delegate) -> {
+            delegate.positionMultiEnd(reqId);
         });
     }
 
@@ -397,6 +426,7 @@ public class IBConnection implements IBConnectionInterface {
 
     @Override
     public void verifyMessageAPI(String apiData) {
+        logger.info("verifyMessageAPI: " + apiData);
         ibConnectionDelegates.stream().forEach((delegate) -> {
             delegate.verifyMessageAPI(apiData);
         });
@@ -404,6 +434,7 @@ public class IBConnection implements IBConnectionInterface {
 
     @Override
     public void verifyCompleted(boolean isSuccessful, String errorText) {
+        logger.info("verifyCompleted: isSuccessful=" + isSuccessful + ", errorText=" + errorText);
         ibConnectionDelegates.stream().forEach((delegate) -> {
             delegate.verifyCompleted(isSuccessful, errorText);
         });
@@ -425,6 +456,7 @@ public class IBConnection implements IBConnectionInterface {
 
     @Override
     public void error(Exception e) {
+        logger.error("Error occurred: ", e);
         ibConnectionDelegates.stream().forEach((delegate) -> {
             delegate.error(e);
         });
@@ -432,383 +464,27 @@ public class IBConnection implements IBConnectionInterface {
 
     @Override
     public void error(String str) {
+        logger.error("Error occurred: " + str);
         ibConnectionDelegates.stream().forEach((delegate) -> {
             delegate.error(str);
         });
     }
 
-        // @Override
-        // public void error(int id, int errorCode, String errorMsg) {
-        //     ibConnectionDelegates.stream().forEach((delegate) -> {
-        //         delegate.error(id, errorCode, errorMsg);
-        //     });
-        // }
-
     @Override
-    public void connectionClosed() {
+    public void error(int id, int errorCode, String errorMsg, String advancedOrderRejectJson) {
+        logger.error("Error occurred: id=" + id + ", errorCode=" + errorCode + ", errorMsg=" + errorMsg
+                + ", advancedOrderRejectJson=" + advancedOrderRejectJson);
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.connectionClosed();
+            delegate.error(id, errorCode, errorMsg, advancedOrderRejectJson);
         });
     }
 
     @Override
-    public void accountUpdateMulti(int arg0, String arg1, String arg2, String arg3, String arg4, String arg5) {
-        throw new UnsupportedOperationException();
-        
+    public void connectionClosed() {
+        logger.info("Connection closed.");
+        ibConnectionDelegates.stream().forEach((delegate) -> {
+            delegate.connectionClosed();
+        });
     }
-
-    @Override
-    public void accountUpdateMultiEnd(int arg0) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void commissionAndFeesReport(CommissionAndFeesReport arg0) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void completedOrder(Contract arg0, Order arg1, OrderState arg2) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void completedOrdersEnd() {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void connectAck() {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void deltaNeutralValidation(int arg0, DeltaNeutralContract arg1) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void error(int arg0, long arg1, int arg2, String arg3, String arg4) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void familyCodes(FamilyCode[] arg0) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void headTimestamp(int arg0, String arg1) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void histogramData(int arg0, List<HistogramEntry> arg1) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void historicalData(int arg0, Bar arg1) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void historicalDataEnd(int arg0, String arg1, String arg2) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void historicalDataUpdate(int arg0, Bar arg1) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void historicalNews(int arg0, String arg1, String arg2, String arg3, String arg4) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void historicalNewsEnd(int arg0, boolean arg1) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void historicalSchedule(int arg0, String arg1, String arg2, String arg3, List<HistoricalSession> arg4) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void historicalTicks(int arg0, List<HistoricalTick> arg1, boolean arg2) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void historicalTicksBidAsk(int arg0, List<HistoricalTickBidAsk> arg1, boolean arg2) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void historicalTicksLast(int arg0, List<HistoricalTickLast> arg1, boolean arg2) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void marketRule(int arg0, PriceIncrement[] arg1) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void mktDepthExchanges(DepthMktDataDescription[] arg0) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void newsArticle(int arg0, int arg1, String arg2) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void newsProviders(NewsProvider[] arg0) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void orderBound(long arg0, int arg1, int arg2) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void orderStatus(int arg0, String arg1, Decimal arg2, Decimal arg3, double arg4, long arg5, int arg6,
-            double arg7, int arg8, String arg9, double arg10) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void pnl(int arg0, double arg1, double arg2, double arg3) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void pnlSingle(int arg0, Decimal arg1, double arg2, double arg3, double arg4, double arg5) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void position(String arg0, Contract arg1, Decimal arg2, double arg3) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void positionMulti(int arg0, String arg1, String arg2, Contract arg3, Decimal arg4, double arg5) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void positionMultiEnd(int arg0) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void realtimeBar(int arg0, long arg1, double arg2, double arg3, double arg4, double arg5, Decimal arg6,
-            Decimal arg7, int arg8) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void replaceFAEnd(int arg0, String arg1) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void rerouteMktDataReq(int arg0, int arg1, String arg2) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void rerouteMktDepthReq(int arg0, int arg1, String arg2) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void securityDefinitionOptionalParameter(int arg0, String arg1, int arg2, String arg3, String arg4,
-            Set<String> arg5, Set<Double> arg6) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void securityDefinitionOptionalParameterEnd(int arg0) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void smartComponents(int arg0, Map<Integer, Entry<String, Character>> arg1) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void softDollarTiers(int arg0, SoftDollarTier[] arg1) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void symbolSamples(int arg0, ContractDescription[] arg1) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void tickByTickAllLast(int arg0, int arg1, long arg2, double arg3, Decimal arg4, TickAttribLast arg5,
-            String arg6, String arg7) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void tickByTickBidAsk(int arg0, long arg1, double arg2, double arg3, Decimal arg4, Decimal arg5,
-            TickAttribBidAsk arg6) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void tickByTickMidPoint(int arg0, long arg1, double arg2) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void tickNews(int arg0, long arg1, String arg2, String arg3, String arg4, String arg5) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void tickOptionComputation(int arg0, int arg1, int arg2, double arg3, double arg4, double arg5, double arg6,
-            double arg7, double arg8, double arg9, double arg10) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void tickPrice(int arg0, int arg1, double arg2, TickAttrib arg3) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void tickReqParams(int arg0, double arg1, String arg2, int arg3) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void tickSize(int arg0, int arg1, Decimal arg2) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void updateMktDepth(int arg0, int arg1, int arg2, int arg3, double arg4, Decimal arg5) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void updateMktDepthL2(int arg0, int arg1, String arg2, int arg3, int arg4, double arg5, Decimal arg6,
-            boolean arg7) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void updatePortfolio(Contract arg0, Decimal arg1, double arg2, double arg3, double arg4, double arg5,
-            double arg6, String arg7) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void userInfo(int arg0, String arg1) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void verifyAndAuthCompleted(boolean arg0, String arg1) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void verifyAndAuthMessageAPI(String arg0, String arg1) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void wshEventData(int arg0, String arg1) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void wshMetaData(int arg0, String arg1) {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void issueSignal() {
-        throw new UnsupportedOperationException();
-        
-    }
-
-    @Override
-    public void waitForSignal() {
-        throw new UnsupportedOperationException();
-        
-    }
-
-
-
-    
 
 }

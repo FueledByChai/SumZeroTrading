@@ -27,9 +27,10 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         <version>0.1.7-SNAPSHOT</version>
     </parent>
 
+    
     <groupId>com.ib</groupId> 
     <artifactId>interactive-brokers-api</artifactId>
-    <version>9.73-2-SNAPSHOT</version>
+    <version>10.30</version>
     <packaging>jar</packaging>
 
     <name>interactive-brokers-api</name>

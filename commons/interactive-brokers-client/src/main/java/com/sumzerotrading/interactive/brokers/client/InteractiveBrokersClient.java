@@ -20,6 +20,15 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 package com.sumzerotrading.interactive.brokers.client;
 
+import java.io.IOException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sumzerotrading.broker.BrokerErrorListener;
 import com.sumzerotrading.broker.IBroker;
 import com.sumzerotrading.broker.Position;
@@ -40,18 +49,14 @@ import com.sumzerotrading.realtime.bar.IRealtimeBarEngine;
 import com.sumzerotrading.realtime.bar.RealtimeBarListener;
 import com.sumzerotrading.realtime.bar.RealtimeBarRequest;
 import com.sumzerotrading.realtime.bar.ib.IBRealTimeBarEngine;
-import java.io.IOException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  *
  * @author RobTerpilowski
  */
 public class InteractiveBrokersClient implements InteractiveBrokersClientInterface {
-    
+
+    protected static Logger logger = LoggerFactory.getLogger(InteractiveBrokersClient.class);
     protected String host;
     protected int port;
     protected int clientId;
@@ -60,25 +65,24 @@ public class InteractiveBrokersClient implements InteractiveBrokersClientInterfa
     protected IBroker broker;
     protected IHistoricalDataProvider historicalDataProvider;
     protected IRealtimeBarEngine realtimeBarProvider;
-    protected static Map<String,InteractiveBrokersClientInterface> ibClientMap = new HashMap<>();
-    
+    protected static Map<String, InteractiveBrokersClientInterface> ibClientMap = new HashMap<>();
 
-    
     public static InteractiveBrokersClientInterface getInstance(String host, int port, int clientId) {
         StringBuilder sb = new StringBuilder();
         sb.append(host).append("-").append(port).append("-").append(clientId);
-        
+
         InteractiveBrokersClientInterface client = ibClientMap.get(sb.toString());
-        if(client == null ) {
+        if (client == null) {
             client = new InteractiveBrokersClient(host, port, clientId);
             ibClientMap.put(sb.toString(), client);
         }
-        
+
         return client;
-                
+
     }
-    
+
     protected InteractiveBrokersClient(String host, int port, int clientId) {
+        logger.info("Creating InteractiveBrokersClient for host: {}, port: {}, clientId: {}", host, port, clientId);
         this.host = host;
         this.port = port;
         this.clientId = clientId;
@@ -90,39 +94,38 @@ public class InteractiveBrokersClient implements InteractiveBrokersClientInterfa
         realtimeBarProvider = new IBRealTimeBarEngine(quoteEngine, historicalDataProvider);
     }
 
-
     @Override
     public void connect() {
+        logger.info("connecting");
         ibSocket.connect();
         broker.connect();
         historicalDataProvider.connect();
         quoteEngine.startEngine();
     }
-    
+
     @Override
     public void disconnect() {
         broker.disconnect();
         quoteEngine.stopEngine();
     }
-    
-    
+
     @Override
-    public void subscribeLevel1( Ticker ticker, Level1QuoteListener listener ) {
+    public void subscribeLevel1(Ticker ticker, Level1QuoteListener listener) {
         quoteEngine.subscribeLevel1(ticker, listener);
     }
-    
+
     @Override
-    public void subscribeMarketDepth( Ticker ticker, Level2QuoteListener listener ) {
+    public void subscribeMarketDepth(Ticker ticker, Level2QuoteListener listener) {
         quoteEngine.subscribeMarketDepth(ticker, listener);
     }
-    
+
     @Override
-    public void unsubscribeLevel1( Ticker ticker, Level1QuoteListener listener ) {
+    public void unsubscribeLevel1(Ticker ticker, Level1QuoteListener listener) {
         quoteEngine.unsubscribeLevel1(ticker, listener);
     }
-    
+
     @Override
-    public void unsubscribeMarketDepth( Ticker ticker, Level2QuoteListener listener ) {
+    public void unsubscribeMarketDepth(Ticker ticker, Level2QuoteListener listener) {
         quoteEngine.unsubscribeMarketDepth(ticker, listener);
     }
 
@@ -135,14 +138,12 @@ public class InteractiveBrokersClient implements InteractiveBrokersClientInterfa
     public void removeBrokerErrorListener(BrokerErrorListener listener) {
         broker.removeBrokerErrorListener(listener);
     }
-    
-    
-    
+
     @Override
-    public void useDelayedData( boolean b ) {
+    public void useDelayedData(boolean b) {
         quoteEngine.useDelayedData(b);
     }
-    
+
     @Override
     public String getHost() {
         return host;
@@ -157,17 +158,17 @@ public class InteractiveBrokersClient implements InteractiveBrokersClientInterfa
     public int getClientId() {
         return clientId;
     }
-    
+
     @Override
     public void placeOrder(TradeOrder order) {
         broker.placeOrder(order);
     }
-    
+
     @Override
     public void addOrderStatusListener(OrderEventListener listener) {
         broker.addOrderEventListener(listener);
     }
-    
+
     @Override
     public String getNextOrderId() {
         return broker.getNextOrderId();
@@ -179,13 +180,18 @@ public class InteractiveBrokersClient implements InteractiveBrokersClientInterfa
     }
 
     @Override
-    public List<BarData> requestHistoricalData(Ticker ticker, Date endDateTime, int duration, BarData.LengthUnit durationLengthUnit, int barSize, BarData.LengthUnit barSizeUnit, IHistoricalDataProvider.ShowProperty whatToShow, boolean useRTH) throws IOException {
-        return historicalDataProvider.requestHistoricalData(ticker, endDateTime, duration, durationLengthUnit, barSize, barSizeUnit, whatToShow, useRTH);
+    public List<BarData> requestHistoricalData(Ticker ticker, Date endDateTime, int duration,
+            BarData.LengthUnit durationLengthUnit, int barSize, BarData.LengthUnit barSizeUnit,
+            IHistoricalDataProvider.ShowProperty whatToShow, boolean useRTH) throws IOException {
+        return historicalDataProvider.requestHistoricalData(ticker, endDateTime, duration, durationLengthUnit, barSize,
+                barSizeUnit, whatToShow, useRTH);
     }
-    
+
     @Override
-    public List<BarData> requestHistoricalData(Ticker ticker, int duration, BarData.LengthUnit lengthUnit, int barSize, BarData.LengthUnit barSizeUnit, IHistoricalDataProvider.ShowProperty showProperty ) {
-        return historicalDataProvider.requestHistoricalData(ticker, duration, lengthUnit,  barSize, barSizeUnit, showProperty, true);
+    public List<BarData> requestHistoricalData(Ticker ticker, int duration, BarData.LengthUnit lengthUnit, int barSize,
+            BarData.LengthUnit barSizeUnit, IHistoricalDataProvider.ShowProperty showProperty) {
+        return historicalDataProvider.requestHistoricalData(ticker, duration, lengthUnit, barSize, barSizeUnit,
+                showProperty, true);
     }
 
     @Override
@@ -194,20 +200,15 @@ public class InteractiveBrokersClient implements InteractiveBrokersClientInterfa
     }
 
     @Override
-    public void subscribeRealtimeBar(RealtimeBarRequest request, RealtimeBarListener listener ) {
+    public void subscribeRealtimeBar(RealtimeBarRequest request, RealtimeBarListener listener) {
         realtimeBarProvider.subscribeRealtimeBars(request, listener);
     }
-    
-    
 
-    
-    
-    
-    public static void setMockInteractiveBrokersClient(InteractiveBrokersClientInterface mockClient, String host, int port, int clientId) {
+    public static void setMockInteractiveBrokersClient(InteractiveBrokersClientInterface mockClient, String host,
+            int port, int clientId) {
         StringBuffer sb = new StringBuffer();
         sb.append(host).append("-").append(port).append("-").append(clientId);
         ibClientMap.put(sb.toString(), mockClient);
     }
-    
-    
+
 }

@@ -18,7 +18,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.ib.historical;
 
 import com.ib.client.Contract;
@@ -43,7 +42,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Rob Terpilowski
  */
-public class IBHistoricalDataProvider extends BaseIBConnectionDelegate  implements IHistoricalDataProvider {
+public class IBHistoricalDataProvider extends BaseIBConnectionDelegate implements IHistoricalDataProvider {
 
     protected Logger logger = LoggerFactory.getLogger(IBHistoricalDataProvider.class);
     protected EClientSocket ibConnection;
@@ -69,23 +68,25 @@ public class IBHistoricalDataProvider extends BaseIBConnectionDelegate  implemen
 
     @Override
     public void connect() {
+        logger.info("Connecting to Interactive Brokers for Historical Data");
         ibSocket.connect();
     }
 
     public void init(Properties props) {
-        //do nothing
-    }
-
-    
-    
-    
-    @Override
-    public List<BarData> requestHistoricalData(Ticker ticker, int duration, BarData.LengthUnit durationLengthUnit, int barSize, BarData.LengthUnit barSizeUnit, ShowProperty whatToShow, boolean useRTH) {
-        return this.requestHistoricalData(ticker, null, duration, durationLengthUnit, barSize, barSizeUnit, whatToShow, useRTH);
+        // do nothing
     }
 
     @Override
-    public List<BarData> requestHistoricalData(Ticker ticker, Date endDateTime, int duration, BarData.LengthUnit durationLengthUnit, int barSize, BarData.LengthUnit barSizeUnit, ShowProperty whatToShow, boolean useRTH) {
+    public List<BarData> requestHistoricalData(Ticker ticker, int duration, BarData.LengthUnit durationLengthUnit,
+            int barSize, BarData.LengthUnit barSizeUnit, ShowProperty whatToShow, boolean useRTH) {
+        return this.requestHistoricalData(ticker, null, duration, durationLengthUnit, barSize, barSizeUnit, whatToShow,
+                useRTH);
+    }
+
+    @Override
+    public List<BarData> requestHistoricalData(Ticker ticker, Date endDateTime, int duration,
+            BarData.LengthUnit durationLengthUnit, int barSize, BarData.LengthUnit barSizeUnit, ShowProperty whatToShow,
+            boolean useRTH) {
         int id = requestId++;
         Contract contract = ContractBuilderFactory.getContractBuilder(ticker).buildContract(ticker);
         String durationString = HistoricalDataUtils.buildDurationString(duration, durationLengthUnit);
@@ -93,7 +94,7 @@ public class IBHistoricalDataProvider extends BaseIBConnectionDelegate  implemen
         String whatToShowString = HistoricalDataUtils.showPropertyToString(whatToShow);
         IBHistoricalDataEventProcessor processor = new IBHistoricalDataEventProcessor(requestId, barSizeUnit);
         int rth = 1;
-        if( useRTH == false ) {
+        if (useRTH == false) {
             rth = 0;
         }
         historicalProcessorMap.put(id, processor);
@@ -102,15 +103,18 @@ public class IBHistoricalDataProvider extends BaseIBConnectionDelegate  implemen
         }
         String endDate = dateFormatter.format(endDateTime);
 
-        //ibConnection.reqHistoricalData(id, contract, new Date(), null, null, null, barSize, duration);
-       // ibConnection.reqHistoricalData(id, contract, endDate, durationString, barSizeString, whatToShowString, rth, 1, IbUtils.getDefaultTagVector());
-       IbUtils.throwUnsupportedException();
+        // ibConnection.reqHistoricalData(id, contract, new Date(), null, null, null,
+        // barSize, duration);
+        // ibConnection.reqHistoricalData(id, contract, endDate, durationString,
+        // barSizeString, whatToShowString, rth, 1, IbUtils.getDefaultTagVector());
+        IbUtils.throwUnsupportedException();
         List<BarData> bars = processor.getHistoricalData();
         historicalProcessorMap.remove(id);
         return bars;
     }
 
-    public void historicalData(int reqId, String date, double open, double high, double low, double close, int volume, int count, double WAP, boolean hasGaps) {
+    public void historicalData(int reqId, String date, double open, double high, double low, double close, int volume,
+            int count, double WAP, boolean hasGaps) {
         IBHistoricalDataEventProcessor processor = historicalProcessorMap.get(reqId);
         if (date != null && date.indexOf("finished") != -1) {
             if (processor != null) {
@@ -130,7 +134,8 @@ public class IBHistoricalDataProvider extends BaseIBConnectionDelegate  implemen
             throw new IllegalStateException(ex);
         }
         if (processor != null) {
-            processor.addHistoricalData(new HistoricalData(reqId, calendarDate, open, high, low, close, volume, count, WAP, hasGaps));
+            processor.addHistoricalData(
+                    new HistoricalData(reqId, calendarDate, open, high, low, close, volume, count, WAP, hasGaps));
         } else {
             logger.error("Unable to find Historical Data Processor for requestId: " + reqId);
         }

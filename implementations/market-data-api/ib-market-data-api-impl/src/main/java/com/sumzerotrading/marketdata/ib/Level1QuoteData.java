@@ -18,9 +18,9 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.marketdata.ib;
 
+import com.ib.client.Decimal;
 import com.sumzerotrading.data.Ticker;
 
 /**
@@ -31,10 +31,10 @@ public class Level1QuoteData {
     protected Ticker ticker;
     protected int field;
     protected double price = 0;
-    protected int canAutoExecute = 0;
-    protected int size = 0;
-            
-    public Level1QuoteData(Ticker ticker, int field, double price, int canAutoExecute, int size) {
+    protected boolean canAutoExecute = false;
+    protected Decimal size = Decimal.ZERO;
+
+    public Level1QuoteData(Ticker ticker, int field, double price, boolean canAutoExecute, Decimal size) {
         this.ticker = ticker;
         this.field = field;
         this.price = price;
@@ -42,7 +42,7 @@ public class Level1QuoteData {
         this.size = size;
     }
 
-    public int getCanAutoExecute() {
+    public boolean getCanAutoExecute() {
         return canAutoExecute;
     }
 
@@ -58,52 +58,50 @@ public class Level1QuoteData {
         return ticker;
     }
 
-    public int getSize() {
+    public Decimal getSize() {
         return size;
-    }
-    
-    
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final Level1QuoteData other = (Level1QuoteData) obj;
-        if (this.ticker != other.ticker && (this.ticker == null || !this.ticker.equals(other.ticker))) {
-            return false;
-        }
-        if (this.field != other.field) {
-            return false;
-        }
-        if (Double.doubleToLongBits(this.price) != Double.doubleToLongBits(other.price)) {
-            return false;
-        }
-        if (this.canAutoExecute != other.canAutoExecute) {
-            return false;
-        }
-        if( this.size != other.size ) {
-            return false;
-        }
-        return true;
     }
 
     @Override
     public int hashCode() {
-        int hash = 3;
-        hash = 37 * hash + (this.ticker != null ? this.ticker.hashCode() : 0);
-        hash = 37 * hash + this.field;
-        hash = 37 * hash + (int) (Double.doubleToLongBits(this.price) ^ (Double.doubleToLongBits(this.price) >>> 32));
-        hash = 37 * hash + this.canAutoExecute;
-        hash = 37 * hash + this.size;
-        return hash;
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((ticker == null) ? 0 : ticker.hashCode());
+        result = prime * result + field;
+        long temp;
+        temp = Double.doubleToLongBits(price);
+        result = prime * result + (int) (temp ^ (temp >>> 32));
+        result = prime * result + (canAutoExecute ? 1231 : 1237);
+        result = prime * result + ((size == null) ? 0 : size.hashCode());
+        return result;
     }
-    
-    
-    
-    
-    
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Level1QuoteData other = (Level1QuoteData) obj;
+        if (ticker == null) {
+            if (other.ticker != null)
+                return false;
+        } else if (!ticker.equals(other.ticker))
+            return false;
+        if (field != other.field)
+            return false;
+        if (Double.doubleToLongBits(price) != Double.doubleToLongBits(other.price))
+            return false;
+        if (canAutoExecute != other.canAutoExecute)
+            return false;
+        if (size == null) {
+            if (other.size != null)
+                return false;
+        } else if (!size.equals(other.size))
+            return false;
+        return true;
+    }
+
 }

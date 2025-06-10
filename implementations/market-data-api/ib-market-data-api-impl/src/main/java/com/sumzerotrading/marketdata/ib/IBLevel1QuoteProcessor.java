@@ -18,7 +18,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.marketdata.ib;
 
 import com.sumzerotrading.data.StockTicker;
@@ -40,8 +39,6 @@ import java.util.concurrent.BlockingQueue;
  * @author Rob Terpilowski
  */
 public class IBLevel1QuoteProcessor extends IBQuoteProcessor<Level1QuoteData> {
-    
-
 
     public IBLevel1QuoteProcessor(BlockingQueue<Level1QuoteData> queue, IQuoteEngine quoteEngine) {
         super(queue, quoteEngine);
@@ -49,19 +46,18 @@ public class IBLevel1QuoteProcessor extends IBQuoteProcessor<Level1QuoteData> {
 
     @Override
     protected void processData(Level1QuoteData data) {
-        if (data.getSize() > 0) {
+        if (data.getSize().value().doubleValue() > 0) {
             processTickSize(data);
         } else {
             processTickPrice(data);
         }
     }
 
-    
     protected void processTickPrice(Level1QuoteData data) {
         QuoteType quoteType;
 
         quoteType = IbUtils.getQuoteType(data.getField());
-        //This is a quote type we don't care about.
+        // This is a quote type we don't care about.
         if (quoteType == null || QuoteType.UNKNOWN == quoteType) {
             return;
         }
@@ -71,11 +67,10 @@ public class IBLevel1QuoteProcessor extends IBQuoteProcessor<Level1QuoteData> {
 
     }
 
-    
     protected void processTickSize(Level1QuoteData data) {
         QuoteType quoteType;
         Ticker ticker = data.getTicker();
-        int size = data.getSize();
+        int size = data.getSize().value().intValue();
 
         quoteType = IbUtils.getQuoteType(data.getField());
         if (quoteType == null || quoteType == QuoteType.UNKNOWN) {
@@ -89,7 +84,6 @@ public class IBLevel1QuoteProcessor extends IBQuoteProcessor<Level1QuoteData> {
         processQuote(ticker, quoteType, formattedValue);
     }
 
-
     protected void processQuote(Ticker ticker, QuoteType quoteType, BigDecimal formattedValue) {
         Map<QuoteType, BigDecimal> quoteMap = new HashMap<>();
         quoteMap.put(quoteType, formattedValue);
@@ -97,7 +91,7 @@ public class IBLevel1QuoteProcessor extends IBQuoteProcessor<Level1QuoteData> {
 
         quoteEngine.fireLevel1Quote(quote);
     }
-    
+
     protected ZonedDateTime getTime() {
         return ZonedDateTime.now();
     }

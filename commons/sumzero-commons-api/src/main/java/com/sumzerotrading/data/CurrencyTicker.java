@@ -18,7 +18,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.data;
 
 import java.math.BigDecimal;
@@ -29,26 +28,28 @@ import java.math.BigDecimal;
  */
 public class CurrencyTicker extends Ticker {
     protected boolean halfTickSupported = true;
-    
+
     public CurrencyTicker() {
         super();
-        minimumTickSize = new BigDecimal("0.0001");
+        minimumTickSize = new BigDecimal("0.00005");
     }
-    
-    public void setSupporthalfTick( boolean supported ) {
+
+    public void setSupporthalfTick(boolean supported) {
         this.halfTickSupported = supported;
     }
-    
-    
+
     @Override
     public InstrumentType getInstrumentType() {
         return InstrumentType.FOREX;
     }
-    
-    
+
+    @Override
+    public Exchange getExchange() {
+        return Exchange.IDEALPRO;
+    }
+
     public boolean supportsHalfTick() {
         return halfTickSupported;
     }
-    
-    
+
 }

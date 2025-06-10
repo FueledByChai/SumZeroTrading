@@ -18,18 +18,25 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.ib;
 
-import com.ib.client.EClientSocket;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.ib.client.EClientSocket;
+import com.ib.client.EJavaSignal;
+import com.ib.client.EReader;
 
 /**
  *
  * @author Rob Terpilowski
  */
 public class IBConnectionRegistry {
+
+    protected final static Logger logger = LoggerFactory.getLogger(IBConnectionRegistry.class);
 
     protected static final Map<IBConnectionInfo, IBSocket> connectionMap = new HashMap<IBConnectionInfo, IBSocket>();
 
@@ -42,8 +49,23 @@ public class IBConnectionRegistry {
                 connection.setClientId(info.getClientId());
                 connection.setHost(info.getHost());
                 connection.setPort(info.getPort());
+                EJavaSignal signal = new EJavaSignal();
 
-                EClientSocket clientSocket = new EClientSocket(connection, connection);
+                EClientSocket clientSocket = new EClientSocket(connection, signal);
+                clientSocket.eConnect(info.getHost(), info.getPort(), info.getClientId());
+                EReader reader = new EReader(clientSocket, signal);
+                reader.start();
+
+                new Thread(() -> {
+                    while (clientSocket.isConnected()) {
+                        signal.waitForSignal();
+                        try {
+                            reader.processMsgs();
+                        } catch (Exception e) {
+                            logger.error("Exception: " + e.getMessage());
+                        }
+                    }
+                }).start();
 
                 savedSocket = new IBSocket(connection, clientSocket);
 
@@ -54,8 +76,7 @@ public class IBConnectionRegistry {
         }
 
     }
-    
-    
+
     public static void setTestIBSocket(IBConnectionInfo connectionInfo, IBSocket ibSocket) {
         connectionMap.put(connectionInfo, ibSocket);
     }

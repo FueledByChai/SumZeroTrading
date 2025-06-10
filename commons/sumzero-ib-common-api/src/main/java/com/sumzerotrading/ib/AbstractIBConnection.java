@@ -1,0 +1,623 @@
+package com.sumzerotrading.ib;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.ib.client.Bar;
+import com.ib.client.CommissionReport;
+import com.ib.client.Contract;
+import com.ib.client.ContractDescription;
+import com.ib.client.ContractDetails;
+import com.ib.client.Decimal;
+import com.ib.client.DeltaNeutralContract;
+import com.ib.client.DepthMktDataDescription;
+import com.ib.client.Execution;
+import com.ib.client.FamilyCode;
+import com.ib.client.HistogramEntry;
+import com.ib.client.HistoricalSession;
+import com.ib.client.HistoricalTick;
+import com.ib.client.HistoricalTickBidAsk;
+import com.ib.client.HistoricalTickLast;
+import com.ib.client.NewsProvider;
+import com.ib.client.Order;
+import com.ib.client.OrderState;
+import com.ib.client.PriceIncrement;
+import com.ib.client.SoftDollarTier;
+import com.ib.client.TickAttrib;
+import com.ib.client.TickAttribBidAsk;
+import com.ib.client.TickAttribLast;
+
+public abstract class AbstractIBConnection implements IBConnectionInterface {
+
+    protected static final Logger logger = LoggerFactory.getLogger(AbstractIBConnection.class);
+
+    @Override
+    public void accountDownloadEnd(String accountName) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void accountSummary(int reqId, String account, String tag, String value, String currency) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void accountSummaryEnd(int reqId) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void accountUpdateMulti(int reqId, String account, String modelCode, String key, String value,
+            String currency) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void accountUpdateMultiEnd(int reqId) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void bondContractDetails(int reqId, ContractDetails contractDetails) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void commissionReport(CommissionReport commissionReport) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void completedOrder(Contract contract, Order order, OrderState orderState) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void completedOrdersEnd() {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void connectAck() {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void connectionClosed() {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void contractDetails(int reqId, ContractDetails contractDetails) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void contractDetailsEnd(int reqId) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void currentTime(long time) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void deltaNeutralValidation(int reqId, DeltaNeutralContract deltaNeutralContract) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void displayGroupList(int reqId, String groups) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void displayGroupUpdated(int reqId, String contractInfo) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void error(Exception e) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void error(String str) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void error(int id, int errorCode, String errorMsg, String advancedOrderRejectJson) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void execDetails(int reqId, Contract contract, Execution execution) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void execDetailsEnd(int reqId) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void familyCodes(FamilyCode[] familyCodes) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void fundamentalData(int reqId, String data) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void headTimestamp(int reqId, String headTimestamp) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void histogramData(int reqId, List<HistogramEntry> items) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void historicalData(int reqId, Bar bar) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void historicalDataEnd(int reqId, String startDateStr, String endDateStr) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void historicalDataUpdate(int reqId, Bar bar) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void historicalNews(int requestId, String time, String providerCode, String articleId, String headline) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void historicalNewsEnd(int requestId, boolean hasMore) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void historicalSchedule(int reqId, String startDateTime, String endDateTime, String timeZone,
+            List<HistoricalSession> sessions) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void historicalTicks(int reqId, List<HistoricalTick> ticks, boolean done) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void historicalTicksBidAsk(int reqId, List<HistoricalTickBidAsk> ticks, boolean done) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void historicalTicksLast(int reqId, List<HistoricalTickLast> ticks, boolean done) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void managedAccounts(String accountsList) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void marketDataType(int reqId, int marketDataType) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void marketRule(int marketRuleId, PriceIncrement[] priceIncrements) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void mktDepthExchanges(DepthMktDataDescription[] depthMktDataDescriptions) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void newsArticle(int requestId, int articleType, String articleText) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void newsProviders(NewsProvider[] newsProviders) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void nextValidId(int orderId) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void openOrder(int orderId, Contract contract, Order order, OrderState orderState) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void openOrderEnd() {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void orderBound(long orderId, int apiClientId, int apiOrderId) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void orderStatus(int orderId, String status, Decimal filled, Decimal remaining, double avgFillPrice,
+            int permId, int parentId, double lastFillPrice, int clientId, String whyHeld, double mktCapPrice) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void pnl(int reqId, double dailyPnL, double unrealizedPnL, double realizedPnL) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void pnlSingle(int reqId, Decimal pos, double dailyPnL, double unrealizedPnL, double realizedPnL,
+            double value) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void position(String account, Contract contract, Decimal pos, double avgCost) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void positionEnd() {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void positionMulti(int reqId, String account, String modelCode, Contract contract, Decimal pos,
+            double avgCost) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void positionMultiEnd(int reqId) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void realtimeBar(int reqId, long time, double open, double high, double low, double close, Decimal volume,
+            Decimal wap, int count) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void receiveFA(int faDataType, String xml) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void replaceFAEnd(int reqId, String text) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void rerouteMktDataReq(int reqId, int conId, String exchange) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void rerouteMktDepthReq(int reqId, int conId, String exchange) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void scannerData(int reqId, int rank, ContractDetails contractDetails, String distance, String benchmark,
+            String projection, String legsStr) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void scannerDataEnd(int reqId) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void scannerParameters(String xml) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void securityDefinitionOptionalParameter(int reqId, String exchange, int underlyingConId,
+            String tradingClass, String multiplier, Set<String> expirations, Set<Double> strikes) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void securityDefinitionOptionalParameterEnd(int reqId) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void smartComponents(int reqId, Map<Integer, Entry<String, Character>> theMap) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void softDollarTiers(int reqId, SoftDollarTier[] tiers) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void symbolSamples(int reqId, ContractDescription[] contractDescriptions) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void tickByTickAllLast(int reqId, int tickType, long time, double price, Decimal size,
+            TickAttribLast tickAttribLast, String exchange, String specialConditions) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void tickByTickBidAsk(int reqId, long time, double bidPrice, double askPrice, Decimal bidSize,
+            Decimal askSize, TickAttribBidAsk tickAttribBidAsk) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void tickByTickMidPoint(int reqId, long time, double midPoint) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void tickEFP(int tickerId, int tickType, double basisPoints, String formattedBasisPoints,
+            double impliedFuture, int holdDays, String futureLastTradeDate, double dividendImpact,
+            double dividendsToLastTradeDate) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void tickGeneric(int tickerId, int tickType, double value) {
+        // TODO Auto-generated method stub
+        logger.warn("tickGeneric not implemented for tickerId: " + tickerId + ", tickType: " + tickType + ", value: "
+                + value);
+
+    }
+
+    @Override
+    public void tickNews(int tickerId, long timeStamp, String providerCode, String articleId, String headline,
+            String extraData) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void tickOptionComputation(int tickerId, int field, int tickAttrib, double impliedVol, double delta,
+            double optPrice, double pvDividend, double gamma, double vega, double theta, double undPrice) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void tickPrice(int tickerId, int field, double price, TickAttrib attrib) {
+        logger.info("tickPrice not implemented for tickerId: " + tickerId + ", field: " + field + ", price: " + price
+                + ", attrib: " + attrib);
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void tickReqParams(int tickerId, double minTick, String bboExchange, int snapshotPermissions) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void tickSize(int tickerId, int field, Decimal size) {
+        logger.info("tickSize not implemented for tickerId: " + tickerId + ", field: " + field + ", size: " + size);
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void tickSnapshotEnd(int reqId) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void tickString(int tickerId, int tickType, String value) {
+        logger.info("tickString not implemented for tickerId: " + tickerId + ", tickType: " + tickType + ", value: "
+                + value);
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void updateAccountTime(String timeStamp) {
+        logger.info("updateAccountTime not implemented for timeStamp: " + timeStamp);
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void updateAccountValue(String key, String value, String currency, String accountName) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void updateMktDepth(int tickerId, int position, int operation, int side, double price, Decimal size) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void updateMktDepthL2(int tickerId, int position, String marketMaker, int operation, int side, double price,
+            Decimal size, boolean isSmartDepth) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void updateNewsBulletin(int msgId, int msgType, String message, String origExchange) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void updatePortfolio(Contract contract, Decimal position, double marketPrice, double marketValue,
+            double averageCost, double unrealizedPNL, double realizedPNL, String accountName) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void userInfo(int reqId, String whiteBrandingId) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void verifyAndAuthCompleted(boolean isSuccessful, String errorText) {
+        logger.info("verifyAndAuthCompleted not implemented for isSuccessful: " + isSuccessful + ", errorText: "
+                + errorText);
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void verifyAndAuthMessageAPI(String apiData, String xyzChallenge) {
+        logger.info(
+                "verifyAndAuthMessageAPI not implemented for apiData: " + apiData + ", xyzChallenge: " + xyzChallenge);
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void verifyCompleted(boolean isSuccessful, String errorText) {
+        logger.info("verifyCompleted not implemented for isSuccessful: " + isSuccessful + ", errorText: " + errorText);
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void verifyMessageAPI(String apiData) {
+        logger.info("verifyMessageAPI not implemented for apiData: " + apiData);
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void wshEventData(int reqId, String dataJson) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void wshMetaData(int reqId, String dataJson) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void issueSignal() {
+        logger.info("issueSignal not implemented");
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void waitForSignal() {
+        logger.info("waitForSignal not implemented");
+        // TODO Auto-generated method stub
+
+    }
+
+}

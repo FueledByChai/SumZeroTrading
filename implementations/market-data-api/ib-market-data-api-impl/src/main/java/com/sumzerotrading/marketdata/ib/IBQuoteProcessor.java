@@ -18,66 +18,59 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.marketdata.ib;
 
-import com.sumzerotrading.marketdata.IQuoteEngine;
-import com.sumzerotrading.marketdata.QuoteEngine;
 import java.util.concurrent.BlockingQueue;
-//import org.apache.log4j.Logger;
+
+import com.sumzerotrading.marketdata.IQuoteEngine;
 
 /**
  *
  * @author Rob Terpilowski
  */
 public abstract class IBQuoteProcessor<T> implements Runnable {
-    
+
     protected IQuoteEngine quoteEngine;
     protected BlockingQueue<T> quoteBlockingQueue;
     protected volatile boolean shouldRun = true;
-    //protected Logger logger = Logger.getLogger( IBQuoteProcessor.class );
-    protected Thread thread = new Thread( this, getClass().getName() + "-Thread" );
+    // protected Logger logger = Logger.getLogger( IBQuoteProcessor.class );
+    protected Thread thread = new Thread(this, getClass().getName() + "-Thread");
     protected boolean started = false;
-    
-    
-    public IBQuoteProcessor( BlockingQueue<T> queue, IQuoteEngine quoteEngine ) {
+
+    public IBQuoteProcessor(BlockingQueue<T> queue, IQuoteEngine quoteEngine) {
         this.quoteBlockingQueue = queue;
         this.quoteEngine = quoteEngine;
     }
 
-    
     public void startProcessor() {
-        if( ! started ) {
+        if (!started) {
             started = true;
             thread.start();
         }
     }
-    
-    
+
     public void stopProcessor() {
-        if( started ) {
+        if (started) {
             started = false;
             shouldRun = false;
         }
     }
-    
+
     public void run() {
-        while( shouldRun ) {
+        while (shouldRun) {
             try {
-                processData( quoteBlockingQueue.take() );
-            } catch( Exception ex ) {
-                //logger.error(ex, ex);
+                processData(quoteBlockingQueue.take());
+            } catch (Exception ex) {
+                // logger.error(ex, ex);
                 ex.printStackTrace();
             }
         }
     }
-    
+
     public boolean isRunning() {
         return started;
     }
-    
-    
-    protected abstract void processData( T data );
-    
-    
+
+    protected abstract void processData(T data);
+
 }

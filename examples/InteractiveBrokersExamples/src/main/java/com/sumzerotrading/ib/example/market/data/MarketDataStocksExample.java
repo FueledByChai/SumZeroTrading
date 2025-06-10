@@ -18,34 +18,32 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.ib.example.market.data;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sumzerotrading.data.StockTicker;
 import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClient;
 import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClientInterface;
 import com.sumzerotrading.marketdata.ILevel1Quote;
-import com.sumzerotrading.marketdata.QuoteType;
-
-
 
 public class MarketDataStocksExample {
-    
-    
+
+    protected static final Logger logger = LoggerFactory.getLogger(MarketDataStocksExample.class);
+
     public void start() {
-        InteractiveBrokersClientInterface ibClient = InteractiveBrokersClient.getInstance("localhost", 7999, 1);
+        InteractiveBrokersClientInterface ibClient = InteractiveBrokersClient.getInstance("localhost", 7779, 1);
         ibClient.connect();
-        
-        StockTicker stockTicker=  new StockTicker("QQQ");
-        
+
+        StockTicker stockTicker = new StockTicker("QQQ");
+
         ibClient.subscribeLevel1(stockTicker, (ILevel1Quote quote) -> {
-            if( quote.containsType(QuoteType.LAST) ){
-                System.out.println("Received Quote: " + quote.getValue(QuoteType.LAST));
-            }
+            logger.info("Received Quote: {}", quote);
         });
-        
+
     }
-    
+
     public static void main(String[] args) {
         new MarketDataStocksExample().start();
     }

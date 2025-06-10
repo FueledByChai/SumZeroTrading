@@ -1,4 +1,4 @@
-/* Copyright (C) 2013 Interactive Brokers LLC. All rights reserved.  This code is subject to the terms
+/* Copyright (C) 2019 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 
 package com.ib.controller;
@@ -13,7 +13,7 @@ public enum AccountSummaryTag {
 	AccruedCash,					// Net accrued interest
 	BuyingPower,					// The maximum amount of marginable US stocks the account can buy
 	EquityWithLoanValue,			// Cash + stocks + bonds + mutual funds
-	PreviousEquityWithLoanValue,
+	PreviousDayEquityWithLoanValue,
 	GrossPositionValue,				// The sum of the absolute value of all stock and equity option positions
 	RegTEquity,
 	RegTMargin,

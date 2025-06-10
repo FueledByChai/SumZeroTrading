@@ -19,23 +19,32 @@
  */
 package com.sumzerotrading.marketdata;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sumzerotrading.data.Ticker;
-import org.apache.log4j.Logger;
 
 /**
  * @author Rob Terpilowski
  *
- * TODO To change the template for this generated type comment go to Window -
- * Preferences - Java - Code Style - Code Templates
+ *         TODO To change the template for this generated type comment go to
+ *         Window - Preferences - Java - Code Style - Code Templates
  */
 public abstract class QuoteEngine implements IQuoteEngine {
 
+    protected static final Logger logger = LoggerFactory.getLogger(QuoteEngine.class);
+
     protected List<ErrorListener> errorListeners;
-    protected Map<Ticker, List<Level1QuoteListener>> level1ListenerMap = Collections.synchronizedMap(new HashMap<Ticker, List<Level1QuoteListener>>());
-    protected Map<Ticker, List<Level2QuoteListener>> level2ListenerMap = Collections.synchronizedMap(new HashMap<Ticker, List<Level2QuoteListener>>());
-    protected Logger logger = Logger.getLogger( QuoteEngine.class );
+    protected Map<Ticker, List<Level1QuoteListener>> level1ListenerMap = Collections
+            .synchronizedMap(new HashMap<Ticker, List<Level1QuoteListener>>());
+    protected Map<Ticker, List<Level2QuoteListener>> level2ListenerMap = Collections
+            .synchronizedMap(new HashMap<Ticker, List<Level2QuoteListener>>());
 
     public QuoteEngine() {
         errorListeners = new ArrayList<ErrorListener>();
@@ -103,8 +112,9 @@ public abstract class QuoteEngine implements IQuoteEngine {
                         thread.start();
                     }
                 } catch (Exception ex) {
-                    //don't let 1 listener blowing up prevent other listeners from getting the quote.
-                    //     logger.error(ex, ex);
+                    // don't let 1 listener blowing up prevent other listeners from getting the
+                    // quote.
+                    // logger.error(ex, ex);
                 }
             }
         }
@@ -126,7 +136,7 @@ public abstract class QuoteEngine implements IQuoteEngine {
                         thread.start();
                     }
                 } catch (Exception ex) {
-                    //   logger.error(ex, ex);
+                    // logger.error(ex, ex);
                 }
             }
         }

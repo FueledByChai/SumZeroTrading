@@ -18,31 +18,33 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.marketdata.ib;
 
-import com.ib.client.Contract;
-import com.ib.client.EClientSocket;
-import com.ib.client.TagValue;
-import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.ib.ContractBuilderFactory;
-import com.sumzerotrading.ib.IBConnectionInterface;
-import com.sumzerotrading.ib.IBDataQueue;
-import com.sumzerotrading.ib.IBSocket;
-import com.sumzerotrading.ib.MarketDepthListener;
-import com.sumzerotrading.ib.TickListener;
-import com.sumzerotrading.marketdata.*;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Vector;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.ib.client.Contract;
+import com.ib.client.Decimal;
+import com.ib.client.EClientSocket;
+import com.ib.client.TickAttrib;
+import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.ib.ContractBuilderFactory;
+import com.sumzerotrading.ib.IBConnectionInterface;
+import com.sumzerotrading.ib.IBDataQueue;
+import com.sumzerotrading.ib.IBSocket;
+import com.sumzerotrading.marketdata.ILevel1Quote;
+import com.sumzerotrading.marketdata.Level1QuoteListener;
+import com.sumzerotrading.marketdata.Level2QuoteListener;
+import com.sumzerotrading.marketdata.QuoteError;
+import com.sumzerotrading.marketdata.QuoteType;
 
 /**
  *
@@ -72,13 +74,12 @@ public class IBQuoteEngine extends AbstractIBQuoteEngine {
     protected String name = "";
 
     public IBQuoteEngine(IBSocket ibSocket) {
-        if(true) throw new UnsupportedOperationException("IB CHanged implemenation need to fix this");
         this.ibSocket = ibSocket;
 
         callbackInterface = ibSocket.getConnection();
         callbackInterface.addIbConnectionDelegate(this);
         ibConnection = ibSocket.getClientSocket();
-        
+
         level1QuoteProcessor = new IBLevel1QuoteProcessor(level1QuoteQueue, this);
         level2QuoteProcessor = new IBLevel2QuoteProcessor(level2QuoteQueue, this);
         errorQuoteProcessor = new IBQuoteErrorProcessor(quoteErrorQueue, this);
@@ -89,15 +90,20 @@ public class IBQuoteEngine extends AbstractIBQuoteEngine {
         return ibSocket.isConnected();
     }
 
-    public void tickSize(int tickerId, int field, int size) {
-        buildLevel1QuoteDataAndSend(tickerId, field, 0, 0, size);
+    @Override
+    public void tickSize(int tickerId, int field, Decimal size) {
+        logger.info("tickSize: tickerId: {}, field: {}, size: {}", tickerId, field, size);
+        buildLevel1QuoteDataAndSend(tickerId, field, 0, false, size);
     }
 
-    public void tickPrice(int tickerId, int field, double price, int canAutoExecute) {
-        buildLevel1QuoteDataAndSend(tickerId, field, price, canAutoExecute, 0);
+    @Override
+    public void tickPrice(int tickerId, int field, double price, TickAttrib attrib) {
+        logger.info("tickPrice: tickerId: {}, field: {}, price: {}, attrib: {}", tickerId, field, price, attrib);
+        buildLevel1QuoteDataAndSend(tickerId, field, price, attrib.canAutoExecute(), Decimal.ZERO);
     }
 
-    protected void buildLevel1QuoteDataAndSend(int tickerId, int field, double price, int canAutoExecute, int size) {
+    protected void buildLevel1QuoteDataAndSend(int tickerId, int field, double price, boolean canAutoExecute,
+            Decimal size) {
         Ticker ticker = idToTickerMap.get(tickerId);
 
         if (ticker != null) {
@@ -126,7 +132,8 @@ public class IBQuoteEngine extends AbstractIBQuoteEngine {
         }
     }
 
-    public void updateMktDepth2(int tickerId, int position, String marketMaker, int operation, int side, double price, int size) {
+    public void updateMktDepth2(int tickerId, int position, String marketMaker, int operation, int side, double price,
+            int size) {
 
     }
 
@@ -143,6 +150,7 @@ public class IBQuoteEngine extends AbstractIBQuoteEngine {
     }
 
     protected void putOnErrorQueue(QuoteError error) {
+        System.out.println("Error: " + error);
         try {
             quoteErrorQueue.put(error);
         } catch (Exception ex) {
@@ -159,10 +167,7 @@ public class IBQuoteEngine extends AbstractIBQuoteEngine {
             level2TickerMap.put(ticker, quoteId);
             level2IdToTickerMap.put(quoteId, ticker);
             Contract contract = ContractBuilderFactory.getContractBuilder(ticker).buildContract(ticker);
-            Vector<TagValue> v = new Vector<>();
-            v.add(new TagValue("XYZ", "XYZ"));
-           // ibConnection.reqMktDepth(quoteId, contract, 100, v);
-           if(true) throw new UnsupportedOperationException("IB changed implementation");
+            ibConnection.reqMktDepth(nextQuoteId, contract, 20, false, null);
 
         }
     }
@@ -170,14 +175,14 @@ public class IBQuoteEngine extends AbstractIBQuoteEngine {
     @Override
     public void unsubscribeMarketDepth(Ticker ticker, Level2QuoteListener listener) {
         super.unsubscribeMarketDepth(ticker, listener);
-        //if there are no more listeners cancel the subscription
+        // if there are no more listeners cancel the subscription
         List<Level2QuoteListener> listeners = level2ListenerMap.get(ticker);
         if ((listeners == null) || (listeners.isEmpty())) {
             Integer requestId = level2TickerMap.remove(ticker);
             level2IdToTickerMap.remove(requestId);
             if (requestId != null) {
-                //ibConnection.cancelMktDepth(requestId);
-                if(true) throw new UnsupportedOperationException("IB changed implementation");
+                ibConnection.cancelMktDepth(requestId, false);
+
             }
         }
     }
@@ -185,16 +190,16 @@ public class IBQuoteEngine extends AbstractIBQuoteEngine {
     @Override
     public synchronized void subscribeLevel1(Ticker ticker, Level1QuoteListener listener) {
         super.subscribeLevel1(ticker, listener);
+        logger.info("Subscribing to Level 1 data for ticker: {}", ticker);
         Integer quoteId = tickerMap.get(ticker);
         if (quoteId == null) {
             quoteId = ++nextQuoteId;
             tickerMap.put(ticker, quoteId);
             idToTickerMap.put(quoteId, ticker);
             Contract contract = ContractBuilderFactory.getContractBuilder(ticker).buildContract(ticker);
-            List<TagValue> list = new ArrayList<>();
-            list.add(new TagValue("XYZ","XYZ"));
-            //ibConnection.reqMktData(nextQuoteId, contract, "", false, list);
-            if(true) throw new UnsupportedOperationException("IB changed implementation");
+            logger.info("Using IBContract: {}", contract);
+            ibConnection.reqMktData(nextQuoteId, contract, "", false, false, null);
+
         }
 
         if (closeQuoteMap.get(ticker) != null) {
@@ -211,7 +216,7 @@ public class IBQuoteEngine extends AbstractIBQuoteEngine {
     public void unsubscribeLevel1(Ticker ticker, Level1QuoteListener listener) {
         super.unsubscribeLevel1(ticker, listener);
 
-        //if there are no more listeners cancel the subscription
+        // if there are no more listeners cancel the subscription
         List<Level1QuoteListener> listeners = level1ListenerMap.get(ticker);
         if ((listeners == null) || (listeners.isEmpty())) {
             Integer requestId = tickerMap.remove(ticker);
@@ -235,11 +240,13 @@ public class IBQuoteEngine extends AbstractIBQuoteEngine {
 
     public void startEngine() {
         if (!started) {
+            logger.info("Starting IBQuoteEngine...");
             ibSocket.connect();
             level1QuoteProcessor.startProcessor();
             level2QuoteProcessor.startProcessor();
             errorQuoteProcessor.startProcessor();
             started = true;
+            ibConnection.reqMarketDataType(1); // 1 = live data, 3 = delayed data
         }
     }
 
@@ -261,11 +268,11 @@ public class IBQuoteEngine extends AbstractIBQuoteEngine {
 
     @Override
     public void fireLevel1Quote(ILevel1Quote quote) {
-        super.fireLevel1Quote(quote); 
-        if (quote.containsType(QuoteType.CLOSE) ) {
+        super.fireLevel1Quote(quote);
+        if (quote.containsType(QuoteType.CLOSE)) {
             closeQuoteMap.put(quote.getTicker(), quote);
         }
-        if (quote.containsType(QuoteType.OPEN) ) {
+        if (quote.containsType(QuoteType.OPEN)) {
             openQuoteMap.put(quote.getTicker(), quote);
         }
     }
@@ -280,12 +287,11 @@ public class IBQuoteEngine extends AbstractIBQuoteEngine {
 
     @Override
     public void useDelayedData(boolean useDelayed) {
-        if( useDelayed ) {
+        if (useDelayed) {
             ibConnection.reqMarketDataType(3);
         } else {
             ibConnection.reqMarketDataType(1);
         }
     }
-    
-    
+
 }

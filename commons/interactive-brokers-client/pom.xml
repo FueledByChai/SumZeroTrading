@@ -32,10 +32,16 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     <version>0.1.7-SNAPSHOT</version>
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>ib-market-data-api-impl</artifactId>
-            <version>0.1.7-SNAPSHOT</version>
-        </dependency>
+    <groupId>com.ib</groupId>
+    <artifactId>interactive-brokers-api</artifactId>
+    <version>10.30</version>
+</dependency>
+
+    <dependency>
+    <groupId>com.sumzerotrading</groupId>
+    <artifactId>ib-market-data-api-impl</artifactId>
+    <version>${project.version}</version>
+</dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>ib-broker-api-impl</artifactId>

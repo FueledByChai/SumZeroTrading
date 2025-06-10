@@ -18,18 +18,22 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.ib;
 
-import com.ib.client.EClientSocket;
 import java.util.concurrent.CyclicBarrier;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.ib.client.EClientSocket;
 
 /**
  *
  * @author Rob Terpilowski
  */
 public class IBSocket {
-    
+
+    protected static final Logger logger = LoggerFactory.getLogger(IBSocket.class);
     protected IBConnectionInterface connection;
     protected EClientSocket clientSocket;
     protected int clientId;
@@ -48,60 +52,64 @@ public class IBSocket {
     public EClientSocket getClientSocket() {
         return clientSocket;
     }
-    
-    
-    
+
     public void connect() {
-                final CyclicBarrier barrier = new CyclicBarrier(2);
-            try {
-                Thread thread = new Thread( new Runnable() {
-                    public void run() {
-                        startConnection();
+        if (connected) {
+            logger.info("Already connected to " + connection.getHost() + ":" + connection.getPort() + " with clientId: "
+                    + connection.getClientId());
+            return;
+        }
+        final CyclicBarrier barrier = new CyclicBarrier(2);
+        logger.info("Connecting to " + connection.getHost() + ":" + connection.getPort() + " with clientId: "
+                + connection.getClientId());
+        try {
+            Thread thread = new Thread(new Runnable() {
+                public void run() {
+                    startConnection();
+                    logger.info("Connected to " + connection.getHost() + ":" + connection.getPort() + " with clientId: "
+                            + connection.getClientId());
                     try {
                         barrier.await();
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }
-                    }
-                }, "Connect() thread: " + IBSocket.class.getName()  );
-                
-                thread.start();
-            } catch( Exception ex ) {
-                ex.printStackTrace();
-            }
-            try {
-                barrier.await();
-            } catch( Exception ex ) {
-                ex.printStackTrace();
-            }
+                }
+            }, "Connect() thread: " + IBSocket.class.getName());
+
+            thread.start();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        try {
+            barrier.await();
+            logger.info("Barrier passed, connection established.");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
-    
+
     public void disconnect() {
-        if( clientSocket.isConnected() ) {
+        if (clientSocket.isConnected()) {
             clientSocket.eDisconnect();
             connected = false;
         }
     }
-    
-    
+
     public boolean isConnected() {
         return connected;
     }
-    
-    
+
     protected void startConnection() {
-        if( !connected ) {
+        if (!connected) {
             connected = true;
-            clientSocket.eConnect(connection.getHost(), connection.getPort(), connection.getClientId() );
+            clientSocket.eConnect(connection.getHost(), connection.getPort(), connection.getClientId());
         }
     }
 
     public int getClientId() {
         return clientId;
     }
-    
-    
-    
+
     @Override
     public int hashCode() {
         int hash = 7;
@@ -119,15 +127,15 @@ public class IBSocket {
             return false;
         }
         final IBSocket other = (IBSocket) obj;
-        if (this.connection != other.connection && (this.connection == null || !this.connection.equals(other.connection))) {
+        if (this.connection != other.connection
+                && (this.connection == null || !this.connection.equals(other.connection))) {
             return false;
         }
-        if (this.clientSocket != other.clientSocket && (this.clientSocket == null || !this.clientSocket.equals(other.clientSocket))) {
+        if (this.clientSocket != other.clientSocket
+                && (this.clientSocket == null || !this.clientSocket.equals(other.clientSocket))) {
             return false;
         }
         return true;
     }
-    
-    
-    
+
 }
