@@ -606,18 +606,4 @@ public abstract class AbstractIBConnection implements IBConnectionInterface {
 
     }
 
-    @Override
-    public void issueSignal() {
-        logger.info("issueSignal not implemented");
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void waitForSignal() {
-        logger.info("waitForSignal not implemented");
-        // TODO Auto-generated method stub
-
-    }
-
 }

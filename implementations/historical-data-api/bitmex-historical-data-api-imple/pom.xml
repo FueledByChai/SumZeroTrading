@@ -28,13 +28,13 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     <parent>
       <groupId>com.sumzerotrading</groupId>
       <artifactId>historical-data-api</artifactId>
-      <version>0.1.7-SNAPSHOT</version>
+      <version>0.2.0-SNAPSHOT</version>
   </parent>
   
 
   <groupId>com.sumzerotrading</groupId>
   <artifactId>bitmex-historical-data-api-impl</artifactId>
-  <version>0.1.7-SNAPSHOT</version>
+  <version>0.2.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>bitmex-historical-data-api-impl</name>

@@ -4,10 +4,10 @@
     <parent>
         <groupId>com.sumzerotrading</groupId>
         <artifactId>sumzero-commons</artifactId>
-        <version>0.1.7-SNAPSHOT</version>
+        <version>0.2.0-SNAPSHOT</version>
     </parent>
     <artifactId>bitmex-common-api</artifactId>
-    <version>0.1.7-SNAPSHOT</version>
+    <version>0.2.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <dependencies>
         <dependency>  

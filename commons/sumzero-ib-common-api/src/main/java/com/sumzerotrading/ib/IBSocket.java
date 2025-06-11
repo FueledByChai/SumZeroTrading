@@ -26,23 +26,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ib.client.EClientSocket;
+import com.ib.client.EJavaSignal;
+import com.ib.client.EReader;
 
 /**
  *
  * @author Rob Terpilowski
  */
-public class IBSocket {
+public class IBSocket implements Runnable {
 
     protected static final Logger logger = LoggerFactory.getLogger(IBSocket.class);
     protected IBConnectionInterface connection;
     protected EClientSocket clientSocket;
     protected int clientId;
     protected boolean connected = false;
+    protected EJavaSignal signal;
+    protected EReader reader;
+    protected Thread signalThread = new Thread(this, "IBSocket Signal Thread");
 
-    public IBSocket(IBConnectionInterface connection, EClientSocket clientSocket) {
+    protected volatile boolean shouldRun = false;
+
+    public IBSocket(IBConnectionInterface connection) {
         this.connection = connection;
-        this.clientSocket = clientSocket;
         clientId = connection.getClientId();
+        signal = new EJavaSignal();
+        clientSocket = new EClientSocket(connection, signal);
+
     }
 
     public IBConnectionInterface getConnection() {
@@ -51,6 +60,35 @@ public class IBSocket {
 
     public EClientSocket getClientSocket() {
         return clientSocket;
+    }
+
+    @Override
+    public void run() {
+        logger.info("Signal thread started for " + connection.getHost() + ":" + connection.getPort()
+                + " with clientId: " + connection.getClientId());
+        while (shouldRun) {
+            while (clientSocket.isConnected()) {
+                logger.info("Waiting for signal for " + connection.getHost() + ":" + connection.getPort()
+                        + " with clientId: " + connection.getClientId());
+                signal.waitForSignal();
+                try {
+                    reader.processMsgs();
+                    logger.info("Processed messages for " + connection.getHost() + ":" + connection.getPort()
+                            + " with clientId: " + connection.getClientId());
+                } catch (Exception e) {
+                    logger.error("Exception: " + e.getMessage());
+                }
+            }
+            try {
+                logger.info("Waiting for thread to reconnect...");
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                logger.error("Thread interrupted: " + e.getMessage());
+            } // Sleep for a second before checking connection status again
+        }
+        logger.info("Signal thread stopped for " + connection.getHost() + ":" + connection.getPort()
+                + " with clientId: " + connection.getClientId());
     }
 
     public void connect() {
@@ -86,12 +124,14 @@ public class IBSocket {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+
     }
 
     public void disconnect() {
         if (clientSocket.isConnected()) {
             clientSocket.eDisconnect();
             connected = false;
+            shouldRun = false;
         }
     }
 
@@ -102,7 +142,12 @@ public class IBSocket {
     protected void startConnection() {
         if (!connected) {
             connected = true;
+            shouldRun = true;
+
             clientSocket.eConnect(connection.getHost(), connection.getPort(), connection.getClientId());
+            reader = new EReader(clientSocket, signal);
+            reader.start();
+            signalThread.start();
         }
     }
 

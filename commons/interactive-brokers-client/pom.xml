@@ -25,11 +25,11 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     <parent>
         <groupId>com.sumzerotrading</groupId>
         <artifactId>sumzero-commons</artifactId>
-        <version>0.1.7-SNAPSHOT</version>
+        <version>0.2.0-SNAPSHOT</version>
     </parent>
     <artifactId>interactive-brokers-client</artifactId>
     <packaging>jar</packaging>
-    <version>0.1.7-SNAPSHOT</version>
+    <version>0.2.0-SNAPSHOT</version>
     <dependencies>
         <dependency>
     <groupId>com.ib</groupId>

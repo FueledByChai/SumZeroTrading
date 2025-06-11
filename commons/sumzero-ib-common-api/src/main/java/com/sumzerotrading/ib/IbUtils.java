@@ -18,7 +18,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.ib;
 
 import com.ib.client.TagValue;
@@ -45,29 +44,28 @@ import javax.imageio.ImageIO;
  */
 public class IbUtils {
 
-
     public static void throwUnsupportedException() {
-        if( true ) {
+        if (true) {
             throw new UnsupportedOperationException("IB Changed implementation, this needs to be fixed");
         }
     }
 
     public static String translateToIbFuturesSymbol(String symbol) {
         switch (symbol) {
-            case "6C":
-                return "CAD";
-            case "6E":
-                return "EUR";
-            case "6J":
-                return "JPY";
-            case "6S":
-                return "CHF";
-            case "6B":
-                return "GBP";
-            case "VX":
-                return "VIX";
-            default:
-                return symbol;
+        case "6C":
+            return "CAD";
+        case "6E":
+            return "EUR";
+        case "6J":
+            return "JPY";
+        case "6S":
+            return "CHF";
+        case "6B":
+            return "GBP";
+        case "VX":
+            return "VIX";
+        default:
+            return symbol;
         }
     }
 
@@ -86,35 +84,36 @@ public class IbUtils {
                 return "MKT";
             default:
                 throw new IllegalStateException("Unknown order type: " + orderType);
-        }
-        }else {
+            }
+        } else {
             throw new IllegalStateException("Unknown order type: " + orderType);
         }
     }
 
     public static String getTif(TradeOrder.Duration duration) {
-        if( duration == null ) {
+        if (duration == null) {
             return "DAY";
         }
-        
+
         switch (duration) {
-            case DAY:
-                return "DAY";
-            case GOOD_UNTIL_CANCELED:
-                return "GTC";
-            case GOOD_UTNIL_TIME:
-                return "GTD";
-            case FILL_OR_KILL:
-                return "IOC";
-            case MARKET_ON_OPEN:
-                return "OPG";
-            default:
-                throw new IllegalStateException("Unknown duration: " + duration);
+        case DAY:
+            return "DAY";
+        case GOOD_UNTIL_CANCELED:
+            return "GTC";
+        case GOOD_UTNIL_TIME:
+            return "GTD";
+        case FILL_OR_KILL:
+            return "IOC";
+        case MARKET_ON_OPEN:
+            return "OPG";
+        default:
+            throw new IllegalStateException("Unknown duration: " + duration);
         }
     }
 
     public static String getSecurityType(InstrumentType instrumentType) {
-        if (null != instrumentType) switch (instrumentType) {
+        if (null != instrumentType)
+            switch (instrumentType) {
             case STOCK:
                 return "STK";
             case FOREX:
@@ -131,7 +130,8 @@ public class IbUtils {
                 return "CFD";
             default:
                 throw new IllegalStateException("Unknown instrument type: " + instrumentType);
-        } else {
+            }
+        else {
             throw new SumZeroException("Instrument type can't be null");
         }
     }
@@ -150,28 +150,44 @@ public class IbUtils {
         }
     }
 
+    /**
+     * Quote types are defined here....
+     * https://interactivebrokers.github.io/tws-api/tick_types.html
+     * 
+     * @param field
+     * @return
+     */
     public static QuoteType getQuoteType(int field) {
         switch (field) {
-            case 0:
-                return QuoteType.BID_SIZE;
-            case 1:
-                return QuoteType.BID;
-            case 2:
-                return QuoteType.ASK;
-            case 3:
-                return QuoteType.ASK_SIZE;
-            case 4:
-                return QuoteType.LAST;
-            case 5:
-                return QuoteType.LAST_SIZE;
-            case 8:
-                return QuoteType.VOLUME;
-            case 9:
-                return QuoteType.CLOSE;
-            case 14:
-                return QuoteType.OPEN;
-            default:
-                return QuoteType.UNKNOWN;
+        case 0:
+        case 69:
+            return QuoteType.BID_SIZE;
+        case 1:
+        case 66:
+            return QuoteType.BID;
+        case 2:
+        case 67:
+            return QuoteType.ASK;
+        case 3:
+        case 70:
+            return QuoteType.ASK_SIZE;
+        case 4:
+        case 68:
+            return QuoteType.LAST;
+        case 5:
+        case 71:
+            return QuoteType.LAST_SIZE;
+        case 8:
+        case 74:
+            return QuoteType.VOLUME;
+        case 9:
+        case 75:
+            return QuoteType.CLOSE;
+        case 14:
+        case 76:
+            return QuoteType.OPEN;
+        default:
+            return QuoteType.UNKNOWN;
         }
     }
 
@@ -206,25 +222,24 @@ public class IbUtils {
         sb.append(expiryMonth);
         return sb.toString();
     }
-    
-    
+
     public static String getExpiryString(int expiryDay, int expiryMonth, int expiryYear) {
         String dayString = Integer.toString(expiryDay);
-        if( expiryDay < 10 ) {
+        if (expiryDay < 10) {
             dayString = "0" + dayString;
         }
-        
+
         return getExpiryString(expiryMonth, expiryYear) + dayString;
     }
-    
-    public static String getOptionRight( OptionTicker.Right right ) {
-        switch( right ) {
-            case Call:
-                return "C";
-            case Put:
-                return "P";
-            default:
-                throw new SumZeroException("Unknown option right: " + right);
+
+    public static String getOptionRight(OptionTicker.Right right) {
+        switch (right) {
+        case Call:
+            return "C";
+        case Put:
+            return "P";
+        default:
+            throw new SumZeroException("Unknown option right: " + right);
         }
     }
 
@@ -235,38 +250,36 @@ public class IbUtils {
             throw new IllegalStateException(ex);
         }
     }
-    
-    public static BigDecimal getIbMultiplier( Ticker ticker ) {
-        if( ticker instanceof FuturesTicker ) {
+
+    public static BigDecimal getIbMultiplier(Ticker ticker) {
+        if (ticker instanceof FuturesTicker) {
             FuturesTicker futuresTicker = (FuturesTicker) ticker;
-            switch( futuresTicker.getSymbol() ) {
-                case "ZC":
-                case "ZS":
-                case "ZW":
-                    return new BigDecimal( 5000 );
-                default:
-                    return ticker.getContractMultiplier();
-                    
+            switch (futuresTicker.getSymbol()) {
+            case "ZC":
+            case "ZS":
+            case "ZW":
+                return new BigDecimal(5000);
+            default:
+                return ticker.getContractMultiplier();
+
             }
-        } 
-        
+        }
+
         return ticker.getContractMultiplier();
     }
-    
+
     public static Vector<TagValue> getDefaultTagVector() {
         Vector<TagValue> list = new Vector<>();
         list.add(new TagValue("XYZ", "XYZ"));
-        
+
         return list;
     }
-    
-        public static List<TagValue> getDefaultTagList() {
+
+    public static List<TagValue> getDefaultTagList() {
         List<TagValue> list = new ArrayList<>();
         list.add(new TagValue("XYZ", "XYZ"));
-        
+
         return list;
     }
-    
-    
-    
+
 }

@@ -685,16 +685,4 @@ public abstract class AbstractIBQuoteEngine extends QuoteEngine implements IBCon
 
     }
 
-    @Override
-    public void issueSignal() {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void waitForSignal() {
-        // TODO Auto-generated method stub
-
-    }
-
 }

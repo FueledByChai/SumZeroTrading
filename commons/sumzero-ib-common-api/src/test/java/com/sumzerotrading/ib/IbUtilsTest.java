@@ -140,12 +140,34 @@ public class IbUtilsTest {
 
     @Test
     public void testGetQuoteType() {
+        // BID_SIZE
+        assertEquals(QuoteType.BID_SIZE, IbUtils.getQuoteType(0));
+        assertEquals(QuoteType.BID_SIZE, IbUtils.getQuoteType(69));
+        // BID
         assertEquals(QuoteType.BID, IbUtils.getQuoteType(1));
+        assertEquals(QuoteType.BID, IbUtils.getQuoteType(66));
+        // ASK
         assertEquals(QuoteType.ASK, IbUtils.getQuoteType(2));
+        assertEquals(QuoteType.ASK, IbUtils.getQuoteType(67));
+        // ASK_SIZE
+        assertEquals(QuoteType.ASK_SIZE, IbUtils.getQuoteType(3));
+        assertEquals(QuoteType.ASK_SIZE, IbUtils.getQuoteType(70));
+        // LAST
         assertEquals(QuoteType.LAST, IbUtils.getQuoteType(4));
-        assertEquals(QuoteType.CLOSE, IbUtils.getQuoteType(9));
-        assertEquals(QuoteType.OPEN, IbUtils.getQuoteType(14));
+        assertEquals(QuoteType.LAST, IbUtils.getQuoteType(68));
+        // LAST_SIZE
+        assertEquals(QuoteType.LAST_SIZE, IbUtils.getQuoteType(5));
+        assertEquals(QuoteType.LAST_SIZE, IbUtils.getQuoteType(71));
+        // VOLUME
         assertEquals(QuoteType.VOLUME, IbUtils.getQuoteType(8));
+        assertEquals(QuoteType.VOLUME, IbUtils.getQuoteType(74));
+        // CLOSE
+        assertEquals(QuoteType.CLOSE, IbUtils.getQuoteType(9));
+        assertEquals(QuoteType.CLOSE, IbUtils.getQuoteType(75));
+        // OPEN
+        assertEquals(QuoteType.OPEN, IbUtils.getQuoteType(14));
+        assertEquals(QuoteType.OPEN, IbUtils.getQuoteType(76));
+        // UNKNOWN
         assertEquals(QuoteType.UNKNOWN, IbUtils.getQuoteType(99));
     }
 

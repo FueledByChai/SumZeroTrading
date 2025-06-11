@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.sumzerotrading</groupId>
         <artifactId>examples</artifactId>
-        <version>0.1.7-SNAPSHOT</version>
+        <version>0.2.0-SNAPSHOT</version>
     </parent>
     <artifactId>InteractiveBrokersExamples</artifactId>
     <packaging>jar</packaging>
@@ -49,8 +49,7 @@
         </dependency>
     </dependencies>
     <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+
     </properties>
     <name>InteractiveBrokersExamples</name>
 </project>

@@ -91,49 +91,50 @@ public class BaseIBConnectionDelegate implements IBConnectionInterface {
     }
 
     @Override
-    public void accountDownloadEnd(String arg0) {
+    public void accountDownloadEnd(String accountName) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void accountSummary(int arg0, String arg1, String arg2, String arg3, String arg4) {
+    public void accountSummary(int reqId, String account, String tag, String value, String currency) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void accountSummaryEnd(int arg0) {
+    public void accountSummaryEnd(int reqId) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void accountUpdateMulti(int arg0, String arg1, String arg2, String arg3, String arg4, String arg5) {
+    public void accountUpdateMulti(int reqId, String account, String modelCode, String key, String value,
+            String currency) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void accountUpdateMultiEnd(int arg0) {
+    public void accountUpdateMultiEnd(int reqId) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void bondContractDetails(int arg0, ContractDetails arg1) {
+    public void bondContractDetails(int reqId, ContractDetails contractDetails) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void commissionReport(CommissionReport arg0) {
+    public void commissionReport(CommissionReport commissionReport) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void completedOrder(Contract arg0, Order arg1, OrderState arg2) {
+    public void completedOrder(Contract contract, Order order, OrderState orderState) {
         // TODO Auto-generated method stub
 
     }
@@ -157,193 +158,194 @@ public class BaseIBConnectionDelegate implements IBConnectionInterface {
     }
 
     @Override
-    public void contractDetails(int arg0, ContractDetails arg1) {
+    public void contractDetails(int reqId, ContractDetails contractDetails) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void contractDetailsEnd(int arg0) {
+    public void contractDetailsEnd(int reqId) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void currentTime(long arg0) {
+    public void currentTime(long time) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void deltaNeutralValidation(int arg0, DeltaNeutralContract arg1) {
+    public void deltaNeutralValidation(int reqId, DeltaNeutralContract deltaNeutralContract) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void displayGroupList(int arg0, String arg1) {
+    public void displayGroupList(int reqId, String groups) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void displayGroupUpdated(int arg0, String arg1) {
+    public void displayGroupUpdated(int reqId, String contractInfo) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void error(Exception arg0) {
+    public void error(Exception e) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void error(String arg0) {
+    public void error(String str) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void error(int arg0, int arg1, String arg2, String arg3) {
+    public void error(int id, int errorCode, String errorMsg, String advancedOrderRejectJson) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void execDetails(int arg0, Contract arg1, Execution arg2) {
+    public void execDetails(int reqId, Contract contract, Execution execution) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void execDetailsEnd(int arg0) {
+    public void execDetailsEnd(int reqId) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void familyCodes(FamilyCode[] arg0) {
+    public void familyCodes(FamilyCode[] familyCodes) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void fundamentalData(int arg0, String arg1) {
+    public void fundamentalData(int reqId, String data) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void headTimestamp(int arg0, String arg1) {
+    public void headTimestamp(int reqId, String headTimestamp) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void histogramData(int arg0, List<HistogramEntry> arg1) {
+    public void histogramData(int reqId, List<HistogramEntry> items) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void historicalData(int arg0, Bar arg1) {
+    public void historicalData(int reqId, Bar bar) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void historicalDataEnd(int arg0, String arg1, String arg2) {
+    public void historicalDataEnd(int reqId, String startDateStr, String endDateStr) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void historicalDataUpdate(int arg0, Bar arg1) {
+    public void historicalDataUpdate(int reqId, Bar bar) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void historicalNews(int arg0, String arg1, String arg2, String arg3, String arg4) {
+    public void historicalNews(int requestId, String time, String providerCode, String articleId, String headline) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void historicalNewsEnd(int arg0, boolean arg1) {
+    public void historicalNewsEnd(int requestId, boolean hasMore) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void historicalSchedule(int arg0, String arg1, String arg2, String arg3, List<HistoricalSession> arg4) {
+    public void historicalSchedule(int reqId, String startDateTime, String endDateTime, String timeZone,
+            List<HistoricalSession> sessions) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void historicalTicks(int arg0, List<HistoricalTick> arg1, boolean arg2) {
+    public void historicalTicks(int reqId, List<HistoricalTick> ticks, boolean done) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void historicalTicksBidAsk(int arg0, List<HistoricalTickBidAsk> arg1, boolean arg2) {
+    public void historicalTicksBidAsk(int reqId, List<HistoricalTickBidAsk> ticks, boolean done) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void historicalTicksLast(int arg0, List<HistoricalTickLast> arg1, boolean arg2) {
+    public void historicalTicksLast(int reqId, List<HistoricalTickLast> ticks, boolean done) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void managedAccounts(String arg0) {
+    public void managedAccounts(String accountsList) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void marketDataType(int arg0, int arg1) {
+    public void marketDataType(int reqId, int marketDataType) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void marketRule(int arg0, PriceIncrement[] arg1) {
+    public void marketRule(int marketRuleId, PriceIncrement[] priceIncrements) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void mktDepthExchanges(DepthMktDataDescription[] arg0) {
+    public void mktDepthExchanges(DepthMktDataDescription[] depthMktDataDescriptions) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void newsArticle(int arg0, int arg1, String arg2) {
+    public void newsArticle(int requestId, int articleType, String articleText) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void newsProviders(NewsProvider[] arg0) {
+    public void newsProviders(NewsProvider[] newsProviders) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void nextValidId(int arg0) {
+    public void nextValidId(int orderId) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void openOrder(int arg0, Contract arg1, Order arg2, OrderState arg3) {
+    public void openOrder(int orderId, Contract contract, Order order, OrderState orderState) {
         // TODO Auto-generated method stub
 
     }
@@ -355,32 +357,33 @@ public class BaseIBConnectionDelegate implements IBConnectionInterface {
     }
 
     @Override
-    public void orderBound(long arg0, int arg1, int arg2) {
+    public void orderBound(long orderId, int apiClientId, int apiOrderId) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void orderStatus(int arg0, String arg1, Decimal arg2, Decimal arg3, double arg4, int arg5, int arg6,
-            double arg7, int arg8, String arg9, double arg10) {
+    public void orderStatus(int orderId, String status, Decimal filled, Decimal remaining, double avgFillPrice,
+            int permId, int parentId, double lastFillPrice, int clientId, String whyHeld, double mktCapPrice) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void pnl(int arg0, double arg1, double arg2, double arg3) {
+    public void pnl(int reqId, double dailyPnL, double unrealizedPnL, double realizedPnL) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void pnlSingle(int arg0, Decimal arg1, double arg2, double arg3, double arg4, double arg5) {
+    public void pnlSingle(int reqId, Decimal pos, double dailyPnL, double unrealizedPnL, double realizedPnL,
+            double value) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void position(String arg0, Contract arg1, Decimal arg2, double arg3) {
+    public void position(String account, Contract contract, Decimal pos, double avgCost) {
         // TODO Auto-generated method stub
 
     }
@@ -392,262 +395,253 @@ public class BaseIBConnectionDelegate implements IBConnectionInterface {
     }
 
     @Override
-    public void positionMulti(int arg0, String arg1, String arg2, Contract arg3, Decimal arg4, double arg5) {
+    public void positionMulti(int reqId, String account, String modelCode, Contract contract, Decimal pos,
+            double avgCost) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void positionMultiEnd(int arg0) {
+    public void positionMultiEnd(int reqId) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void realtimeBar(int arg0, long arg1, double arg2, double arg3, double arg4, double arg5, Decimal arg6,
-            Decimal arg7, int arg8) {
+    public void realtimeBar(int reqId, long time, double open, double high, double low, double close, Decimal volume,
+            Decimal wap, int count) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void receiveFA(int arg0, String arg1) {
+    public void receiveFA(int faDataType, String xml) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void replaceFAEnd(int arg0, String arg1) {
+    public void replaceFAEnd(int reqId, String text) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void rerouteMktDataReq(int arg0, int arg1, String arg2) {
+    public void rerouteMktDataReq(int reqId, int conId, String exchange) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void rerouteMktDepthReq(int arg0, int arg1, String arg2) {
+    public void rerouteMktDepthReq(int reqId, int conId, String exchange) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void scannerData(int arg0, int arg1, ContractDetails arg2, String arg3, String arg4, String arg5,
-            String arg6) {
+    public void scannerData(int reqId, int rank, ContractDetails contractDetails, String distance, String benchmark,
+            String projection, String legsStr) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void scannerDataEnd(int arg0) {
+    public void scannerDataEnd(int reqId) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void scannerParameters(String arg0) {
+    public void scannerParameters(String xml) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void securityDefinitionOptionalParameter(int arg0, String arg1, int arg2, String arg3, String arg4,
-            Set<String> arg5, Set<Double> arg6) {
+    public void securityDefinitionOptionalParameter(int reqId, String exchange, int underlyingConId,
+            String tradingClass, String multiplier, Set<String> expirations, Set<Double> strikes) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void securityDefinitionOptionalParameterEnd(int arg0) {
+    public void securityDefinitionOptionalParameterEnd(int reqId) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void smartComponents(int arg0, Map<Integer, Entry<String, Character>> arg1) {
+    public void smartComponents(int reqId, Map<Integer, Entry<String, Character>> theMap) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void softDollarTiers(int arg0, SoftDollarTier[] arg1) {
+    public void softDollarTiers(int reqId, SoftDollarTier[] tiers) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void symbolSamples(int arg0, ContractDescription[] arg1) {
+    public void symbolSamples(int reqId, ContractDescription[] contractDescriptions) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void tickByTickAllLast(int arg0, int arg1, long arg2, double arg3, Decimal arg4, TickAttribLast arg5,
-            String arg6, String arg7) {
+    public void tickByTickAllLast(int reqId, int tickType, long time, double price, Decimal size,
+            TickAttribLast tickAttribLast, String exchange, String specialConditions) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void tickByTickBidAsk(int arg0, long arg1, double arg2, double arg3, Decimal arg4, Decimal arg5,
-            TickAttribBidAsk arg6) {
+    public void tickByTickBidAsk(int reqId, long time, double bidPrice, double askPrice, Decimal bidSize,
+            Decimal askSize, TickAttribBidAsk tickAttribBidAsk) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void tickByTickMidPoint(int arg0, long arg1, double arg2) {
+    public void tickByTickMidPoint(int reqId, long time, double midPoint) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void tickEFP(int arg0, int arg1, double arg2, String arg3, double arg4, int arg5, String arg6, double arg7,
-            double arg8) {
+    public void tickEFP(int tickerId, int tickType, double basisPoints, String formattedBasisPoints,
+            double impliedFuture, int holdDays, String futureLastTradeDate, double dividendImpact,
+            double dividendsToLastTradeDate) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void tickGeneric(int arg0, int arg1, double arg2) {
+    public void tickGeneric(int tickerId, int tickType, double value) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void tickNews(int arg0, long arg1, String arg2, String arg3, String arg4, String arg5) {
+    public void tickNews(int tickerId, long timeStamp, String providerCode, String articleId, String headline,
+            String extraData) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void tickOptionComputation(int arg0, int arg1, int arg2, double arg3, double arg4, double arg5, double arg6,
-            double arg7, double arg8, double arg9, double arg10) {
+    public void tickOptionComputation(int tickerId, int field, int tickAttrib, double impliedVol, double delta,
+            double optPrice, double pvDividend, double gamma, double vega, double theta, double undPrice) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void tickPrice(int arg0, int arg1, double arg2, TickAttrib arg3) {
+    public void tickPrice(int tickerId, int field, double price, TickAttrib attrib) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void tickReqParams(int arg0, double arg1, String arg2, int arg3) {
+    public void tickReqParams(int tickerId, double minTick, String bboExchange, int snapshotPermissions) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void tickSize(int arg0, int arg1, Decimal arg2) {
+    public void tickSize(int tickerId, int field, Decimal size) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void tickSnapshotEnd(int arg0) {
+    public void tickSnapshotEnd(int reqId) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void tickString(int arg0, int arg1, String arg2) {
+    public void tickString(int tickerId, int tickType, String value) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void updateAccountTime(String arg0) {
+    public void updateAccountTime(String timeStamp) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void updateAccountValue(String arg0, String arg1, String arg2, String arg3) {
+    public void updateAccountValue(String key, String value, String currency, String accountName) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void updateMktDepth(int arg0, int arg1, int arg2, int arg3, double arg4, Decimal arg5) {
+    public void updateMktDepth(int tickerId, int position, int operation, int side, double price, Decimal size) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void updateMktDepthL2(int arg0, int arg1, String arg2, int arg3, int arg4, double arg5, Decimal arg6,
-            boolean arg7) {
+    public void updateMktDepthL2(int tickerId, int position, String marketMaker, int operation, int side, double price,
+            Decimal size, boolean isSmartDepth) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void updateNewsBulletin(int arg0, int arg1, String arg2, String arg3) {
+    public void updateNewsBulletin(int msgId, int msgType, String message, String origExchange) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void updatePortfolio(Contract arg0, Decimal arg1, double arg2, double arg3, double arg4, double arg5,
-            double arg6, String arg7) {
+    public void updatePortfolio(Contract contract, Decimal position, double marketPrice, double marketValue,
+            double averageCost, double unrealizedPNL, double realizedPNL, String accountName) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void userInfo(int arg0, String arg1) {
+    public void userInfo(int reqId, String whiteBrandingId) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void verifyAndAuthCompleted(boolean arg0, String arg1) {
+    public void verifyAndAuthCompleted(boolean isSuccessful, String errorText) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void verifyAndAuthMessageAPI(String arg0, String arg1) {
+    public void verifyAndAuthMessageAPI(String apiData, String xyzChallenge) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void verifyCompleted(boolean arg0, String arg1) {
+    public void verifyCompleted(boolean isSuccessful, String errorText) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void verifyMessageAPI(String arg0) {
+    public void verifyMessageAPI(String apiData) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void wshEventData(int arg0, String arg1) {
+    public void wshEventData(int reqId, String dataJson) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void wshMetaData(int arg0, String arg1) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void issueSignal() {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void waitForSignal() {
+    public void wshMetaData(int reqId, String dataJson) {
         // TODO Auto-generated method stub
 
     }

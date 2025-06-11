@@ -34,7 +34,7 @@ public class MarketDataCurriencesExample {
 
     public void start() {
         logger.info("Starting Market Data Currencies Example...");
-        InteractiveBrokersClientInterface ibClient = InteractiveBrokersClient.getInstance("localhost", 7779, 1);
+        InteractiveBrokersClientInterface ibClient = InteractiveBrokersClient.getInstance("localhost", 7777, 2);
         logger.info("Connecting to Interactive Brokers Client...");
         ibClient.connect();
         logger.info("Connected to Interactive Brokers Client");

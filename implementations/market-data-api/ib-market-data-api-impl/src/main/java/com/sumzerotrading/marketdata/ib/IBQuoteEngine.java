@@ -236,6 +236,10 @@ public class IBQuoteEngine extends AbstractIBQuoteEngine {
     }
 
     public void stopEngine() {
+        level1QuoteProcessor.stopProcessor();
+        level2QuoteProcessor.stopProcessor();
+        errorQuoteProcessor.stopProcessor();
+        started = false;
     }
 
     public void startEngine() {
@@ -246,7 +250,7 @@ public class IBQuoteEngine extends AbstractIBQuoteEngine {
             level2QuoteProcessor.startProcessor();
             errorQuoteProcessor.startProcessor();
             started = true;
-            ibConnection.reqMarketDataType(1); // 1 = live data, 3 = delayed data
+            // ibConnection.reqMarketDataType(1); // 1 = live data, 3 = delayed data
         }
     }
 

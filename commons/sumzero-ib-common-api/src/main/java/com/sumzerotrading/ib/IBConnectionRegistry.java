@@ -49,25 +49,8 @@ public class IBConnectionRegistry {
                 connection.setClientId(info.getClientId());
                 connection.setHost(info.getHost());
                 connection.setPort(info.getPort());
-                EJavaSignal signal = new EJavaSignal();
 
-                EClientSocket clientSocket = new EClientSocket(connection, signal);
-                clientSocket.eConnect(info.getHost(), info.getPort(), info.getClientId());
-                EReader reader = new EReader(clientSocket, signal);
-                reader.start();
-
-                new Thread(() -> {
-                    while (clientSocket.isConnected()) {
-                        signal.waitForSignal();
-                        try {
-                            reader.processMsgs();
-                        } catch (Exception e) {
-                            logger.error("Exception: " + e.getMessage());
-                        }
-                    }
-                }).start();
-
-                savedSocket = new IBSocket(connection, clientSocket);
+                savedSocket = new IBSocket(connection);
 
                 connectionMap.put(info, savedSocket);
             }

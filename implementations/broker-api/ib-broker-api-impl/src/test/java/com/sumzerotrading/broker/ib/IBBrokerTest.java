@@ -77,46 +77,45 @@ public class IBBrokerTest {
     @Before
     public void setUp() {
         mockery = new Mockery();
-        mockClientSocket = Mockito.mock( EClientSocket.class );
-        mockConnection = Mockito.mock( IBConnectionInterface.class );
-        
-        testIbSocket = new IBSocket(mockConnection, mockClientSocket);
+        mockClientSocket = Mockito.mock(EClientSocket.class);
+        mockConnection = Mockito.mock(IBConnectionInterface.class);
+
+        testIbSocket = new IBSocket(mockConnection);
         testBroker = new InteractiveBrokersBroker(testIbSocket);
     }
 
     @After
     public void tearDown() {
     }
-    
+
     @Test
     @Ignore
     public void testConnect() {
-       // fail();
+        // fail();
     }
-    
+
     @Test
     @Ignore
     public void testDisconnect() {
-        //fail();
+        // fail();
     }
-    
+
     @Test
     @Ignore
     public void testIsConnected() {
-        //fail();
+        // fail();
     }
-    
+
     @Test
     @Ignore
     public void testExecDetails() {
-        //fail();
+        // fail();
     }
-    
-    
+
     @Test
     @Ignore
     public void testNextValidId() {
-        //fail();
+        // fail();
     }
 
     @Test
@@ -125,24 +124,21 @@ public class IBBrokerTest {
         final int intId = Integer.parseInt(id);
 
         testBroker.cancelOrder(id);
-        
-        //verify(mockClientSocket).cancelOrder(intId);
+
+        // verify(mockClientSocket).cancelOrder(intId);
 
     }
 
-    
     @Test
     public void testCancelTradeOrder() {
         final String id = "99";
-        final int intId= Integer.parseInt(id);
+        final int intId = Integer.parseInt(id);
         final TradeOrder tradeOrder = new TradeOrder(id, null, 1, TradeDirection.BUY);
 
         testBroker.cancelOrder(tradeOrder);
 
-        //verify(mockClientSocket).cancelOrder(intId);
+        // verify(mockClientSocket).cancelOrder(intId);
 
     }
 
-   
-    
 }

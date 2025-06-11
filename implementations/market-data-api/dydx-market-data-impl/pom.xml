@@ -4,12 +4,12 @@
   <parent>
     <artifactId>market-data-api</artifactId>
     <groupId>com.sumzerotrading</groupId>
-    <version>0.1.7-SNAPSHOT</version>
+    <version>0.2.0-SNAPSHOT</version>
   </parent>
 
   <groupId>com.sumzerotrading</groupId>
   <artifactId>dydx-market-data-impl</artifactId>
-  <version>0.1.7-SNAPSHOT</version>
+  <version>0.2.0-SNAPSHOT</version>
 
   <name>dydx-market-data-impl</name>
   <!-- FIXME change it to the project's website -->

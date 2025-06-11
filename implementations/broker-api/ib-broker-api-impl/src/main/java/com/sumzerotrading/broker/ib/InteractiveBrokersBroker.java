@@ -21,6 +21,7 @@ package com.sumzerotrading.broker.ib;
 
 import com.ib.client.Contract;
 import com.ib.client.ContractDetails;
+import com.ib.client.Decimal;
 import com.ib.client.EClientSocket;
 import com.ib.client.Execution;
 import com.ib.client.ExecutionFilter;
@@ -203,10 +204,9 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
         }
     }
 
-    // @Override
-    public void orderStatus(int orderId, String status, int filled, int remaining, double avgFillPrice, int permId,
-            int parentId, double lastFillPrice, int clientId, String whyHeld) {
-        IbUtils.throwUnsupportedException();
+    @Override
+    public void orderStatus(int orderId, String status, Decimal filled, Decimal remaining, double avgFillPrice,
+            int permId, int parentId, double lastFillPrice, int clientId, String whyHeld, double mktCapPrice) {
         logger.debug("OrderStatus(): orderId: " + orderId + " Status: " + status + " filled: " + filled + " remaining: "
                 + remaining + " avgFillPrice: " + avgFillPrice + " permId: " + permId + " parentId: " + parentId
                 + " lastFillePrice: " + lastFillPrice + " clientId: " + clientId + " whyHeld: " + whyHeld);
@@ -217,12 +217,13 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
             return;
         }
 
-        order.setFilledSize(filled);
+        order.setFilledSize(filled.longValue());
         order.setFilledPrice(avgFillPrice);
 
         try {
-            OrderEvent event = OrderManagmentUtil.createOrderEvent(order, status, filled, remaining, avgFillPrice,
-                    permId, parentId, lastFillPrice, clientId, whyHeld, getZoneDateTime());
+            OrderEvent event = OrderManagmentUtil.createOrderEvent(order, status, (int) filled.longValue(),
+                    (int) remaining.longValue(), avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld,
+                    getZoneDateTime());
 
             // Check if this order status has been seen in the last minute
             OrderEvent cachedEvent = orderEventMap.get(order.getOrderId());
@@ -523,84 +524,78 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
 
     protected List<IbOrderAndContract> buildOrderAndContract(TradeOrder order) {
         List<IbOrderAndContract> orderList = new ArrayList<>();
-        IbUtils.throwUnsupportedException();
-        // orderMap.put(order.getOrderId(), order);
 
-        // Contract contract =
-        // ContractBuilderFactory.getContractBuilder(order.getTicker()).buildContract(order.getTicker());
+        orderMap.put(order.getOrderId(), order);
 
-        // Order ibOrder = new Order();
-        // if (order.getType() == TradeOrder.Type.MARKET_ON_OPEN) {
-        // order.setDuration(TradeOrder.Duration.MARKET_ON_OPEN);
-        // }
+        Contract contract = ContractBuilderFactory.getContractBuilder(order.getTicker())
+                .buildContract(order.getTicker());
 
-        // ibOrder.m_action = IbUtils.getAction(order.getTradeDirection());
-        // ibOrder.m_orderType = IbUtils.getOrderType(order.getType());
+        Order ibOrder = new Order();
+        if (order.getType() == TradeOrder.Type.MARKET_ON_OPEN) {
+            order.setDuration(TradeOrder.Duration.MARKET_ON_OPEN);
+        }
 
-        // ibOrder.m_tif = IbUtils.getTif(order.getDuration());
-        // ibOrder.m_orderId = Integer.parseInt(order.getOrderId());
-        // ibOrder.m_totalQuantity = order.getSize();
+        ibOrder.action(IbUtils.getAction(order.getTradeDirection()));
+        ibOrder.orderType(IbUtils.getOrderType(order.getType()));
 
-        // if (order.getGoodAfterTime() != null) {
-        // ibOrder.m_goodAfterTime = getFormattedDate(order.getGoodAfterTime());
-        // }
+        ibOrder.tif(IbUtils.getTif(order.getDuration()));
+        ibOrder.orderId(Integer.parseInt(order.getOrderId()));
+        ibOrder.totalQuantity(com.ib.client.Decimal.get(order.getSize()));
 
-        // if (order.getParentOrderId() != null && order.getParentOrderId().length() >
-        // 0) {
-        // ibOrder.m_parentId = Integer.parseInt(order.getParentOrderId());
-        // }
+        if (order.getGoodAfterTime() != null) {
+            ibOrder.goodAfterTime(getFormattedDate(order.getGoodAfterTime()));
+        }
 
-        // if (order.getDuration() == TradeOrder.Duration.GOOD_UTNIL_TIME) {
-        // if (order.getGoodUntilTime() != null) {
-        // ibOrder.m_goodTillDate = getFormattedDate(order.getGoodUntilTime());
-        // } else {
-        // throw new IllegalStateException("Duration is good-until-time, but no time has
-        // been set in the Order");
-        // }
-        // }
+        if (order.getParentOrderId() != null && order.getParentOrderId().length() > 0) {
+            ibOrder.parentId(Integer.parseInt(order.getParentOrderId()));
+        }
 
-        // if (order.getType() == TradeOrder.Type.LIMIT) {
-        // if (order.getLimitPrice() == null) {
-        // throw new IllegalStateException("Limit price not set for LMT order: " +
-        // order.getOrderId());
-        // }
-        // double limitPrice = QuoteUtil.getBigDecimalValue(order.getTicker(),
-        // order.getLimitPrice()).doubleValue();
-        // ibOrder.m_lmtPrice = limitPrice;
-        // } else if (order.getType() == TradeOrder.Type.STOP) {
-        // if (order.getStopPrice() == null) {
-        // throw new IllegalStateException("Stop price not set for StopLoss order: " +
-        // order.getOrderId());
-        // }
-        // double stopPrice = QuoteUtil.getBigDecimalValue(order.getTicker(),
-        // order.getStopPrice()).doubleValue();
-        // ibOrder.m_auxPrice = stopPrice;
-        // }
+        if (order.getDuration() == TradeOrder.Duration.GOOD_UTNIL_TIME) {
+            if (order.getGoodUntilTime() != null) {
+                ibOrder.goodTillDate(getFormattedDate(order.getGoodUntilTime()));
+            } else {
+                throw new IllegalStateException("Duration is good-until-time, but no time has been set in the Order");
+            }
+        }
 
-        // if (order.getOcaGroup() != null) {
-        // ibOrder.m_ocaGroup = order.getOcaGroup();
-        // }
+        if (order.getType() == TradeOrder.Type.LIMIT) {
+            if (order.getLimitPrice() == null) {
+                throw new IllegalStateException("Limit price not set for LMT order: " + order.getOrderId());
+            }
+            double limitPrice = QuoteUtil.getBigDecimalValue(order.getTicker(), order.getLimitPrice()).doubleValue();
+            ibOrder.lmtPrice(limitPrice);
+        } else if (order.getType() == TradeOrder.Type.STOP) {
+            if (order.getStopPrice() == null) {
+                throw new IllegalStateException("Stop price not set for StopLoss order: " + order.getOrderId());
+            }
+            double stopPrice = QuoteUtil.getBigDecimalValue(order.getTicker(), order.getStopPrice()).doubleValue();
+            ibOrder.auxPrice(stopPrice);
+        }
 
-        // if (order.getReference() != null) {
-        // ibOrder.m_orderRef = order.getReference();
-        // }
+        if (order.getOcaGroup() != null) {
+            ibOrder.ocaGroup(order.getOcaGroup());
+        }
 
-        // //If the order has already been submitted, have TWS transmit immediately,
+        if (order.getReference() != null) {
+            ibOrder.orderRef(order.getReference());
+        }
+
+        // If the order has already been submitted, have TWS transmit immediately,
         // otherwise this order may be
-        // //attched to another order which needs to be submitted first.
-        // ibOrder.m_transmit = order.isSubmitted();
+        // attched to another order which needs to be submitted first.
+        ibOrder.transmit(order.isSubmitted());
 
-        // //the order has now been submitted.
-        // order.setSubmitted(true);
+        // the order has now been submitted.
+        order.setSubmitted(true);
 
-        // orderList.add(new IbOrderAndContract(ibOrder, contract));
-        // for (TradeOrder tradeOrder : order.getChildOrders()) {
-        // orderList.addAll(buildOrderAndContract(tradeOrder));
-        // }
+        orderList.add(new IbOrderAndContract(ibOrder, contract));
+        for (TradeOrder tradeOrder : order.getChildOrders()) {
+            orderList.addAll(buildOrderAndContract(tradeOrder));
+        }
 
-        // if (order.isSubmitChildOrdersFirst()) {
-        // Collections.reverse(orderList);
-        // }
+        if (order.isSubmitChildOrdersFirst()) {
+            Collections.reverse(orderList);
+        }
 
         return orderList;
     }

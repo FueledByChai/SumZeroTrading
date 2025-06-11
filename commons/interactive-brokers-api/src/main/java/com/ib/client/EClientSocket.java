@@ -8,16 +8,16 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-public class EClientSocket extends EClient implements EClientMsgSink  {
+public class EClientSocket extends EClient implements EClientMsgSink {
 
 	protected int m_redirectCount = 0;
 	protected int m_defaultPort;
-    private boolean m_allowRedirect;
-    protected DataInputStream m_dis;
+	private boolean m_allowRedirect;
+	protected DataInputStream m_dis;
 	private boolean m_asyncEConnect = false;
 	private boolean m_connected = false;
 	private Socket m_socket;
-		
+
 	public void setAsyncEConnect(boolean asyncEConnect) {
 		this.m_asyncEConnect = asyncEConnect;
 	}
@@ -32,84 +32,82 @@ public class EClientSocket extends EClient implements EClientMsgSink  {
 
 	@Override
 	protected Builder prepareBuffer() {
-        Builder buf = new Builder( 1024 );
-        if( m_useV100Plus ) {
-            buf.allocateLengthHeader();
-        }
-        return buf;
-    }
+		Builder buf = new Builder(1024);
+		if (m_useV100Plus) {
+			buf.allocateLengthHeader();
+		}
+		return buf;
+	}
 
 	@Override
 	protected void closeAndSend(Builder buf) throws IOException {
-    	if( m_useV100Plus ) {
-    		buf.updateLength( 0 ); // New buffer means length header position is always zero
-    	}
-    	
-    	EMessage msg = new EMessage(buf);
-    	
-    	sendMsg(msg);
-    }
+		if (m_useV100Plus) {
+			buf.updateLength(0); // New buffer means length header position is always zero
+		}
+
+		EMessage msg = new EMessage(buf);
+
+		sendMsg(msg);
+	}
 
 	protected synchronized void eConnect(Socket socket) throws IOException {
-	    // create io streams
-	    m_socketTransport = new ESocket(socket);
-	    m_dis = new DataInputStream(socket.getInputStream());
-	    m_defaultPort = socket.getPort();
-	    m_socket = socket;
-	
-	    sendConnectRequest();
-	
-	    // start reader thread
-	    EReader reader = new EReader(this, m_signal);
-	
-	    if (!m_asyncEConnect) {
-	    	if (!reader.putMessageToQueue())
-	    		return;
+		// create io streams
+		m_socketTransport = new ESocket(socket);
+		m_dis = new DataInputStream(socket.getInputStream());
+		m_defaultPort = socket.getPort();
+		m_socket = socket;
 
-	    	while (m_serverVersion == 0) {
-	    		m_signal.waitForSignal();
-	    		reader.processMsgs();
-	    	}       
-	    }
+		sendConnectRequest();
+
+		// start reader thread
+		EReader reader = new EReader(this, m_signal);
+
+		if (!m_asyncEConnect) {
+			if (!reader.putMessageToQueue())
+				return;
+
+			while (m_serverVersion == 0) {
+				m_signal.waitForSignal();
+				reader.processMsgs();
+			}
+		}
 	}
 
 	public synchronized void eConnect(Socket socket, int clientId) throws IOException {
-	    m_clientId = clientId;
-	    m_redirectCount = 0;
-	    eConnect(socket);
+		m_clientId = clientId;
+		m_redirectCount = 0;
+		eConnect(socket);
 	}
 
-	public synchronized void eConnect( String host, int port, int clientId) {
-	    eConnect(host, port, clientId, false);
+	public synchronized void eConnect(String host, int port, int clientId) {
+		eConnect(host, port, clientId, false);
 	}
 
-	public synchronized void eConnect( String host, int port, int clientId, boolean extraAuth) {
-        try {
-            validateInvalidSymbols(host);
-        }
-        catch(EClientException e) {
-            error(EClientErrors.NO_VALID_ID, e.error(), e.text());
-            return;
-        }
+	public synchronized void eConnect(String host, int port, int clientId, boolean extraAuth) {
+		try {
+			validateInvalidSymbols(host);
+		} catch (EClientException e) {
+			error(EClientErrors.NO_VALID_ID, e.error(), e.text());
+			return;
+		}
 
-	    // already connected?
-	    m_host = checkConnected(host);
-	
-	    m_clientId = clientId;
-	    m_extraAuth = extraAuth;
-	    m_redirectCount = 0;
-	
-	    if(m_host == null){
-	        return;
-	    }
-	    try{
-	        Socket socket = new Socket( m_host, port);
-	        eConnect(socket);
-	    }
-	    catch( Exception e) {
-	    	eDisconnect();
-	        connectionError();
-	    }
+		// already connected?
+		m_host = checkConnected(host);
+
+		m_clientId = clientId;
+		m_extraAuth = extraAuth;
+		m_redirectCount = 0;
+
+		if (m_host == null) {
+			return;
+		}
+		try {
+			Socket socket = new Socket(m_host, port);
+			eConnect(socket);
+		} catch (Exception e) {
+			eDisconnect();
+			connectionError();
+		}
 	}
 
 	public boolean allowRedirect() {
@@ -122,103 +120,105 @@ public class EClientSocket extends EClient implements EClientMsgSink  {
 
 	@Override
 	public synchronized void redirect(String newAddress) {
-	    if( m_useV100Plus ) {
-	    	if (!m_allowRedirect) {
-	    		m_eWrapper.error(EClientErrors.NO_VALID_ID, EClientErrors.CONNECT_FAIL.code(), EClientErrors.CONNECT_FAIL.msg(), null);
-	    		return;
-	    	}
-	    	
-	        ++m_redirectCount;
-	        
-	        if ( m_redirectCount > REDIRECT_COUNT_MAX ) {
-	            eDisconnect();
-	            m_eWrapper.error( "Redirect count exceeded" );
-	            return;
-	        }
-	                    
-	        eDisconnect( false );
-	        
-	      	try {
-				performRedirect( newAddress, m_defaultPort );
+		if (m_useV100Plus) {
+			if (!m_allowRedirect) {
+				m_eWrapper.error(EClientErrors.NO_VALID_ID, EClientErrors.CONNECT_FAIL.code(),
+						EClientErrors.CONNECT_FAIL.msg(), null);
+				return;
+			}
+
+			++m_redirectCount;
+
+			if (m_redirectCount > REDIRECT_COUNT_MAX) {
+				eDisconnect();
+				m_eWrapper.error("Redirect count exceeded");
+				return;
+			}
+
+			eDisconnect(false);
+
+			try {
+				performRedirect(newAddress, m_defaultPort);
 			} catch (IOException e) {
 				m_eWrapper.error(e);
 			}
-	    }
+		}
 	}
 
 	@Override
 	public synchronized void serverVersion(int version, String time) {
 		m_serverVersion = version;
-		m_TwsTime = time;	
-		
-		if( m_useV100Plus && (m_serverVersion < MIN_VERSION || m_serverVersion > MAX_VERSION) ) {
+		m_TwsTime = time;
+		System.err.println("Server Version: " + m_serverVersion + " Minimum Version: " + MIN_VERSION
+				+ " Maximum Version: " + MAX_VERSION);
+		if (m_useV100Plus && (m_serverVersion < MIN_VERSION || m_serverVersion > MAX_VERSION)) {
 			eDisconnect();
-			m_eWrapper.error(EClientErrors.NO_VALID_ID, EClientErrors.UNSUPPORTED_VERSION.code(), EClientErrors.UNSUPPORTED_VERSION.msg(), null);
+			m_eWrapper.error(EClientErrors.NO_VALID_ID, EClientErrors.UNSUPPORTED_VERSION.code(),
+					EClientErrors.UNSUPPORTED_VERSION.msg(), null);
 			return;
 		}
-		
-	    if( m_serverVersion < MIN_SERVER_VER_SUPPORTED) {
-	    	eDisconnect();
-	        m_eWrapper.error( EClientErrors.NO_VALID_ID, EClientErrors.UPDATE_TWS.code(), EClientErrors.UPDATE_TWS.msg(), null);
-	        return;
-	    }
 
-	    if ( m_serverVersion < MIN_SERVER_VER_LINKING) {
+		if (m_serverVersion < MIN_SERVER_VER_SUPPORTED) {
+			eDisconnect();
+			m_eWrapper.error(EClientErrors.NO_VALID_ID, EClientErrors.UPDATE_TWS.code(), EClientErrors.UPDATE_TWS.msg(),
+					null);
+			return;
+		}
+
+		if (m_serverVersion < MIN_SERVER_VER_LINKING) {
 			try {
-				send( m_clientId);
+				send(m_clientId);
 			} catch (IOException e) {
 				m_eWrapper.error(e);
 			}
 		}
-	    
-	    
-	    // set connected flag
-	    m_connected = true;       
 
-	    if (!m_asyncEConnect)
-	    	startAPI();
+		// set connected flag
+		m_connected = true;
+
+		if (!m_asyncEConnect)
+			startAPI();
 	}
 
-	protected synchronized void performRedirect( String address, int defaultPort ) throws IOException {
-	    System.out.println("Server Redirect: " + address);
-	    
-	    // Get host:port from address string and reconnect (note: port is optional)
-	    String[] array = address.split(":");
-	    m_host = array[0]; // reset connected host
-	    int newPort;
-	    try {
-	        newPort = ( array.length > 1 ) ? Integer.parseInt(array[1]) : defaultPort;
-	    }
-	    catch ( NumberFormatException e ) {
-	        System.out.println( "Warning: redirect port is invalid, using default port");
-	        newPort = defaultPort;
-	    }
-	    eConnect( new Socket( m_host, newPort ) );
+	protected synchronized void performRedirect(String address, int defaultPort) throws IOException {
+		System.out.println("Server Redirect: " + address);
+
+		// Get host:port from address string and reconnect (note: port is optional)
+		String[] array = address.split(":");
+		m_host = array[0]; // reset connected host
+		int newPort;
+		try {
+			newPort = (array.length > 1) ? Integer.parseInt(array[1]) : defaultPort;
+		} catch (NumberFormatException e) {
+			System.out.println("Warning: redirect port is invalid, using default port");
+			newPort = defaultPort;
+		}
+		eConnect(new Socket(m_host, newPort));
 	}
 
 	@Override
-    public synchronized void eDisconnect() {
-	    eDisconnect( true );
+	public synchronized void eDisconnect() {
+		eDisconnect(true);
 	}
 
-	private synchronized void eDisconnect( boolean resetState ) {
-	    // not connected?
-	    if( m_dis == null && m_socketTransport == null) {
-	        return;
-	    }
-	
-	    if ( resetState ) {
-	    	m_connected = false;
-	        m_extraAuth = false;
-	        m_clientId = -1;
-	        m_serverVersion = 0;
-	        m_TwsTime = "";
-	        m_redirectCount = 0;
-	    }
-	
-	    FilterInputStream dis = m_dis;
-	    m_dis = null;
-	    if (m_socketTransport != null) {
+	private synchronized void eDisconnect(boolean resetState) {
+		// not connected?
+		if (m_dis == null && m_socketTransport == null) {
+			return;
+		}
+
+		if (resetState) {
+			m_connected = false;
+			m_extraAuth = false;
+			m_clientId = -1;
+			m_serverVersion = 0;
+			m_TwsTime = "";
+			m_redirectCount = 0;
+		}
+
+		FilterInputStream dis = m_dis;
+		m_dis = null;
+		if (m_socketTransport != null) {
 			try {
 				m_socketTransport.close();
 			} catch (IOException ignored) {
@@ -226,14 +226,14 @@ public class EClientSocket extends EClient implements EClientMsgSink  {
 				m_socketTransport = null;
 			}
 		}
-	
-	    try {
-	        if (dis != null)
-	        	dis.close();
-	    } catch (Exception ignored) {
-	    }
-	    // Notify client: connection closed
-	    m_eWrapper.connectionClosed();
+
+		try {
+			if (dis != null)
+				dis.close();
+		} catch (Exception ignored) {
+		}
+		// Notify client: connection closed
+		m_eWrapper.connectionClosed();
 	}
 
 	public int read(byte[] buf, int off, int len) throws IOException {

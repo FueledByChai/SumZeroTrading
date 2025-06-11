@@ -30,7 +30,7 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
   <groupId>com.sumzerotrading</groupId>
   <artifactId>sumzero-historical-data-api</artifactId>
-  <version>0.1.7-SNAPSHOT</version>
+  <version>0.2.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>sumzero-historical-data-api</name>

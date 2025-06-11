@@ -40,11 +40,11 @@ public class TradingExampleWithOrderStatusListener implements OrderEventListener
     protected Logger logger = LoggerFactory.getLogger(TradingExampleWithOrderStatusListener.class);
 
     public void start() {
-        //Connect to the Interactive Brokers TWS Client
+        // Connect to the Interactive Brokers TWS Client
         logger.debug("Connecting to IB Client");
         ibClient = InteractiveBrokersClient.getInstance("localhost", 7999, 1);
         ibClient.connect();
-        logger.debug("IB client connected" );
+        logger.debug("IB client connected");
     }
 
     public void placeFuturesOrder() {
@@ -52,7 +52,7 @@ public class TradingExampleWithOrderStatusListener implements OrderEventListener
         ibClient.addOrderStatusListener(this);
         ibClient.connect();
 
-        //Create a crude oil futures ticker
+        // Create a crude oil futures ticker
         FuturesTicker futuresTicker = new FuturesTicker();
         futuresTicker.setSymbol("CL");
         futuresTicker.setExpiryMonth(5);
@@ -64,7 +64,7 @@ public class TradingExampleWithOrderStatusListener implements OrderEventListener
         String orderId = ibClient.getNextOrderId();
         int contracts = 1;
 
-        //Create the order and send to Interactive Brokers
+        // Create the order and send to Interactive Brokers
         TradeOrder order = new TradeOrder(orderId, futuresTicker, contracts, TradeDirection.BUY);
         order.setGoodAfterTime(date);
         ibClient.placeOrder(order);
@@ -74,7 +74,6 @@ public class TradingExampleWithOrderStatusListener implements OrderEventListener
         InteractiveBrokersClientInterface ibClient = InteractiveBrokersClient.getInstance("localhost", 7999, 1);
         ibClient.addOrderStatusListener(this);
         ibClient.connect();
-        
 
         StockTicker amazonTicker = new StockTicker("123");
         String orderId = ibClient.getNextOrderId();
@@ -86,7 +85,7 @@ public class TradingExampleWithOrderStatusListener implements OrderEventListener
     }
 
     public void placeCurrencyOrder() {
-        InteractiveBrokersClientInterface ibClient = InteractiveBrokersClient.getInstance("localhost", 7999, 1);
+        InteractiveBrokersClientInterface ibClient = InteractiveBrokersClient.getInstance("localhost", 7777, 1);
         ibClient.connect();
         CurrencyTicker eurTicker = new CurrencyTicker();
         eurTicker.setSymbol("EUR");
@@ -103,15 +102,13 @@ public class TradingExampleWithOrderStatusListener implements OrderEventListener
 
     @Override
     public void orderEvent(OrderEvent event) {
-        logger.info( "Received Order Event: " + event );
+        logger.info("Received Order Event: " + event);
     }
-    
-    
-    
 
     public static void main(String[] args) throws Exception {
         TradingExampleWithOrderStatusListener example = new TradingExampleWithOrderStatusListener();
-        example.start();
-        //example.placeFuturesOrder();
+        // example.start();
+        example.placeCurrencyOrder();
+        // example.placeFuturesOrder();
     }
 }

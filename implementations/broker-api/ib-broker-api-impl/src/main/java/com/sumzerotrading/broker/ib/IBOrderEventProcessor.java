@@ -20,50 +20,48 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 package com.sumzerotrading.broker.ib;
 
-import com.sumzerotrading.broker.order.OrderEvent;
 import java.util.concurrent.BlockingQueue;
 //import org.apache.log4j.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.sumzerotrading.broker.order.OrderEvent;
 
 /**
  *
  * @author Rob Terpilowski
  */
-public class IBOrderEventProcessor implements Runnable  {
+public class IBOrderEventProcessor implements Runnable {
 
-   // protected Logger logger = Logger.getLogger( IBOrderEventProcessor.class );
+    protected static final Logger logger = LoggerFactory.getLogger(IBOrderEventProcessor.class);
     protected BlockingQueue<OrderEvent> orderEventQueue;
     protected volatile boolean shouldRun = false;
     protected InteractiveBrokersBroker broker;
-    
-    public IBOrderEventProcessor( BlockingQueue<OrderEvent> orderEventQueue, InteractiveBrokersBroker broker ) {
+
+    public IBOrderEventProcessor(BlockingQueue<OrderEvent> orderEventQueue, InteractiveBrokersBroker broker) {
         this.orderEventQueue = orderEventQueue;
         this.broker = broker;
     }
-    
-    
+
     public void startProcessor() {
         shouldRun = true;
-        Thread thread = new Thread( this );
+        Thread thread = new Thread(this);
         thread.start();
     }
-    
-    
+
     public void stopProcessor() {
         shouldRun = false;
     }
-    
-    
+
     public void run() {
-        while( shouldRun ) {
+        while (shouldRun) {
             try {
-                broker.fireOrderEvent( orderEventQueue.take() );
-            } catch( Exception ex ) {
-                ex.printStackTrace();
-             //   logger.error(ex, ex);
+                broker.fireOrderEvent(orderEventQueue.take());
+            } catch (Exception ex) {
+                logger.error(ex.getMessage(), ex);
             }
         }
     }
-    
-    
-    
+
 }

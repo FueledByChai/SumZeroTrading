@@ -99,7 +99,11 @@ public class IBConnection extends AbstractIBConnection {
     public void connectAck() {
         logger.info("connectAck called.");
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.connectAck();
+            try {
+                delegate.connectAck();
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.connectAck()", ex);
+            }
         });
     }
 
@@ -107,7 +111,11 @@ public class IBConnection extends AbstractIBConnection {
     public void tickGeneric(int tickerId, int tickType, double value) {
         logger.info("tickGeneric: " + tickerId + ", " + tickType + ", " + value);
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.tickGeneric(tickerId, tickType, value);
+            try {
+                delegate.tickGeneric(tickerId, tickType, value);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.tickGeneric()", ex);
+            }
         });
     }
 
@@ -115,7 +123,11 @@ public class IBConnection extends AbstractIBConnection {
     public void tickPrice(int tickerId, int field, double price, TickAttrib attrib) {
         logger.info("tickPrice: " + tickerId + ", " + field + ", " + price + ", " + attrib);
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.tickPrice(tickerId, field, price, attrib);
+            try {
+                delegate.tickPrice(tickerId, field, price, attrib);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.tickPrice()", ex);
+            }
         });
     }
 
@@ -123,7 +135,11 @@ public class IBConnection extends AbstractIBConnection {
     public void tickSize(int tickerId, int field, Decimal size) {
         logger.info("tickSize: " + tickerId + ", " + field + ", " + size);
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.tickSize(tickerId, field, size);
+            try {
+                delegate.tickSize(tickerId, field, size);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.tickSize()", ex);
+            }
         });
     }
 
@@ -148,8 +164,12 @@ public class IBConnection extends AbstractIBConnection {
     public void tickEFP(int tickerId, int tickType, double basisPoints, String formattedBasisPoints,
             double impliedFuture, int holdDays, String futureExpiry, double dividendImpact, double dividendsToExpiry) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.tickEFP(tickerId, tickType, basisPoints, formattedBasisPoints, impliedFuture, holdDays,
-                    futureExpiry, dividendImpact, dividendsToExpiry);
+            try {
+                delegate.tickEFP(tickerId, tickType, basisPoints, formattedBasisPoints, impliedFuture, holdDays,
+                        futureExpiry, dividendImpact, dividendsToExpiry);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.tickEFP()", ex);
+            }
         });
     }
 
@@ -157,29 +177,45 @@ public class IBConnection extends AbstractIBConnection {
     public void orderStatus(int orderId, String status, Decimal filled, Decimal remaining, double avgFillPrice,
             int permId, int parentId, double lastFillPrice, int clientId, String whyHeld, double mktCapPrice) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.orderStatus(orderId, status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice,
-                    clientId, whyHeld, mktCapPrice);
+            try {
+                delegate.orderStatus(orderId, status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice,
+                        clientId, whyHeld, mktCapPrice);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.orderStatus()", ex);
+            }
         });
     }
 
     @Override
     public void openOrder(int orderId, Contract contract, Order order, OrderState orderState) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.openOrder(orderId, contract, order, orderState);
+            try {
+                delegate.openOrder(orderId, contract, order, orderState);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.openOrder()", ex);
+            }
         });
     }
 
     @Override
     public void openOrderEnd() {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.openOrderEnd();
+            try {
+                delegate.openOrderEnd();
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.openOrderEnd()", ex);
+            }
         });
     }
 
     @Override
     public void updateAccountValue(String key, String value, String currency, String accountName) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.updateAccountValue(key, value, currency, accountName);
+            try {
+                delegate.updateAccountValue(key, value, currency, accountName);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.updateAccountValue()", ex);
+            }
         });
     }
 
@@ -187,78 +223,122 @@ public class IBConnection extends AbstractIBConnection {
     public void updatePortfolio(Contract contract, Decimal position, double marketPrice, double marketValue,
             double averageCost, double unrealizedPNL, double realizedPNL, String accountName) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.updatePortfolio(contract, position, marketPrice, marketValue, averageCost, unrealizedPNL,
-                    realizedPNL, accountName);
+            try {
+                delegate.updatePortfolio(contract, position, marketPrice, marketValue, averageCost, unrealizedPNL,
+                        realizedPNL, accountName);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.updatePortfolio()", ex);
+            }
         });
     }
 
     @Override
     public void updateAccountTime(String timeStamp) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.updateAccountTime(timeStamp);
+            try {
+                delegate.updateAccountTime(timeStamp);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.updateAccountTime()", ex);
+            }
         });
     }
 
     @Override
     public void accountDownloadEnd(String accountName) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.accountDownloadEnd(accountName);
+            try {
+                delegate.accountDownloadEnd(accountName);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.accountDownloadEnd()", ex);
+            }
         });
     }
 
     @Override
     public void nextValidId(int orderId) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.nextValidId(orderId);
+            try {
+                delegate.nextValidId(orderId);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.nextValidId()", ex);
+            }
         });
     }
 
     @Override
     public void contractDetails(int reqId, ContractDetails contractDetails) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.contractDetails(reqId, contractDetails);
+            try {
+                delegate.contractDetails(reqId, contractDetails);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.contractDetails()", ex);
+            }
         });
     }
 
     @Override
     public void bondContractDetails(int reqId, ContractDetails contractDetails) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.bondContractDetails(reqId, contractDetails);
+            try {
+                delegate.bondContractDetails(reqId, contractDetails);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.bondContractDetails()", ex);
+            }
         });
     }
 
     @Override
     public void contractDetailsEnd(int reqId) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.contractDetailsEnd(reqId);
+            try {
+                delegate.contractDetailsEnd(reqId);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.contractDetailsEnd()", ex);
+            }
         });
     }
 
     @Override
     public void execDetails(int reqId, Contract contract, Execution execution) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.execDetails(reqId, contract, execution);
+            try {
+                delegate.execDetails(reqId, contract, execution);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.execDetails()", ex);
+            }
         });
     }
 
     @Override
     public void execDetailsEnd(int reqId) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.execDetailsEnd(reqId);
+            try {
+                delegate.execDetailsEnd(reqId);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.execDetailsEnd()", ex);
+            }
         });
     }
 
     @Override
     public void updateNewsBulletin(int msgId, int msgType, String message, String origExchange) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.updateNewsBulletin(msgId, msgType, message, origExchange);
+            try {
+                delegate.updateNewsBulletin(msgId, msgType, message, origExchange);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.updateNewsBulletin()", ex);
+            }
         });
     }
 
     @Override
     public void updateMktDepth(int tickerId, int position, int operation, int side, double price, Decimal size) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.updateMktDepth(tickerId, position, operation, side, price, size);
+            try {
+                delegate.updateMktDepth(tickerId, position, operation, side, price, size);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.updateMktDepth()", ex);
+            }
         });
     }
 
@@ -266,49 +346,77 @@ public class IBConnection extends AbstractIBConnection {
     public void updateMktDepthL2(int tickerId, int position, String marketMaker, int operation, int side, double price,
             Decimal size, boolean isSmartDepth) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.updateMktDepthL2(tickerId, position, marketMaker, operation, side, price, size, isSmartDepth);
+            try {
+                delegate.updateMktDepthL2(tickerId, position, marketMaker, operation, side, price, size, isSmartDepth);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.updateMktDepthL2()", ex);
+            }
         });
     }
 
     @Override
     public void managedAccounts(String accountsList) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.managedAccounts(accountsList);
+            try {
+                delegate.managedAccounts(accountsList);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.managedAccounts()", ex);
+            }
         });
     }
 
     @Override
     public void receiveFA(int faDataType, String xml) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.receiveFA(faDataType, xml);
+            try {
+                delegate.receiveFA(faDataType, xml);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.receiveFA()", ex);
+            }
         });
     }
 
     @Override
     public void scannerParameters(String xml) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.scannerParameters(xml);
+            try {
+                delegate.scannerParameters(xml);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.scannerParameters()", ex);
+            }
         });
     }
 
     @Override
     public void historicalData(int reqId, Bar bar) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.historicalData(reqId, bar);
+            try {
+                delegate.historicalData(reqId, bar);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.historicalData()", ex);
+            }
         });
     }
 
     @Override
     public void historicalDataEnd(int reqId, String startDateStr, String endDateStr) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.historicalDataEnd(reqId, startDateStr, endDateStr);
+            try {
+                delegate.historicalDataEnd(reqId, startDateStr, endDateStr);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.historicalDataEnd()", ex);
+            }
         });
     }
 
     @Override
     public void historicalDataUpdate(int reqId, Bar bar) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.historicalDataUpdate(reqId, bar);
+            try {
+                delegate.historicalDataUpdate(reqId, bar);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.historicalDataUpdate()", ex);
+            }
         });
     }
 
@@ -316,14 +424,22 @@ public class IBConnection extends AbstractIBConnection {
     public void scannerData(int reqId, int rank, ContractDetails contractDetails, String distance, String benchmark,
             String projection, String legsStr) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.scannerData(reqId, rank, contractDetails, distance, benchmark, projection, legsStr);
+            try {
+                delegate.scannerData(reqId, rank, contractDetails, distance, benchmark, projection, legsStr);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.scannerData()", ex);
+            }
         });
     }
 
     @Override
     public void scannerDataEnd(int reqId) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.scannerDataEnd(reqId);
+            try {
+                delegate.scannerDataEnd(reqId);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.scannerDataEnd()", ex);
+            }
         });
     }
 
@@ -331,7 +447,11 @@ public class IBConnection extends AbstractIBConnection {
     public void currentTime(long time) {
         logger.info("currentTime: " + time);
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.currentTime(time);
+            try {
+                delegate.currentTime(time);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.currentTime()", ex);
+            }
         });
     }
 
@@ -339,14 +459,22 @@ public class IBConnection extends AbstractIBConnection {
     public void realtimeBar(int reqId, long time, double open, double high, double low, double close, Decimal volume,
             Decimal wap, int count) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.realtimeBar(reqId, time, open, high, low, close, volume, wap, count);
+            try {
+                delegate.realtimeBar(reqId, time, open, high, low, close, volume, wap, count);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.realtimeBar()", ex);
+            }
         });
     }
 
     @Override
     public void fundamentalData(int reqId, String data) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.fundamentalData(reqId, data);
+            try {
+                delegate.fundamentalData(reqId, data);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.fundamentalData()", ex);
+            }
         });
     }
 
@@ -354,14 +482,22 @@ public class IBConnection extends AbstractIBConnection {
     public void tickSnapshotEnd(int reqId) {
         logger.info("tickSnapshotEnd: " + reqId);
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.tickSnapshotEnd(reqId);
+            try {
+                delegate.tickSnapshotEnd(reqId);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.tickSnapshotEnd()", ex);
+            }
         });
     }
 
     @Override
     public void deltaNeutralValidation(int reqId, DeltaNeutralContract deltaNeutralContract) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.deltaNeutralValidation(reqId, deltaNeutralContract);
+            try {
+                delegate.deltaNeutralValidation(reqId, deltaNeutralContract);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.deltaNeutralValidation()", ex);
+            }
         });
     }
 
@@ -369,21 +505,33 @@ public class IBConnection extends AbstractIBConnection {
     public void marketDataType(int reqId, int marketDataType) {
         logger.info("marketDataType: " + reqId + ", " + marketDataType);
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.marketDataType(reqId, marketDataType);
+            try {
+                delegate.marketDataType(reqId, marketDataType);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.marketDataType()", ex);
+            }
         });
     }
 
     @Override
     public void positionEnd() {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.positionEnd();
+            try {
+                delegate.positionEnd();
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.positionEnd()", ex);
+            }
         });
     }
 
     @Override
     public void commissionReport(CommissionReport commissionReport) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.commissionReport(commissionReport);
+            try {
+                delegate.commissionReport(commissionReport);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.commissionReport()", ex);
+            }
         });
     }
 
@@ -391,7 +539,11 @@ public class IBConnection extends AbstractIBConnection {
     public void position(String account, Contract contract, Decimal pos, double avgCost) {
         logger.info("position: " + account + ", " + contract + ", " + pos + ", " + avgCost);
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.position(account, contract, pos, avgCost);
+            try {
+                delegate.position(account, contract, pos, avgCost);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.position()", ex);
+            }
         });
     }
 
@@ -399,28 +551,44 @@ public class IBConnection extends AbstractIBConnection {
     public void positionMulti(int reqId, String account, String modelCode, Contract contract, Decimal pos,
             double avgCost) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.positionMulti(reqId, account, modelCode, contract, pos, avgCost);
+            try {
+                delegate.positionMulti(reqId, account, modelCode, contract, pos, avgCost);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.positionMulti()", ex);
+            }
         });
     }
 
     @Override
     public void positionMultiEnd(int reqId) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.positionMultiEnd(reqId);
+            try {
+                delegate.positionMultiEnd(reqId);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.positionMultiEnd()", ex);
+            }
         });
     }
 
     @Override
     public void accountSummary(int reqId, String account, String tag, String value, String currency) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.accountSummary(reqId, account, tag, value, currency);
+            try {
+                delegate.accountSummary(reqId, account, tag, value, currency);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.accountSummary()", ex);
+            }
         });
     }
 
     @Override
     public void accountSummaryEnd(int reqId) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.accountSummaryEnd(reqId);
+            try {
+                delegate.accountSummaryEnd(reqId);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.accountSummaryEnd()", ex);
+            }
         });
     }
 
@@ -428,7 +596,11 @@ public class IBConnection extends AbstractIBConnection {
     public void verifyMessageAPI(String apiData) {
         logger.info("verifyMessageAPI: " + apiData);
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.verifyMessageAPI(apiData);
+            try {
+                delegate.verifyMessageAPI(apiData);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.verifyMessageAPI()", ex);
+            }
         });
     }
 
@@ -436,21 +608,33 @@ public class IBConnection extends AbstractIBConnection {
     public void verifyCompleted(boolean isSuccessful, String errorText) {
         logger.info("verifyCompleted: isSuccessful=" + isSuccessful + ", errorText=" + errorText);
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.verifyCompleted(isSuccessful, errorText);
+            try {
+                delegate.verifyCompleted(isSuccessful, errorText);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.verifyCompleted()", ex);
+            }
         });
     }
 
     @Override
     public void displayGroupList(int reqId, String groups) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.displayGroupList(reqId, groups);
+            try {
+                delegate.displayGroupList(reqId, groups);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.displayGroupList()", ex);
+            }
         });
     }
 
     @Override
     public void displayGroupUpdated(int reqId, String contractInfo) {
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.displayGroupUpdated(reqId, contractInfo);
+            try {
+                delegate.displayGroupUpdated(reqId, contractInfo);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.displayGroupUpdated()", ex);
+            }
         });
     }
 
@@ -458,7 +642,11 @@ public class IBConnection extends AbstractIBConnection {
     public void error(Exception e) {
         logger.error("Error occurred: ", e);
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.error(e);
+            try {
+                delegate.error(e);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.error(Exception)", ex);
+            }
         });
     }
 
@@ -466,7 +654,11 @@ public class IBConnection extends AbstractIBConnection {
     public void error(String str) {
         logger.error("Error occurred: " + str);
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.error(str);
+            try {
+                delegate.error(str);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.error(String)", ex);
+            }
         });
     }
 
@@ -475,7 +667,11 @@ public class IBConnection extends AbstractIBConnection {
         logger.error("Error occurred: id=" + id + ", errorCode=" + errorCode + ", errorMsg=" + errorMsg
                 + ", advancedOrderRejectJson=" + advancedOrderRejectJson);
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.error(id, errorCode, errorMsg, advancedOrderRejectJson);
+            try {
+                delegate.error(id, errorCode, errorMsg, advancedOrderRejectJson);
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.error(int, int, String, String)", ex);
+            }
         });
     }
 
@@ -483,7 +679,11 @@ public class IBConnection extends AbstractIBConnection {
     public void connectionClosed() {
         logger.info("Connection closed.");
         ibConnectionDelegates.stream().forEach((delegate) -> {
-            delegate.connectionClosed();
+            try {
+                delegate.connectionClosed();
+            } catch (Exception ex) {
+                logger.error("Exception in delegate.connectionClosed()", ex);
+            }
         });
     }
 

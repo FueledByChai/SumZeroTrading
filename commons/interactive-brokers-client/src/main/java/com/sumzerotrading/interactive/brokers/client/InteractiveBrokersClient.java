@@ -96,7 +96,7 @@ public class InteractiveBrokersClient implements InteractiveBrokersClientInterfa
 
     @Override
     public void connect() {
-        logger.info("connecting");
+        logger.info("connecting to Interactive Brokers client");
         ibSocket.connect();
         broker.connect();
         historicalDataProvider.connect();

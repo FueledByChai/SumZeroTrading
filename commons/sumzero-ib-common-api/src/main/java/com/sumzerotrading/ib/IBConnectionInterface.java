@@ -26,25 +26,22 @@ import com.ib.client.EWrapper;
  *
  * @author Rob Terpilowski
  */
-public interface IBConnectionInterface extends EWrapper, EReaderSignal {
-    
-    
-    public void setClientId( int clientId );
-    
-    public void setHost( String host );
-    
-    public void setPort( int port );
-    
+public interface IBConnectionInterface extends EWrapper {
+
+    public void setClientId(int clientId);
+
+    public void setHost(String host);
+
+    public void setPort(int port);
+
     public int getClientId();
-    
+
     public String getHost();
-    
+
     public int getPort();
 
     public void addIbConnectionDelegate(IBConnectionInterface delegate);
 
     public void removeIbConnectionDelegate(IBConnectionInterface delegate);
-
-
 
 }
