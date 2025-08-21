@@ -20,9 +20,11 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 package com.sumzerotrading.broker;
 
-import com.sumzerotrading.data.Ticker;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Objects;
+
+import com.sumzerotrading.data.Ticker;
 
 /**
  * Defines a Position held at the broker.
@@ -30,30 +32,52 @@ import java.util.Objects;
  * @author RobTerpilowski
  */
 public class Position implements Serializable {
-    
-    
+
     public static final long serialVersionUID = 1L;
-    
+
     protected Ticker ticker;
-    protected int size;
-    protected double averageCost;
+    protected BigDecimal size;
+    protected BigDecimal averageCost;
+    protected BigDecimal liquidationPrice;
 
     /**
-     * The ticker and the position size.  Negative position sizes indicate a short position
+     * The ticker and the position size. Negative position sizes indicate a short
+     * position
      * 
-     * @param ticker The ticker held.
-     * @param size The size of the position
+     * @param ticker      The ticker held.
+     * @param size        The size of the position
      * @param averageCost the average price the position was acquired at.
      */
-    public Position(Ticker ticker, int size, double averageCost) {
+    public Position(Ticker ticker, BigDecimal size, BigDecimal averageCost) {
         this.ticker = ticker;
         this.size = size;
         this.averageCost = averageCost;
     }
 
-    
+    public Position(Ticker ticker) {
+        this.ticker = ticker;
+        this.size = BigDecimal.ZERO;
+        this.averageCost = BigDecimal.ZERO;
+    }
+
+    public Position setSize(BigDecimal size) {
+        this.size = size;
+        return this;
+    }
+
+    public Position setAverageCost(BigDecimal averageCost) {
+        this.averageCost = averageCost;
+        return this;
+    }
+
+    public Position setLiquidationPrice(BigDecimal liquidationPrice) {
+        this.liquidationPrice = liquidationPrice;
+        return this;
+    }
+
     /**
      * Get the ticker for this position
+     * 
      * @return The ticker for this position
      */
     public Ticker getTicker() {
@@ -61,59 +85,74 @@ public class Position implements Serializable {
     }
 
     /**
-     * Gets the size of the position.  Negative sizes indicate short positions.
+     * Gets the size of the position. Negative sizes indicate short positions.
+     * 
      * @return The position size.
      */
-    public int getSize() {
+    public BigDecimal getSize() {
         return size;
     }
 
     /**
      * Gets the average price this position was acquired at.
+     * 
      * @return The average price the position was acquired at.
      */
-    public double getAverageCost() {
+    public BigDecimal getAverageCost() {
         return averageCost;
+    }
+
+    public BigDecimal getLiquidationPrice() {
+        return liquidationPrice;
     }
 
     @Override
     public int hashCode() {
-        int hash = 7;
-        hash = 53 * hash + Objects.hashCode(this.ticker);
-        hash = 53 * hash + this.size;
-        hash = 53 * hash + (int) (Double.doubleToLongBits(this.averageCost) ^ (Double.doubleToLongBits(this.averageCost) >>> 32));
-        return hash;
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((ticker == null) ? 0 : ticker.hashCode());
+        result = prime * result + ((size == null) ? 0 : size.hashCode());
+        result = prime * result + ((averageCost == null) ? 0 : averageCost.hashCode());
+        result = prime * result + ((liquidationPrice == null) ? 0 : liquidationPrice.hashCode());
+        return result;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
+        if (this == obj)
             return true;
-        }
-        if (obj == null) {
+        if (obj == null)
             return false;
-        }
-        if (getClass() != obj.getClass()) {
+        if (getClass() != obj.getClass())
             return false;
-        }
-        final Position other = (Position) obj;
-        if (this.size != other.size) {
+        Position other = (Position) obj;
+        if (ticker == null) {
+            if (other.ticker != null)
+                return false;
+        } else if (!ticker.equals(other.ticker))
             return false;
-        }
-        if (Double.doubleToLongBits(this.averageCost) != Double.doubleToLongBits(other.averageCost)) {
+        if (size == null) {
+            if (other.size != null)
+                return false;
+        } else if (!size.equals(other.size))
             return false;
-        }
-        if (!Objects.equals(this.ticker, other.ticker)) {
+        if (averageCost == null) {
+            if (other.averageCost != null)
+                return false;
+        } else if (!averageCost.equals(other.averageCost))
             return false;
-        }
+        if (liquidationPrice == null) {
+            if (other.liquidationPrice != null)
+                return false;
+        } else if (!liquidationPrice.equals(other.liquidationPrice))
+            return false;
         return true;
     }
 
-
-
     @Override
     public String toString() {
-        return "Position{" + "ticker=" + ticker + ", size=" + size + ", averageCost=" + averageCost + '}';
+        return "Position [ticker=" + ticker + ", size=" + size + ", averageCost=" + averageCost + ", liquidationPrice="
+                + liquidationPrice + "]";
     }
-    
+
 }

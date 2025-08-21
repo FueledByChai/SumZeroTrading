@@ -40,5 +40,6 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         <module>collective2-broker-api-impl</module>
         <module>bitmex-broker-api-impl</module>
         <module>dydx-broker-api-impl</module>
+        <module>paradex-broker-api-impl</module>
     </modules>
 </project>

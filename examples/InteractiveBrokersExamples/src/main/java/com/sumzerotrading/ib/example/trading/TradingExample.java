@@ -36,18 +36,16 @@ public class TradingExample {
     protected Logger logger = LoggerFactory.getLogger(TradingExample.class);
 
     public void start() {
-        //Connect to the Interactive Brokers TWS Client
+        // Connect to the Interactive Brokers TWS Client
         logger.debug("Connecting to IB Client");
-        ibClient = InteractiveBrokersClient.getInstance("localhost", 7999, 1);
+        ibClient = InteractiveBrokersClient.getInstance("localhost", 7777, 1);
         ibClient.connect();
-        logger.debug("IB client connected" );
+        logger.debug("IB client connected");
     }
 
     public void placeFuturesOrder() {
-        InteractiveBrokersClientInterface ibClient = InteractiveBrokersClient.getInstance("localhost", 7999, 1);
-        ibClient.connect();
 
-        //Create a crude oil futures ticker
+        // Create a crude oil futures ticker
         FuturesTicker futuresTicker = new FuturesTicker();
         futuresTicker.setSymbol("CL");
         futuresTicker.setExpiryMonth(4);
@@ -57,16 +55,14 @@ public class TradingExample {
         String orderId = ibClient.getNextOrderId();
         int contracts = 5;
 
-        //Create the order and send to Interactive Brokers
+        // Create the order and send to Interactive Brokers
         TradeOrder order = new TradeOrder(orderId, futuresTicker, contracts, TradeDirection.BUY);
         order.setType(TradeOrder.Type.LIMIT);
         order.setLimitPrice(32.50);
         ibClient.placeOrder(order);
     }
- 
+
     public void placeEquityOrder() {
-        InteractiveBrokersClientInterface ibClient = InteractiveBrokersClient.getInstance("localhost", 7999, 1);
-        ibClient.connect();
 
         StockTicker amazonTicker = new StockTicker("QQQ");
         String orderId = ibClient.getNextOrderId();
@@ -74,29 +70,35 @@ public class TradingExample {
 
         TradeOrder order = new TradeOrder(orderId, amazonTicker, shares, TradeDirection.SELL);
 
-        //ibClient.placeOrder(order);
+        // ibClient.placeOrder(order);
         ibClient.getOpenPositions();
     }
 
-    public void placeCurrencyOrder() {
-        InteractiveBrokersClientInterface ibClient = InteractiveBrokersClient.getInstance("localhost", 7999, 1);
-        ibClient.connect();
+    public void placeCurrencyOrder() throws Exception {
+        logger.info("Placing currency order...");
         CurrencyTicker eurTicker = new CurrencyTicker();
         eurTicker.setSymbol("EUR");
         eurTicker.setCurrency("USD");
         eurTicker.setExchange(Exchange.IDEALPRO);
+        logger.info("Created ticker: " + eurTicker);
 
         String orderId = ibClient.getNextOrderId();
+        logger.info("Next Order ID: " + orderId);
         int amount = 50000;
 
         TradeOrder order = new TradeOrder(orderId, eurTicker, amount, TradeDirection.BUY);
 
+        logger.info("Waiting for 15 seconds before placing order...");
+        Thread.sleep(20000);
+
+        logger.info("Placing order: " + order);
         ibClient.placeOrder(order);
+        logger.info("Order placed successfully: " + order);
     }
 
     public static void main(String[] args) throws Exception {
         TradingExample example = new TradingExample();
         example.start();
-        example.placeEquityOrder();
+        example.placeCurrencyOrder();
     }
 }

@@ -20,8 +20,12 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 package com.sumzerotrading.marketdata;
 
-import com.sumzerotrading.data.Ticker;
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.sumzerotrading.data.Ticker;
 
 /**
  * Defines common functionality of all Quote objects.
@@ -31,38 +35,41 @@ import java.time.ZonedDateTime;
 public abstract class AbstractQuote implements IQuote {
 
 	protected Ticker ticker;
-	
+	protected Map<QuoteType, BigDecimal> quoteMap = new HashMap<>();
 	protected ZonedDateTime timeStamp;
-        
-	
-        /**
-         * Constructs a new Quote object. 
-         *
-         * @param ticker The ticker this quote is for.
-         * @param type The type of quote.
-         * @param timeStamp The time of the quote.
-         */
-	public AbstractQuote( Ticker ticker, ZonedDateTime timeStamp ) {
+
+	/**
+	 * Constructs a new Quote object.
+	 *
+	 * @param ticker    The ticker this quote is for.
+	 * @param type      The type of quote.
+	 * @param timeStamp The time of the quote.
+	 */
+	public AbstractQuote(Ticker ticker, ZonedDateTime timeStamp) {
 		this.ticker = ticker;
 		this.timeStamp = timeStamp;
 	}
-        
 
-        /**
-         * Gets the ticker for this quote
-         * @return The ticker for this quote.
-         */
-        @Override
+	/**
+	 * Gets the ticker for this quote
+	 * 
+	 * @return The ticker for this quote.
+	 */
+	@Override
 	public Ticker getTicker() {
 		return ticker;
 	}
 
-	
-        /**
-         * Gets the time of this quote
-         * @return The time of the quote
-         */
-        @Override
+	public void addQuote(QuoteType type, BigDecimal value) {
+		quoteMap.put(type, value);
+	}
+
+	/**
+	 * Gets the time of this quote
+	 * 
+	 * @return The time of the quote
+	 */
+	@Override
 	public ZonedDateTime getTimeStamp() {
 		return timeStamp;
 	}
@@ -97,6 +104,5 @@ public abstract class AbstractQuote implements IQuote {
 			return false;
 		return true;
 	}
-
 
 }

@@ -20,13 +20,15 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 package com.sumzerotrading.broker.order;
 
-import com.sumzerotrading.broker.order.OrderStatus.Status;
-import com.sumzerotrading.data.Ticker;
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.time.*;
 import java.util.Objects;
+
+import com.sumzerotrading.broker.order.OrderStatus.Status;
+import com.sumzerotrading.data.Ticker;
 
 public class TradeOrder implements Serializable {
 
@@ -42,7 +44,6 @@ public class TradeOrder implements Serializable {
         DAY, GOOD_UNTIL_CANCELED, GOOD_UTNIL_TIME, FILL_OR_KILL, MARKET_ON_OPEN
     };
 
-
     protected Ticker ticker;
     protected TradeDirection direction;
     protected Type type;
@@ -52,6 +53,7 @@ public class TradeOrder implements Serializable {
     protected Double stopPrice = null;
     protected Duration duration;
     protected int size;
+    protected BigDecimal sizeAsBigDecimal;
     protected String orderId;
     protected String parentOrderId = "";
     protected String ocaGroup;
@@ -64,21 +66,27 @@ public class TradeOrder implements Serializable {
     protected ZonedDateTime orderEntryTime;
     protected ZonedDateTime orderFilledTime;
     protected double orderTimeInForceMinutes = 0;
-    
+
     protected double filledSize = 0;
     protected double filledPrice = 0;
     protected double commission = 0;
     protected Status currentStatus = Status.NEW;
-    
-    public TradeOrder() {}
+
+    public TradeOrder() {
+    }
 
     public TradeOrder(String orderId, Ticker ticker, int size, TradeDirection tradeDirection) {
+        this(orderId, ticker, BigDecimal.valueOf(size), tradeDirection);
+        this.size = size;
+    }
+
+    public TradeOrder(String orderId, Ticker ticker, BigDecimal size, TradeDirection tradeDirection) {
         type = Type.MARKET;
         duration = Duration.DAY;
         direction = TradeDirection.BUY;
         this.ticker = ticker;
         this.orderId = orderId;
-        this.size = size;
+        this.sizeAsBigDecimal = size;
         this.direction = tradeDirection;
     }
 
@@ -150,8 +158,16 @@ public class TradeOrder implements Serializable {
         this.limitPrice = price;
     }
 
+    public BigDecimal getLimitPriceAsBigDecimal() {
+        return BigDecimal.valueOf(limitPrice);
+    }
+
     public Double getStopPrice() {
         return stopPrice;
+    }
+
+    public BigDecimal getStopPriceAsBigDecimal() {
+        return BigDecimal.valueOf(stopPrice);
     }
 
     public void setStopPrice(Double stopPrice) {
@@ -307,6 +323,14 @@ public class TradeOrder implements Serializable {
         this.commission = commission;
     }
 
+    public BigDecimal getSizeAsBigDecimal() {
+        return sizeAsBigDecimal;
+    }
+
+    public void setSizeAsBigDecimal(BigDecimal sizeAsBigDecimal) {
+        this.sizeAsBigDecimal = sizeAsBigDecimal;
+    }
+
     @Override
     public int hashCode() {
         int hash = 3;
@@ -330,10 +354,14 @@ public class TradeOrder implements Serializable {
         hash = 71 * hash + (this.submitChildOrdersFirst ? 1 : 0);
         hash = 71 * hash + Objects.hashCode(this.orderEntryTime);
         hash = 71 * hash + Objects.hashCode(this.orderFilledTime);
-        hash = 71 * hash + (int) (Double.doubleToLongBits(this.orderTimeInForceMinutes) ^ (Double.doubleToLongBits(this.orderTimeInForceMinutes) >>> 32));
-        hash = 71 * hash + (int) (Double.doubleToLongBits(this.filledSize) ^ (Double.doubleToLongBits(this.filledSize) >>> 32));
-        hash = 71 * hash + (int) (Double.doubleToLongBits(this.filledPrice) ^ (Double.doubleToLongBits(this.filledPrice) >>> 32));
-        hash = 71 * hash + (int) (Double.doubleToLongBits(this.commission) ^ (Double.doubleToLongBits(this.commission) >>> 32));
+        hash = 71 * hash + (int) (Double.doubleToLongBits(this.orderTimeInForceMinutes)
+                ^ (Double.doubleToLongBits(this.orderTimeInForceMinutes) >>> 32));
+        hash = 71 * hash
+                + (int) (Double.doubleToLongBits(this.filledSize) ^ (Double.doubleToLongBits(this.filledSize) >>> 32));
+        hash = 71 * hash + (int) (Double.doubleToLongBits(this.filledPrice)
+                ^ (Double.doubleToLongBits(this.filledPrice) >>> 32));
+        hash = 71 * hash
+                + (int) (Double.doubleToLongBits(this.commission) ^ (Double.doubleToLongBits(this.commission) >>> 32));
         hash = 71 * hash + Objects.hashCode(this.currentStatus);
         return hash;
     }
@@ -359,7 +387,8 @@ public class TradeOrder implements Serializable {
         if (this.submitChildOrdersFirst != other.submitChildOrdersFirst) {
             return false;
         }
-        if (Double.doubleToLongBits(this.orderTimeInForceMinutes) != Double.doubleToLongBits(other.orderTimeInForceMinutes)) {
+        if (Double.doubleToLongBits(this.orderTimeInForceMinutes) != Double
+                .doubleToLongBits(other.orderTimeInForceMinutes)) {
             return false;
         }
         if (Double.doubleToLongBits(this.filledSize) != Double.doubleToLongBits(other.filledSize)) {
@@ -430,11 +459,15 @@ public class TradeOrder implements Serializable {
 
     @Override
     public String toString() {
-        return "TradeOrder{" + "ticker=" + ticker + ", direction=" + direction + ", type=" + type + ", goodAfterTime=" + goodAfterTime + ", goodUntilTime=" + goodUntilTime + ", limitPrice=" + limitPrice + ", stopPrice=" + stopPrice + ", duration=" + duration + ", size=" + size + ", orderId=" + orderId + ", parentOrderId=" + parentOrderId + ", ocaGroup=" + ocaGroup + ", positionId=" + positionId + ", childOrders=" + childOrders + ", comboOrder=" + comboOrder + ", reference=" + reference + ", submitted=" + submitted + ", submitChildOrdersFirst=" + submitChildOrdersFirst + ", orderEntryTime=" + orderEntryTime + ", orderFilledTime=" + orderFilledTime + ", orderTimeInForceMinutes=" + orderTimeInForceMinutes + ", filledSize=" + filledSize + ", filledPrice=" + filledPrice + ", commission=" + commission + ", currentStatus=" + currentStatus + '}';
+        return "TradeOrder{" + "ticker=" + ticker + ", direction=" + direction + ", type=" + type + ", goodAfterTime="
+                + goodAfterTime + ", goodUntilTime=" + goodUntilTime + ", limitPrice=" + limitPrice + ", stopPrice="
+                + stopPrice + ", duration=" + duration + ", size=" + size + ", orderId=" + orderId + ", parentOrderId="
+                + parentOrderId + ", ocaGroup=" + ocaGroup + ", positionId=" + positionId + ", childOrders="
+                + childOrders + ", comboOrder=" + comboOrder + ", reference=" + reference + ", submitted=" + submitted
+                + ", submitChildOrdersFirst=" + submitChildOrdersFirst + ", orderEntryTime=" + orderEntryTime
+                + ", orderFilledTime=" + orderFilledTime + ", orderTimeInForceMinutes=" + orderTimeInForceMinutes
+                + ", filledSize=" + filledSize + ", filledPrice=" + filledPrice + ", commission=" + commission
+                + ", currentStatus=" + currentStatus + '}';
     }
-    
-    
 
-    
-    
 }

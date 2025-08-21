@@ -36,7 +36,9 @@ import static javax.management.Query.value;
  */
 public class Level1Quote extends AbstractQuote implements ILevel1Quote {
 
-    protected Map<QuoteType, BigDecimal> quoteMap = new HashMap<>();
+    public Level1Quote(Ticker ticker) {
+        super(ticker, ZonedDateTime.now());
+    }
 
     /**
      * Builds a new Level1Quote

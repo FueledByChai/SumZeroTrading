@@ -97,6 +97,7 @@ public class IBConnection extends AbstractIBConnection {
 
     @Override
     public void connectAck() {
+        new NullPointerException("bogus for debug").printStackTrace();
         logger.info("connectAck called.");
         ibConnectionDelegates.stream().forEach((delegate) -> {
             try {
@@ -234,6 +235,7 @@ public class IBConnection extends AbstractIBConnection {
 
     @Override
     public void updateAccountTime(String timeStamp) {
+        logger.info("updateAccountTime: " + timeStamp);
         ibConnectionDelegates.stream().forEach((delegate) -> {
             try {
                 delegate.updateAccountTime(timeStamp);
@@ -256,6 +258,7 @@ public class IBConnection extends AbstractIBConnection {
 
     @Override
     public void nextValidId(int orderId) {
+        logger.info("nextValidId: " + orderId);
         ibConnectionDelegates.stream().forEach((delegate) -> {
             try {
                 delegate.nextValidId(orderId);

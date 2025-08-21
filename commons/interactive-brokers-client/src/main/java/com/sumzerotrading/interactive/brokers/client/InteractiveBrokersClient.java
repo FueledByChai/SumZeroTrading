@@ -88,8 +88,9 @@ public class InteractiveBrokersClient implements InteractiveBrokersClientInterfa
         this.clientId = clientId;
         IBConnectionUtil util = new IBConnectionUtil(host, port, clientId);
         ibSocket = util.getIBSocket();
-        quoteEngine = new IBQuoteEngine(ibSocket);
         broker = new InteractiveBrokersBroker(ibSocket);
+        quoteEngine = new IBQuoteEngine(ibSocket);
+
         historicalDataProvider = new IBHistoricalDataProvider(ibSocket);
         realtimeBarProvider = new IBRealTimeBarEngine(quoteEngine, historicalDataProvider);
     }
@@ -99,8 +100,8 @@ public class InteractiveBrokersClient implements InteractiveBrokersClientInterfa
         logger.info("connecting to Interactive Brokers client");
         ibSocket.connect();
         broker.connect();
-        historicalDataProvider.connect();
-        quoteEngine.startEngine();
+        // historicalDataProvider.connect();
+        // quoteEngine.startEngine();
     }
 
     @Override

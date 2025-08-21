@@ -129,6 +129,56 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         
         
     </build>
+    
+    <!-- Centrally manage dependency versions -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- JUnit 5 -->
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-engine</artifactId>
+                <version>5.9.2</version>
+                <scope>test</scope>
+            </dependency>
+            
+            <!-- Modern Mockito -->
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>5.14.2</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-junit-jupiter</artifactId>
+                <version>5.14.2</version>
+                <scope>test</scope>
+            </dependency>
+            
+            <!-- ByteBuddy for Java 23 support -->
+            <dependency>
+                <groupId>net.bytebuddy</groupId>
+                <artifactId>byte-buddy</artifactId>
+                <version>1.15.10</version>
+                <scope>test</scope>
+            </dependency>
+            
+            <!-- Legacy JUnit 4 for older modules -->
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>4.12</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-all</artifactId>
+                <version>1.10.19</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    
     <dependencies>
         <dependency>
             <groupId>org.mockito</groupId>
@@ -146,12 +196,12 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 <dependency>
     <groupId>org.slf4j</groupId>
     <artifactId>slf4j-api</artifactId>
-    <version>2.0.16</version>
+    <version>2.0.17</version>
 </dependency>
 <dependency>
     <groupId>ch.qos.logback</groupId>
     <artifactId>logback-classic</artifactId>
-    <version>1.4.11</version>
+    <version>1.5.18</version>
 </dependency>
 
     </dependencies>

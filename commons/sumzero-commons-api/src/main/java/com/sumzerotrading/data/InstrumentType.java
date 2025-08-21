@@ -18,15 +18,14 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.data;
 
 /**
  * @author Rob Terpilowski
  *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
+ *         TODO To change the template for this generated type comment go to
+ *         Window - Preferences - Java - Code Style - Code Templates
  */
 public enum InstrumentType {
-        STOCK, FUTURES, OPTION, FOREX, INDEX, COMBO, CFD, CRYPTO, NONE;
+        STOCK, FUTURES, OPTION, FOREX, INDEX, COMBO, CFD, CRYPTO_SPOT, CRYPTO_PERP_FUTURES, NONE;
 }

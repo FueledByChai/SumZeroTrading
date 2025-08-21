@@ -245,7 +245,7 @@ public class IBQuoteEngine extends AbstractIBQuoteEngine {
     public void startEngine() {
         if (!started) {
             logger.info("Starting IBQuoteEngine...");
-            ibSocket.connect();
+            // ibSocket.connect();
             level1QuoteProcessor.startProcessor();
             level2QuoteProcessor.startProcessor();
             errorQuoteProcessor.startProcessor();

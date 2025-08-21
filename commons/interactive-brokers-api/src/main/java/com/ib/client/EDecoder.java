@@ -128,7 +128,7 @@ class EDecoder implements ObjectInput {
 	private void processFirstMsg() throws IOException {
 		m_serverVersion = readInt();
 		System.err.println("### Server Version: " + m_serverVersion);
-		new NullPointerException().printStackTrace();
+		// new NullPointerException().printStackTrace();
 
 		// Handle redirect
 		if (m_serverVersion == REDIRECT_MSG_ID) {

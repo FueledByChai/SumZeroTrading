@@ -42,13 +42,13 @@ public class TradingExampleWithOrderStatusListener implements OrderEventListener
     public void start() {
         // Connect to the Interactive Brokers TWS Client
         logger.debug("Connecting to IB Client");
-        ibClient = InteractiveBrokersClient.getInstance("localhost", 7999, 1);
+        ibClient = InteractiveBrokersClient.getInstance("localhost", 7777, 1);
         ibClient.connect();
         logger.debug("IB client connected");
     }
 
     public void placeFuturesOrder() {
-        InteractiveBrokersClientInterface ibClient = InteractiveBrokersClient.getInstance("localhost", 7999, 1);
+        InteractiveBrokersClientInterface ibClient = InteractiveBrokersClient.getInstance("localhost", 7777, 1);
         ibClient.addOrderStatusListener(this);
         ibClient.connect();
 
@@ -84,9 +84,8 @@ public class TradingExampleWithOrderStatusListener implements OrderEventListener
         ibClient.placeOrder(order);
     }
 
-    public void placeCurrencyOrder() {
-        InteractiveBrokersClientInterface ibClient = InteractiveBrokersClient.getInstance("localhost", 7777, 1);
-        ibClient.connect();
+    public void placeCurrencyOrder() throws Exception {
+
         CurrencyTicker eurTicker = new CurrencyTicker();
         eurTicker.setSymbol("EUR");
         eurTicker.setCurrency("USD");
@@ -98,6 +97,10 @@ public class TradingExampleWithOrderStatusListener implements OrderEventListener
         TradeOrder order = new TradeOrder(orderId, eurTicker, amount, TradeDirection.BUY);
 
         ibClient.placeOrder(order);
+
+        Thread.sleep(90 * 1000);
+
+        ibClient.placeOrder(new TradeOrder(ibClient.getNextOrderId(), eurTicker, amount, TradeDirection.SELL));
     }
 
     @Override
@@ -107,7 +110,7 @@ public class TradingExampleWithOrderStatusListener implements OrderEventListener
 
     public static void main(String[] args) throws Exception {
         TradingExampleWithOrderStatusListener example = new TradingExampleWithOrderStatusListener();
-        // example.start();
+        example.start();
         example.placeCurrencyOrder();
         // example.placeFuturesOrder();
     }

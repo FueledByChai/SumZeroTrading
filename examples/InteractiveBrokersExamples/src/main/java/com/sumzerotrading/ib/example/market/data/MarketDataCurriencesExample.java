@@ -37,7 +37,15 @@ public class MarketDataCurriencesExample {
         InteractiveBrokersClientInterface ibClient = InteractiveBrokersClient.getInstance("localhost", 7777, 2);
         logger.info("Connecting to Interactive Brokers Client...");
         ibClient.connect();
+
         logger.info("Connected to Interactive Brokers Client");
+        // try {
+        // Thread.sleep(30000);
+        // } catch (InterruptedException e) {
+        // // TODO Auto-generated catch block
+        // e.printStackTrace();
+        // }
+
         CurrencyTicker currencyTicker = new CurrencyTicker();
         currencyTicker.setSymbol("AUD");
         currencyTicker.setCurrency("CAD");

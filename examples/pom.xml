@@ -39,5 +39,6 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         <module>InteractiveBrokersExamples</module>
         <module>EODTradingStrategy</module>
         <module>IntradayTradingExample</module>
+        <module>CryptoExamples</module>
     </modules>
 </project>

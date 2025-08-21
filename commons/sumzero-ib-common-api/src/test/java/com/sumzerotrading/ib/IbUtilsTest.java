@@ -124,7 +124,7 @@ public class IbUtilsTest {
     public void testGetSecurityType() {
         InstrumentType[] values = InstrumentType.values();
         for (InstrumentType value : values) {
-            if (value != InstrumentType.CRYPTO) {
+            if (value != InstrumentType.CRYPTO_SPOT) {
                 // assertNotNull(IbUtils.getSecurityType(value));
                 // TODO: FIX THIS
             }

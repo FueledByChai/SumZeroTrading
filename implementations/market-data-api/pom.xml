@@ -54,6 +54,8 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     <module>dydx-market-data-impl</module>
 
     <module>hyperliquid-market-data-impl</module>
+
+    <module>paradex-market-data-impl</module>
       
   </modules>
   

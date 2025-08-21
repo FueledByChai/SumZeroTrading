@@ -10,8 +10,8 @@ import java.io.Serializable;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
-/** 
- *    
+/**
+ * 
  * @author RobTerpilowski
  */
 public class RoundTrip implements IRoundTrip {
@@ -22,68 +22,55 @@ public class RoundTrip implements IRoundTrip {
     protected TradeOrder longExit;
     protected TradeOrder shortEntry;
     protected TradeOrder shortExit;
-    
-    
+
     @Override
-    public void addTradeReference( TradeOrder order, TradeReferenceLine tradeReference ) {
+    public void addTradeReference(TradeOrder order, TradeReferenceLine tradeReference) {
         correlationId = tradeReference.getCorrelationId();
-        if( tradeReference.getDirection() == TradeReferenceLine.Direction.LONG ) {
-            if( tradeReference.getSide() == TradeReferenceLine.Side.ENTRY ) {
+        if (tradeReference.getDirection() == TradeReferenceLine.Direction.LONG) {
+            if (tradeReference.getSide() == TradeReferenceLine.Side.ENTRY) {
                 longEntry = order;
             } else {
                 longExit = order;
             }
         } else {
-            if( tradeReference.getSide() == TradeReferenceLine.Side.ENTRY ) {
+            if (tradeReference.getSide() == TradeReferenceLine.Side.ENTRY) {
                 shortEntry = order;
             } else {
                 shortExit = order;
             }
         }
     }
-    
-    
-    
+
     @Override
     public String getResults() {
-        // Long-entry-date, longTicker, LongShares, Long Entry price, Long Entry Commission, 
-        //LongExitDate, Long Exit Price, shortTicker, shortShares, shortEntryPrice, shortEntryCommissions,
-        //shortExitPrice, shortExitCommissions
-        //2016-03-20T12:40:00PST,QQQ,200,100.23,1.45,2016-03-21T12:40:00PST,
+        // Long-entry-date, longTicker, LongShares, Long Entry price, Long Entry
+        // Commission,
+        // LongExitDate, Long Exit Price, shortTicker, shortShares, shortEntryPrice,
+        // shortEntryCommissions,
+        // shortExitPrice, shortExitCommissions
+        // 2016-03-20T12:40:00PST,QQQ,200,100.23,1.45,2016-03-21T12:40:00PST,
         StringBuilder sb = new StringBuilder();
         sb.append(longEntry.getOrderFilledTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)).append(",")
-                .append("Long,")
-                .append(longEntry.getTicker().getSymbol()).append(",")
-                .append(longEntry.getSize()).append(",")
-                .append(longEntry.getFilledPrice()).append(",")
-                //long entry commissions
+                .append("Long,").append(longEntry.getTicker().getSymbol()).append(",").append(longEntry.getSize())
+                .append(",").append(longEntry.getFilledPrice()).append(",")
+                // long entry commissions
                 .append(0).append(",")
                 .append(longExit.getOrderFilledTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)).append(",")
                 .append(longExit.getFilledPrice()).append(",")
-                //long exit commissions
-                .append(0).append(",")
-                .append("Short,")
-                .append(shortEntry.getTicker().getSymbol()).append(",")
-                .append(shortEntry.getSize()).append(",")
-                .append(shortEntry.getFilledPrice()).append(",")
-                //short entry commissions
-                .append(0).append(",")
-                .append(shortExit.getFilledPrice()).append(",")
-                //short exit commissions.
+                // long exit commissions
+                .append(0).append(",").append("Short,").append(shortEntry.getTicker().getSymbol()).append(",")
+                .append(shortEntry.getSize()).append(",").append(shortEntry.getFilledPrice()).append(",")
+                // short entry commissions
+                .append(0).append(",").append(shortExit.getFilledPrice()).append(",")
+                // short exit commissions.
                 .append(0);
-        
+
         return sb.toString();
     }
-    
-    
-    
-    
+
     @Override
     public boolean isComplete() {
-        return longEntry != null &&
-                longExit != null &&
-                shortEntry != null &&
-                shortExit != null;
+        return longEntry != null && longExit != null && shortEntry != null && shortExit != null;
     }
 
     @Override
@@ -91,9 +78,6 @@ public class RoundTrip implements IRoundTrip {
         return correlationId;
     }
 
-    
-    
-    
     @Override
     public int hashCode() {
         int hash = 7;
@@ -134,10 +118,8 @@ public class RoundTrip implements IRoundTrip {
 
     @Override
     public String toString() {
-        return "RoundTrip{" + "correlationId=" + correlationId + ", longEntry=" + longEntry + ", longExit=" + longExit + ", shortEntry=" + shortEntry + ", shortExit=" + shortExit + '}';
+        return "RoundTrip{" + "correlationId=" + correlationId + ", longEntry=" + longEntry + ", longExit=" + longExit
+                + ", shortEntry=" + shortEntry + ", shortExit=" + shortExit + '}';
     }
-    
-    
-    
-    
+
 }

@@ -44,6 +44,7 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     <module>interactive-brokers-client</module>
     <module>interactive-brokers-integration-tests</module>
     <module>bitmex-common-api</module>
+    <module>paradex-common-api</module>
   </modules>
   
 </project>

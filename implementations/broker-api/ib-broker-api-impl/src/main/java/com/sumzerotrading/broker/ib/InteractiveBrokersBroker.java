@@ -154,13 +154,13 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
 
     @Override
     public void connect() {
-        logger.info("Connecting to Interactive Brokers");
-        if (!isConnected()) {
-            logger.info("Not connected, connecting now");
-            ibSocket.connect();
-        } else {
-            logger.info("Already connected to Interactive Brokers");
-        }
+        // logger.info("Connecting to Interactive Brokers");
+        // if (!isConnected()) {
+        // logger.info("Not connected, connecting now");
+        // ibSocket.connect();
+        // } else {
+        // logger.info("Already connected to Interactive Brokers");
+        // }
         if (!started) {
             orderProcessor.startProcessor();
             started = true;
@@ -182,6 +182,7 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
 
     @Override
     public void nextValidId(int orderId) {
+        logger.debug("Next Valid Order ID: " + orderId);
         try {
             nextIdQueue.put(orderId);
         } catch (Exception ex) {

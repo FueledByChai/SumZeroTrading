@@ -26,8 +26,8 @@ import java.text.*;
 /**
  * @author Rob Terpilowski
  *
- * TODO To change the template for this generated type comment go to Window -
- * Preferences - Java - Code Style - Code Templates
+ *         TODO To change the template for this generated type comment go to
+ *         Window - Preferences - Java - Code Style - Code Templates
  */
 public abstract class Ticker implements Serializable {
 
@@ -39,6 +39,7 @@ public abstract class Ticker implements Serializable {
     protected transient DecimalFormat decimalFormat = new DecimalFormat("00");
     protected BigDecimal minimumTickSize = new BigDecimal("0.01");
     protected BigDecimal contractMultiplier;
+    protected BigDecimal orderSizeIncrement = new BigDecimal("1");
 
     public Ticker() {
     }
@@ -51,16 +52,18 @@ public abstract class Ticker implements Serializable {
         return currency;
     }
 
-    public void setCurrency(String currency) {
+    public Ticker setCurrency(String currency) {
         this.currency = currency;
+        return this;
     }
 
     public Exchange getExchange() {
         return exchange;
     }
 
-    public void setExchange(Exchange exchange) {
+    public Ticker setExchange(Exchange exchange) {
         this.exchange = exchange;
+        return this;
     }
 
     public abstract InstrumentType getInstrumentType();
@@ -69,24 +72,27 @@ public abstract class Ticker implements Serializable {
         return symbol;
     }
 
-    public void setSymbol(String symbol) {
+    public Ticker setSymbol(String symbol) {
         this.symbol = symbol;
+        return this;
     }
 
     public BigDecimal getMinimumTickSize() {
         return minimumTickSize;
     }
 
-    public void setMinimumTickSize(BigDecimal minimumTickSize) {
+    public Ticker setMinimumTickSize(BigDecimal minimumTickSize) {
         this.minimumTickSize = minimumTickSize;
+        return this;
     }
 
     public BigDecimal getContractMultiplier() {
         return contractMultiplier;
     }
 
-    public void setContractMultiplier(BigDecimal contractMultiplier) {
+    public Ticker setContractMultiplier(BigDecimal contractMultiplier) {
         this.contractMultiplier = contractMultiplier;
+        return this;
     }
 
     public boolean supportsHalfTick() {
@@ -105,16 +111,27 @@ public abstract class Ticker implements Serializable {
         return decimalFormat;
     }
 
-    public void setDecimalFormat(DecimalFormat decimalFormat) {
+    public Ticker setDecimalFormat(DecimalFormat decimalFormat) {
         this.decimalFormat = decimalFormat;
+        return this;
     }
 
     public Exchange getPrimaryExchange() {
         return primaryExchange;
     }
 
-    public void setPrimaryExchange(Exchange primaryExchange) {
+    public Ticker setPrimaryExchange(Exchange primaryExchange) {
         this.primaryExchange = primaryExchange;
+        return this;
+    }
+
+    public BigDecimal getOrderSizeIncrement() {
+        return orderSizeIncrement;
+    }
+
+    public Ticker setOrderSizeIncrement(BigDecimal orderSizeIncrement) {
+        this.orderSizeIncrement = orderSizeIncrement;
+        return this;
     }
 
     @Override
@@ -126,6 +143,7 @@ public abstract class Ticker implements Serializable {
         hash = 29 * hash + (this.currency != null ? this.currency.hashCode() : 0);
         hash = 29 * hash + (this.minimumTickSize != null ? this.minimumTickSize.hashCode() : 0);
         hash = 29 * hash + (this.contractMultiplier != null ? this.contractMultiplier.hashCode() : 0);
+        hash = 29 * hash + (this.orderSizeIncrement != null ? this.orderSizeIncrement.hashCode() : 0);
         return hash;
     }
 
@@ -144,16 +162,23 @@ public abstract class Ticker implements Serializable {
         if (this.exchange != other.exchange && (this.exchange == null || !this.exchange.equals(other.exchange))) {
             return false;
         }
-        if (this.primaryExchange != other.primaryExchange && (this.primaryExchange == null || !this.primaryExchange.equals(other.primaryExchange))) {
+        if (this.primaryExchange != other.primaryExchange
+                && (this.primaryExchange == null || !this.primaryExchange.equals(other.primaryExchange))) {
             return false;
         }
         if ((this.currency == null) ? (other.currency != null) : !this.currency.equals(other.currency)) {
             return false;
         }
-        if (this.minimumTickSize != other.minimumTickSize && (this.minimumTickSize == null || !this.minimumTickSize.equals(other.minimumTickSize))) {
+        if (this.minimumTickSize != other.minimumTickSize
+                && (this.minimumTickSize == null || !this.minimumTickSize.equals(other.minimumTickSize))) {
             return false;
         }
-        if (this.contractMultiplier != other.contractMultiplier && (this.contractMultiplier == null || !this.contractMultiplier.equals(other.contractMultiplier))) {
+        if (this.contractMultiplier != other.contractMultiplier
+                && (this.contractMultiplier == null || !this.contractMultiplier.equals(other.contractMultiplier))) {
+            return false;
+        }
+        if (this.orderSizeIncrement != other.orderSizeIncrement
+                && (this.orderSizeIncrement == null || !this.orderSizeIncrement.equals(other.orderSizeIncrement))) {
             return false;
         }
         return true;
@@ -161,7 +186,9 @@ public abstract class Ticker implements Serializable {
 
     @Override
     public String toString() {
-        return "Ticker{" + "symbol=" + symbol + ", exchange=" + exchange + ", primaryExchange=" + primaryExchange + ", currency=" + currency + ", decimalFormat=" + decimalFormat + ", minimumTickSize=" + minimumTickSize + ", contractMultiplier=" + contractMultiplier + '}';
+        return "Ticker{" + "symbol=" + symbol + ", exchange=" + exchange + ", primaryExchange=" + primaryExchange
+                + ", currency=" + currency + ", decimalFormat=" + decimalFormat + ", minimumTickSize=" + minimumTickSize
+                + ", contractMultiplier=" + contractMultiplier + ", orderSizeIncrement=" + orderSizeIncrement + '}';
     }
 
 }
