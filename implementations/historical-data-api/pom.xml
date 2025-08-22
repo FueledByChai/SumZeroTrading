@@ -37,6 +37,7 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   <packaging>pom</packaging>
     <modules>
         <module>ib-historical-data-api-impl</module>
-        <module>bitmex-historical-data-api-imple</module>
+        <module>bitmex-historical-data-api-impl</module>
+        <module>paradex-historical-data-api-impl</module>
     </modules>
 </project>
