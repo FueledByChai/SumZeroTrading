@@ -18,7 +18,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.data;
 
 import java.io.Serializable;
@@ -33,7 +32,7 @@ import java.util.Objects;
  * @author Rob Terpilowski
  */
 public class BarData implements Serializable {
-    
+
     public static long serialVersionUID = 1L;
 
     public static final double NULL = -9D;
@@ -61,12 +60,13 @@ public class BarData implements Serializable {
     protected int barLength = 1;
     protected LocalDateTime dateTime;
     protected LengthUnit lengthUnit;
-    //protected Logger logger = Logger.getLogger( BarData.class );
+    // protected Logger logger = Logger.getLogger( BarData.class );
 
     public BarData() {
     }
 
-    public BarData(Ticker ticker, LocalDateTime dateTime, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close, BigDecimal volume, int barLength, LengthUnit lengthUnit) {
+    public BarData(Ticker ticker, LocalDateTime dateTime, BigDecimal open, BigDecimal high, BigDecimal low,
+            BigDecimal close, BigDecimal volume, int barLength, LengthUnit lengthUnit) {
         this.ticker = ticker;
         this.dateTime = dateTime;
         this.open = open;
@@ -74,37 +74,41 @@ public class BarData implements Serializable {
         this.low = low;
         this.high = high;
         this.volume = volume;
+        this.barLength = barLength;
+        this.lengthUnit = lengthUnit;
     }
 
     /**
      * Creates a new instance of a Bar
      *
-     * @param date The date of this bar.
-     * @param open The open price.
-     * @param high The high price.
-     * @param low The low price.
-     * @param close The closing price.
+     * @param date   The date of this bar.
+     * @param open   The open price.
+     * @param high   The high price.
+     * @param low    The low price.
+     * @param close  The closing price.
      * @param volume The volume for the bar.
      */
-    public BarData(LocalDateTime dateTime, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close, BigDecimal volume) {
+    public BarData(LocalDateTime dateTime, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close,
+            BigDecimal volume) {
         this(null, dateTime, open, high, low, close, volume, 1, LengthUnit.DAY);
-    }//constructor()
+    }// constructor()
 
     /**
      * Creates a new instance of a Bar
      *
-     * @param date The date of this bar.
-     * @param open The open price.
-     * @param high The high price.
-     * @param low The low price.
-     * @param close The closing price.
-     * @param volume The volume for the bar.
+     * @param date         The date of this bar.
+     * @param open         The open price.
+     * @param high         The high price.
+     * @param low          The low price.
+     * @param close        The closing price.
+     * @param volume       The volume for the bar.
      * @param openInterest The open interest for the bar.
      */
-    public BarData(LocalDateTime dateTime, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close, BigDecimal volume, long openInterest) {
+    public BarData(LocalDateTime dateTime, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close,
+            BigDecimal volume, long openInterest) {
         this(dateTime, open, high, low, close, volume);
         this.openInterest = openInterest;
-    }//constructor()
+    }// constructor()
 
     public LocalDateTime getDateTime() {
         return dateTime;
@@ -200,18 +204,18 @@ public class BarData implements Serializable {
     public void setVolume(BigDecimal volume) {
         this.volume = volume;
     }
-    
-    
+
     /**
      * Updates the last price, adjusting the high and low
+     * 
      * @param close The last price
      */
-    public void update( BigDecimal close ) {
-        if( close.doubleValue() > high.doubleValue() ) {
+    public void update(BigDecimal close) {
+        if (close.doubleValue() > high.doubleValue()) {
             high = close;
         }
-        
-        if( close.doubleValue() < low.doubleValue() ) {
+
+        if (close.doubleValue() < low.doubleValue()) {
             low = close;
         }
         this.close = close;
@@ -225,7 +229,6 @@ public class BarData implements Serializable {
     public void setOpenInterest(long openInterest) {
         this.openInterest = openInterest;
     }
-    
 
     public Ticker getTicker() {
         return ticker;
@@ -316,16 +319,12 @@ public class BarData implements Serializable {
         return true;
     }
 
-
-    
-    
     @Override
     public String toString() {
-        return "Bar{" + "ticker=" + ticker + ", open=" + open + ", formattedOpen=" + formattedOpen + ", high=" + high + ", formattedHigh=" + formattedHigh + ", low=" + low + ", formattedLow=" + formattedLow + ", close=" + close + ", formattedClose=" + formattedClose + ", volume=" + volume + ", openInterest=" + openInterest + ", barLength=" + barLength + ", dateTime=" + dateTime + ", lengthUnit=" + lengthUnit + '}';
+        return "Bar{" + "ticker=" + ticker + ", open=" + open + ", formattedOpen=" + formattedOpen + ", high=" + high
+                + ", formattedHigh=" + formattedHigh + ", low=" + low + ", formattedLow=" + formattedLow + ", close="
+                + close + ", formattedClose=" + formattedClose + ", volume=" + volume + ", openInterest=" + openInterest
+                + ", barLength=" + barLength + ", dateTime=" + dateTime + ", lengthUnit=" + lengthUnit + '}';
     }
 
-    
-    
-    
-    
-}//class BarData
+}// class BarData

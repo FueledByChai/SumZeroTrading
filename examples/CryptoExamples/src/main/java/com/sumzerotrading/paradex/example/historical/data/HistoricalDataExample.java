@@ -5,39 +5,48 @@
  */
 package com.sumzerotrading.paradex.example.historical.data;
 
-
 import java.util.List;
+import java.util.Properties;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.sumzerotrading.data.BarData;
+import com.sumzerotrading.data.BarData.LengthUnit;
+import com.sumzerotrading.data.CryptoTicker;
+import com.sumzerotrading.data.Exchange;
+import com.sumzerotrading.historicaldata.IHistoricalDataProvider.ShowProperty;
+import com.sumzerotrading.paradex.historical.ParadexHistoricalDataProvider;
 
 /**
- *
- * @author RobTerpilowski
+ * o
+ * 
+ * 
  */
 public class HistoricalDataExample {
-    
-    
+
+    protected Logger logger = LoggerFactory.getLogger(HistoricalDataExample.class);
+
     public void requestHistoricalData() {
-        // InteractiveBrokersClientInterface client = InteractiveBrokersClient.getInstance("localhost", 6468, 1);
-        // client.connect();
-        
-        // StockTicker ticker = new StockTicker("AMZN");
-        // int duration = 1;
-        // LengthUnit durationUnit = LengthUnit.DAY;
-        // int barSize = 1;
-        // LengthUnit barSizeUnit = LengthUnit.MINUTE;
-        // ShowProperty dataToRequest = ShowProperty.TRADES;
-        
-        
-        // List<BarData> historicalData = client.requestHistoricalData(ticker, duration, durationUnit, barSize, barSizeUnit, dataToRequest);
-        
-        // System.out.println("Retrieved " + historicalData.size() + " bars");
-        // historicalData.stream().forEach((bar) -> {
-        //     System.out.println("Retrieved Bar: " + bar);
-        // });
-        
-        // client.disconnect();
+
+        Properties props = new Properties();
+        props.setProperty("paradex.rest.url", "https://api.prod.paradex.trade/v1");
+
+        ParadexHistoricalDataProvider provider = new ParadexHistoricalDataProvider();
+        provider.init(props);
+        provider.connect();
+
+        CryptoTicker ticker = new CryptoTicker("BTC-USD-PERP", Exchange.PARADEX);
+
+        List<BarData> historicalData = provider.requestHistoricalData(ticker, 60, LengthUnit.MINUTE, 1,
+                LengthUnit.MINUTE, ShowProperty.MARK_PRICE, false);
+
+        // Process the retrieved historical data
+        for (BarData bar : historicalData) {
+            logger.info("Bar: {}", bar);
+        }
     }
-    
-    
+
     public static void main(String[] args) {
         new HistoricalDataExample().requestHistoricalData();
     }

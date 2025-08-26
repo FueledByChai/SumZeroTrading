@@ -43,31 +43,59 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class ParadoxRestApi {
-    protected static Logger logger = LoggerFactory.getLogger(ParadoxRestApi.class);
+public class ParadexRestApi {
+    protected static Logger logger = LoggerFactory.getLogger(ParadexRestApi.class);
     private final Gson gson;
+
+    protected static ParadexRestApi publicOnlyApi;
+    protected static ParadexRestApi privateApi;
+
+    public enum HistoricalPriceKind {
+        LAST, MARK
+    }
+
+    public static ParadexRestApi getPublicOnlyApi(String baseUrl) {
+        if (publicOnlyApi == null) {
+            publicOnlyApi = new ParadexRestApi(baseUrl);
+        }
+        return publicOnlyApi;
+    }
+
+    public static ParadexRestApi getPrivateApi(String baseUrl, String accountAddress, String privateKey) {
+        if (privateApi == null) {
+            privateApi = new ParadexRestApi(baseUrl, accountAddress, privateKey);
+        }
+        return privateApi;
+    }
 
     @FunctionalInterface
     public interface RetryableAction {
         void run() throws Exception; // Allows throwing checked exceptions
     }
 
-    private OkHttpClient client;
+    protected OkHttpClient client;
     protected String baseUrl;
     protected String accountAddressString;
     protected String privateKeyString;
+    protected boolean publicApiOnly = true;
 
-    BigInteger prodChainId = new BigInteger("8458834024819506728615521019831122032732688838300957472069977523540");
-    BigInteger testnetChainId = new BigInteger("7693264728749915528729180568779831130134670232771119425");
-    BigInteger chainID = prodChainId;
+    protected BigInteger prodChainId = new BigInteger(
+            "8458834024819506728615521019831122032732688838300957472069977523540");
+    protected BigInteger testnetChainId = new BigInteger("7693264728749915528729180568779831130134670232771119425");
+    protected BigInteger chainID = prodChainId;
 
-    public ParadoxRestApi(String baseUrl, String accountAddressString, String privateKeyString) {
+    public ParadexRestApi(String baseUrl) {
+        this(baseUrl, null, null);
+    }
+
+    public ParadexRestApi(String baseUrl, String accountAddressString, String privateKeyString) {
         this.client = new OkHttpClient();
         this.baseUrl = baseUrl;
         this.accountAddressString = accountAddressString;
         this.privateKeyString = privateKeyString;
         // Register the custom adapter
         this.gson = new GsonBuilder().registerTypeAdapter(ZonedDateTime.class, new ZonedDateTimeAdapter()).create();
+        publicApiOnly = accountAddressString == null || privateKeyString == null;
     }
 
     public List<Position> getPositionInfo(String jwtToken) {
@@ -97,7 +125,27 @@ public class ParadoxRestApi {
         }, 3, 500); // Retry up to 3 times with 500ms backoff
     }
 
-    public List<OHLCBar> getOHLCBars(String symbol, int resolutionInMinutes, int lookbackInMinutes) {
+    /**
+     * Supported resolutions
+     * 
+     * resolution in minutes: 1, 3, 5, 15, 30, 60
+     * 
+     * 
+     * @param symbol
+     * @param resolutionInMinutes
+     * @param lookbackInMinutes
+     * @param priceKind
+     * @return
+     */
+    public List<OHLCBar> getOHLCBars(String symbol, int resolutionInMinutes, int lookbackInMinutes,
+            HistoricalPriceKind priceKind) {
+
+        if (resolutionInMinutes != 1 && resolutionInMinutes != 3 && resolutionInMinutes != 5
+                && resolutionInMinutes != 15 && resolutionInMinutes != 30 && resolutionInMinutes != 60) {
+            throw new IllegalArgumentException("Unsupported resolution: " + resolutionInMinutes
+                    + ". Supported resolutions are 1, 3, 5, 15, 30, 60 minutes.");
+        }
+
         return executeWithRetry(() -> {
 
             String path = "/markets/klines";
@@ -109,7 +157,7 @@ public class ParadoxRestApi {
             urlBuilder.addQueryParameter("resolution", resolutionInMinutes + "");
             urlBuilder.addQueryParameter("start_at", startTime + "");
             urlBuilder.addQueryParameter("end_at", endTime + "");
-            urlBuilder.addQueryParameter("price_kind", "mark");
+            urlBuilder.addQueryParameter("price_kind", priceKind.name().toLowerCase());
             String newUrl = urlBuilder.build().toString();
 
             Request request = new Request.Builder().url(newUrl).get().build();
@@ -166,7 +214,7 @@ public class ParadoxRestApi {
         }, 3, 500); // Retry up to 3 times with 500ms backoff
     }
 
-    protected void cancelOrder(String jwtToken, String orderId) {
+    public void cancelOrder(String jwtToken, String orderId) {
         executeWithRetry(() -> {
 
             String path = "/orders/" + orderId;
@@ -226,7 +274,7 @@ public class ParadoxRestApi {
         }, 3, 500); // Retry up to 3 times with 500ms backoff
     }
 
-    public String placeOrder(String jwtToken, TradeOrder tradeOrder) throws Exception {
+    public String placeOrder(String jwtToken, TradeOrder tradeOrder) {
         return executeWithRetry(() -> {
             ParadexOrder order = ParadexUtil.translateOrder(tradeOrder);
             String path = "/orders";
@@ -283,7 +331,7 @@ public class ParadoxRestApi {
         }, 3, 500); // Retry up to 3 times with 1 second backoff
     }
 
-    public String getJwtToken() throws Exception {
+    public String getJwtToken() {
         return executeWithRetry(() -> {
 
             // Fallback to single try if no headers are used
@@ -460,6 +508,10 @@ public class ParadoxRestApi {
         // System.out.println("Signature Expiration: " + expiry);
 
         return signatureStr;
+    }
+
+    public boolean isPublicApiOnly() {
+        return publicApiOnly;
     }
 
     private static String convertBigIntListToString(List<BigInteger> list) {

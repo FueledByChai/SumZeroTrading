@@ -19,7 +19,6 @@
  */
 package com.sumzerotrading.paradex.historical;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -27,24 +26,23 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// import com.sumzerotrading.bitmex.client.BitmexRestClient;
-// import com.sumzerotrading.bitmex.client.IBitmexClient;
-// import com.sumzerotrading.bitmex.common.api.BitmexClientRegistry;
-// import com.sumzerotrading.bitmex.entity.BitmexChartData;
 import com.sumzerotrading.data.BarData;
+import com.sumzerotrading.data.BarData.LengthUnit;
 import com.sumzerotrading.data.SumZeroException;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.historicaldata.IHistoricalDataProvider;
+import com.sumzerotrading.paradex.common.api.ParadexRestApi;
+import com.sumzerotrading.paradex.common.api.historical.OHLCBar;
 
 /**
  *
- * @author Rob Terpilowski
+ * @author
  */
 public class ParadexHistoricalDataProvider implements IHistoricalDataProvider {
 
     protected Logger logger = LoggerFactory.getLogger(ParadexHistoricalDataProvider.class);
-    protected boolean connected = false;
-    // protected IBitmexClient client = null;
+    protected boolean connected = true;
+    protected ParadexRestApi paradoxApi;
 
     @Override
     public boolean isConnected() {
@@ -53,43 +51,75 @@ public class ParadexHistoricalDataProvider implements IHistoricalDataProvider {
 
     @Override
     public void connect() {
-        // client = BitmexClientRegistry.getInstance().getBitmexClient();
-        connected = true;
+        // does nothing
     }
 
     @Override
     public void init(Properties props) {
-        throw new SumZeroException("Not supported yet."); // To change body of generated methods, choose Tools |
-                                                          // Templates.
+        paradoxApi = ParadexRestApi.getPublicOnlyApi(props.getProperty("paradex.rest.url"));
+        connected = true;
     }
 
     @Override
     public List<BarData> requestHistoricalData(Ticker ticker, int duration, BarData.LengthUnit durationLengthUnit,
             int barSize, BarData.LengthUnit barSizeUnit, ShowProperty whatToShow, boolean useRTH) {
-        if (whatToShow != ShowProperty.TRADES) {
-            throw new SumZeroException("Only historical trades are supported");
+        if (!(whatToShow == ShowProperty.TRADES || whatToShow == ShowProperty.MARK_PRICE)) {
+            throw new SumZeroException("Only historical trades or mark price are supported");
         }
-        // List<BitmexChartData> bitmexData = client.getChartData(ticker, duration,
-        // HistoricalDataUtils.getBinSize(barSize, barSizeUnit), "", true);
-        // return convertToBarData(ticker, barSize, barSizeUnit, bitmexData);
-        return null;
+
+        if (!(barSizeUnit == LengthUnit.MINUTE || barSizeUnit == LengthUnit.HOUR)) {
+            throw new IllegalArgumentException("Only minute and hour bar sizes are supported");
+        }
+
+        int resolutionInMinutes = barSize;
+        if (barSizeUnit == BarData.LengthUnit.HOUR) {
+            resolutionInMinutes *= 60;
+        }
+
+        if (resolutionInMinutes != 1 && resolutionInMinutes != 3 && resolutionInMinutes != 5
+                && resolutionInMinutes != 15 && resolutionInMinutes != 30 && resolutionInMinutes != 60) {
+            throw new IllegalArgumentException("Unsupported resolution: " + resolutionInMinutes
+                    + ". Supported resolutions are 1, 3, 5, 15, 30, 60 minutes.");
+        }
+
+        if (durationLengthUnit == BarData.LengthUnit.TICK) {
+            throw new IllegalArgumentException("Unsupported duration length unit: " + durationLengthUnit
+                    + ". Supported units are MINUTE and HOUR.");
+        }
+
+        int lookbackInMinutes = getDurationInMinutes(duration, durationLengthUnit);
+
+        List<OHLCBar> bars = paradoxApi.getOHLCBars(ticker.getSymbol(), resolutionInMinutes, lookbackInMinutes,
+                whatToShow == ShowProperty.MARK_PRICE ? ParadexRestApi.HistoricalPriceKind.MARK
+                        : ParadexRestApi.HistoricalPriceKind.LAST);
+
+        return HistoricalDataUtils.convertToBarData(ticker, barSize, barSizeUnit, bars);
+
     }
 
     @Override
     public List<BarData> requestHistoricalData(Ticker ticker, Date endDateTime, int duration,
             BarData.LengthUnit durationLengthUnit, int barSize, BarData.LengthUnit barSizeUnit, ShowProperty whatToShow,
             boolean useRTH) {
-        throw new SumZeroException("Not supported");
+        throw new SumZeroException("Not yet implemented");
     }
 
-    // protected List<BarData> convertToBarData(Ticker ticker, int barlength,
-    // BarData.LengthUnit lengthUnit, List<BitmexChartData> chartData) {
-    // // List<BarData> barList = new ArrayList<>();
-    // // for (BitmexChartData data : chartData) {
-    // // barList.add(HistoricalDataUtils.buildBarData(ticker, barlength,
-    // lengthUnit, data));
-    // // }
-    // // return barList;
-    // }
+    protected int getDurationInMinutes(int duration, BarData.LengthUnit lengthUnit) {
+        if (lengthUnit == BarData.LengthUnit.MINUTE) {
+            return duration;
+        } else if (lengthUnit == BarData.LengthUnit.HOUR) {
+            return duration * 60;
+        } else if (lengthUnit == BarData.LengthUnit.DAY) {
+            return duration * 60 * 24;
+        } else if (lengthUnit == BarData.LengthUnit.WEEK) {
+            return duration * 60 * 24 * 7;
+        } else if (lengthUnit == BarData.LengthUnit.MONTH) {
+            return duration * 60 * 24 * 30;
+        } else if (lengthUnit == BarData.LengthUnit.YEAR) {
+            return duration * 60 * 24 * 365;
+        }
+
+        throw new IllegalArgumentException("Unsupported length unit: " + lengthUnit);
+    }
 
 }

@@ -187,8 +187,9 @@ public abstract class Ticker implements Serializable {
     @Override
     public String toString() {
         return "Ticker{" + "symbol=" + symbol + ", exchange=" + exchange + ", primaryExchange=" + primaryExchange
-                + ", currency=" + currency + ", decimalFormat=" + decimalFormat + ", minimumTickSize=" + minimumTickSize
-                + ", contractMultiplier=" + contractMultiplier + ", orderSizeIncrement=" + orderSizeIncrement + '}';
+                + ", currency=" + currency + ", decimalFormat=" + decimalFormat.getGroupingSize() + ", minimumTickSize="
+                + minimumTickSize + ", contractMultiplier=" + contractMultiplier + ", orderSizeIncrement="
+                + orderSizeIncrement + '}';
     }
 
 }

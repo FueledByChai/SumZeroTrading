@@ -18,7 +18,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.broker.order;
 
 import com.sumzerotrading.data.Ticker;
@@ -30,34 +29,37 @@ import java.time.ZonedDateTime;
  *
  * @author Rob Terpilowski
  */
-public class OrderStatus implements Serializable  {
-    
+public class OrderStatus implements Serializable {
+
     public static long serialVersionUID = 1L;
-    
-    public enum Status { NEW, PARTIAL_FILL, PENDING_CANCEL, REJECTED, FILLED, CANCELED, REPLACED, UNKNOWN };
-    
-    
+
+    public enum Status {
+        NEW, PARTIAL_FILL, PENDING_CANCEL, REJECTED, FILLED, CANCELED, REPLACED, UNKNOWN
+    };
+
+    public enum CancelReason {
+        NONE, POST_ONLY_WOULD_CROSS, USER_CANCELED;
+    }
+
     protected Status status;
     protected String orderId;
     protected String oldOrderid;
-    protected int filled;
-    protected int remaining;
+    protected BigDecimal filled;
+    protected BigDecimal remaining;
     protected BigDecimal fillPrice;
     protected Ticker ticker;
     protected ZonedDateTime timestamp;
 
-    
-    
-    public OrderStatus( Status status, String oldOrderId, String orderId, Ticker ticker, ZonedDateTime timestamp) {
+    public OrderStatus(Status status, String oldOrderId, String orderId, Ticker ticker, ZonedDateTime timestamp) {
         this.status = status;
         this.oldOrderid = oldOrderId;
         this.orderId = orderId;
         this.ticker = ticker;
         this.timestamp = timestamp;
     }
-    
-    
-    public OrderStatus(Status status, String orderId, int filled, int remaining, BigDecimal fillPrice, Ticker ticker, ZonedDateTime timestamp) {
+
+    public OrderStatus(Status status, String orderId, BigDecimal filled, BigDecimal remaining, BigDecimal fillPrice,
+            Ticker ticker, ZonedDateTime timestamp) {
         this.status = status;
         this.orderId = orderId;
         this.filled = filled;
@@ -66,8 +68,9 @@ public class OrderStatus implements Serializable  {
         this.ticker = ticker;
         this.timestamp = timestamp;
     }
-    
-    public OrderStatus(Status status, String originalOrderId, String orderId, int filled, int remaining, BigDecimal fillPrice, Ticker ticker, ZonedDateTime timestamp) {
+
+    public OrderStatus(Status status, String originalOrderId, String orderId, BigDecimal filled, BigDecimal remaining,
+            BigDecimal fillPrice, Ticker ticker, ZonedDateTime timestamp) {
         this.status = status;
         this.orderId = orderId;
         this.oldOrderid = originalOrderId;
@@ -78,12 +81,11 @@ public class OrderStatus implements Serializable  {
         this.timestamp = timestamp;
     }
 
-    
-    public int getFilled() {
+    public BigDecimal getFilled() {
         return filled;
     }
 
-    public int getRemaining() {
+    public BigDecimal getRemaining() {
         return remaining;
     }
 
@@ -110,8 +112,6 @@ public class OrderStatus implements Serializable  {
     public String getOldOrderid() {
         return oldOrderid;
     }
-    
-    
 
     @Override
     public int hashCode() {
@@ -119,8 +119,8 @@ public class OrderStatus implements Serializable  {
         hash = 97 * hash + (this.status != null ? this.status.hashCode() : 0);
         hash = 97 * hash + (this.orderId != null ? this.orderId.hashCode() : 0);
         hash = 97 * hash + (this.oldOrderid != null ? this.oldOrderid.hashCode() : 0);
-        hash = 97 * hash + this.filled;
-        hash = 97 * hash + this.remaining;
+        hash = 97 * hash + (this.filled != null ? this.filled.hashCode() : 0);
+        hash = 97 * hash + (this.remaining != null ? this.remaining.hashCode() : 0);
         hash = 97 * hash + (this.fillPrice != null ? this.fillPrice.hashCode() : 0);
         hash = 97 * hash + (this.ticker != null ? this.ticker.hashCode() : 0);
         hash = 97 * hash + (this.timestamp != null ? this.timestamp.hashCode() : 0);
@@ -165,10 +165,9 @@ public class OrderStatus implements Serializable  {
 
     @Override
     public String toString() {
-        return "OrderStatus{" + "status=" + status + ", orderId=" + orderId + ", oldOrderid=" + oldOrderid + ", filled=" + filled + ", remaining=" + remaining + ", fillPrice=" + fillPrice + ", ticker=" + ticker + ", timestamp=" + timestamp + '}';
+        return "OrderStatus{" + "status=" + status + ", orderId=" + orderId + ", oldOrderid=" + oldOrderid + ", filled="
+                + filled + ", remaining=" + remaining + ", fillPrice=" + fillPrice + ", ticker=" + ticker
+                + ", timestamp=" + timestamp + '}';
     }
-    
-    
 
-    
 }

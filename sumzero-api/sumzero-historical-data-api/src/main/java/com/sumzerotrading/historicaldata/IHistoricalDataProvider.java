@@ -33,56 +33,70 @@ import java.util.Properties;
  * @author Rob Terpilowski
  */
 public interface IHistoricalDataProvider {
-    	
-	public static enum ShowProperty { BID, ASK, MIDPOINT, TRADES };
 
-        
+        public static enum ShowProperty {
+                BID, ASK, MIDPOINT, TRADES, MARK_PRICE
+        };
+
         /**
          * Initializes the Data provider with the specified properties
+         * 
          * @param props The properties with which to initialize the provider
          */
-        public abstract void init( Properties props );
-        
+        public abstract void init(Properties props);
+
         /**
          * Requests historical data for the specified ticker
-         * @param ticker The ticker for which to fetch the historical data
-         * @param endDateTime The end time of the historical data query
-         * @param duration The length of lookback time (Specify Integer.MAX_VALUE to pull back the max amount of historical data possible).
+         * 
+         * @param ticker             The ticker for which to fetch the historical data
+         * @param endDateTime        The end time of the historical data query
+         * @param duration           The length of lookback time (Specify
+         *                           Integer.MAX_VALUE to pull back the max amount of
+         *                           historical data possible).
          * @param durationLengthUnit The unit of time for the lookback duration
-         * @param barSize The size of the bars to return
-         * @param barSizeUnit The unit for the bar size
-         * @param whatToShow What to return, bid/ask/mid/last
-         * @param useRTH true if this only return data during "Regular Trading Hours" (Not supported by all data providers)
-         * @return An array of bars containing the historical data* @return 
+         * @param barSize            The size of the bars to return
+         * @param barSizeUnit        The unit for the bar size
+         * @param whatToShow         What to return, bid/ask/mid/last
+         * @param useRTH             true if this only return data during "Regular
+         *                           Trading Hours" (Not supported by all data
+         *                           providers)
+         * @return An array of bars containing the historical data* @return
          */
-	public abstract List<BarData> requestHistoricalData( Ticker ticker, Date endDateTime, int duration, BarData.LengthUnit durationLengthUnit, int barSize, BarData.LengthUnit barSizeUnit, ShowProperty whatToShow, boolean useRTH  ) throws IOException;
-        
-        
-        
+        public abstract List<BarData> requestHistoricalData(Ticker ticker, Date endDateTime, int duration,
+                        BarData.LengthUnit durationLengthUnit, int barSize, BarData.LengthUnit barSizeUnit,
+                        ShowProperty whatToShow, boolean useRTH) throws IOException;
+
         /**
-         * Requests historical data for the specified ticker with the current time as the end time.
-         * @param ticker The ticker for which to fetch the historical data
-         * @param duration The length of lookback time (Specify Integer.MAX_VALUE to pull back the max amount of historical data possible).
+         * Requests historical data for the specified ticker with the current time as
+         * the end time.
+         * 
+         * @param ticker             The ticker for which to fetch the historical data
+         * @param duration           The length of lookback time (Specify
+         *                           Integer.MAX_VALUE to pull back the max amount of
+         *                           historical data possible).
          * @param durationLengthUnit The unit of time for the lookback duration
-         * @param barSize The size of the bars to return
-         * @param barSizeUnit The unit for the bar size
-         * @param whatToShow What to return, bid/ask/mid/last
-         * @param useRTH true if this only return data during "Regular Trading Hours" (Not supported by all data providers)
+         * @param barSize            The size of the bars to return
+         * @param barSizeUnit        The unit for the bar size
+         * @param whatToShow         What to return, bid/ask/mid/last
+         * @param useRTH             true if this only return data during "Regular
+         *                           Trading Hours" (Not supported by all data
+         *                           providers)
          * @return An array of bars containing the historical data
          */
-        public abstract List<BarData> requestHistoricalData(Ticker ticker, int duration, BarData.LengthUnit durationLengthUnit, int barSize, BarData.LengthUnit barSizeUnit, ShowProperty whatToShow, boolean useRTH);
-        
-        
+        public abstract List<BarData> requestHistoricalData(Ticker ticker, int duration,
+                        BarData.LengthUnit durationLengthUnit, int barSize, BarData.LengthUnit barSizeUnit,
+                        ShowProperty whatToShow, boolean useRTH);
+
         /**
          * Checks to see if the application is connected to the historical data provider
+         * 
          * @return true if connected to the provider
          */
         public abstract boolean isConnected();
-        
-        
+
         /**
          * Connects to the historical data provider.
          */
         public abstract void connect();
-        
+
 }

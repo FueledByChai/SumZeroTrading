@@ -1,8 +1,6 @@
 /**
  * MIT License
  *
- * Copyright (c) 2015  Rob Terpilowski
- *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without restriction,
  * including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -31,8 +29,11 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,8 +46,9 @@ import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.broker.order.TradeOrder;
 import com.sumzerotrading.data.ComboTicker;
-import com.sumzerotrading.data.SumZeroException;
 import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.paradex.common.api.ParadexRestApi;
+import com.sumzerotrading.paradex.common.api.ParadexWebSocketClient;
 import com.sumzerotrading.time.TimeUpdatedListener;
 
 /**
@@ -56,11 +58,22 @@ import com.sumzerotrading.time.TimeUpdatedListener;
  *
  * @author Rob Terpilowski
  */
-public class ParadexBroker implements IBroker {
+public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
+    protected static Logger logger = LoggerFactory.getLogger(ParadexBroker.class);
+
+    protected static final String WS_URL = "";
 
     protected static int contractRequestId = 1;
     protected static int executionRequestId = 1;
-    protected static Logger logger = LoggerFactory.getLogger(ParadexBroker.class);
+
+    protected ParadexRestApi restApi;
+    protected String jwtToken;
+    protected int jwtRefreshInSeconds = 60;
+    protected boolean connected = false;
+
+    protected ParadexWebSocketClient accountInfoWSClient;
+    protected ParadexWebSocketClient orderStatusWSClient;
+    protected OrderStatusWebSocketProcessor orderStatusProcessor;
 
     protected Set<TradeOrder> currencyOrderList = new HashSet<>();
     protected BlockingQueue<Integer> nextIdQueue = new LinkedBlockingQueue<>();
@@ -77,6 +90,7 @@ public class ParadexBroker implements IBroker {
     protected BitmexOrderEventProcessor orderProcessor;
     protected Set<String> filledOrderSet = new HashSet<>();
     protected Timer currencyOrderTimer;
+    protected ScheduledExecutorService authenticationScheduler;
     protected Object lock = new Object();
     protected Semaphore semaphore = new Semaphore(1);
     protected Semaphore tradeFileSemaphore = new Semaphore(1);
@@ -86,14 +100,12 @@ public class ParadexBroker implements IBroker {
     protected CountDownLatch getPositionsCountdownLatch = null;
     protected List<Position> positionsList = new ArrayList<>();
 
-    // protected IBitmexClient bitmexClient;
-    // protected Map<String, BitmexOrder> openOrderMap = new HashMap<>();
     protected Map<String, TradeOrder> completedOrderMap = new HashMap<>();
 
     @Override
     public void cancelOrder(String id) {
         checkConnected();
-        // bitmexClient.cancelOrder(openOrderMap.get(id));
+        restApi.cancelOrder(jwtToken, id);
     }
 
     @Override
@@ -104,9 +116,8 @@ public class ParadexBroker implements IBroker {
 
     @Override
     public void placeOrder(TradeOrder order) {
-        // BitmexOrder bitmexOrder = OrderManagmentUtil.createBitmexOrder(order);
-        // BitmexOrder submittedOrder = bitmexClient.submitOrder(bitmexOrder);
-        // openOrderMap.put(submittedOrder.getOrderID(), submittedOrder);
+        checkConnected();
+        restApi.placeOrder(jwtToken, order);
     }
 
     @Override
@@ -158,13 +169,18 @@ public class ParadexBroker implements IBroker {
 
     @Override
     public void connect() {
-        // bitmexClient = BitmexClientRegistry.getInstance().getBitmexClient();
+        startAuthenticationScheduler();
+        orderStatusProcessor = new OrderStatusWebSocketProcessor(this, () -> {
+            logger.info("Order status WebSocket closed, trying to restart...");
+            startOrderStatusWSClient();
+        });
+        connected = true;
     }
 
     @Override
     public void disconnect() {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
+        stopAuthenticationScheduler();
+        connected = false;
     }
 
     @Override
@@ -237,6 +253,71 @@ public class ParadexBroker implements IBroker {
         // if (bitmexClient == null) {
         // throw new SumZeroException("Not connected to broker, call connect() first");
         // }
+    }
+
+    @Override
+    public void orderStatusUpdated(IParadexOrderStatusUpdate orderStatus) {
+        // Handle the order status update
+    }
+
+    private void startAuthenticationScheduler() {
+        if (authenticationScheduler == null || authenticationScheduler.isShutdown()) {
+            authenticationScheduler = Executors.newSingleThreadScheduledExecutor();
+
+            // Authenticate immediately when starting
+            try {
+                logger.info("Initial JWT token authentication");
+                jwtToken = authenticate();
+            } catch (Exception e) {
+                logger.error("Failed to obtain initial JWT token", e);
+            }
+
+            // Schedule authentication every minute
+            authenticationScheduler.scheduleAtFixedRate(() -> {
+                try {
+                    logger.info("Refreshing JWT token");
+                    jwtToken = authenticate();
+                } catch (Exception e) {
+                    logger.error("Failed to refresh JWT token", e);
+                }
+            }, jwtRefreshInSeconds, jwtRefreshInSeconds, TimeUnit.SECONDS);
+
+            logger.info("Authentication scheduler started - will refresh JWT token every minute");
+        }
+    }
+
+    private void stopAuthenticationScheduler() {
+        if (authenticationScheduler != null && !authenticationScheduler.isShutdown()) {
+            authenticationScheduler.shutdown();
+            try {
+                if (!authenticationScheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                    authenticationScheduler.shutdownNow();
+                }
+                logger.info("Authentication scheduler stopped");
+            } catch (InterruptedException e) {
+                authenticationScheduler.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    protected String authenticate() throws Exception {
+        jwtToken = restApi.getJwtToken();
+        logger.info("Obtained JWT Token");
+        return jwtToken;
+    }
+
+    public void startOrderStatusWSClient() {
+        logger.info("Starting order status WebSocket client");
+        String jwtToken = restApi.getJwtToken();
+
+        try {
+            orderStatusWSClient = new ParadexWebSocketClient(WS_URL, "orders.ALL", orderStatusProcessor, jwtToken);
+            orderStatusWSClient.connect();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+
     }
 
 }

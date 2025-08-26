@@ -20,58 +20,32 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 package com.sumzerotrading.paradex.historical;
 
-import com.sumzerotrading.data.BarData;
-import com.sumzerotrading.data.SumZeroException;
-import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.historicaldata.IHistoricalDataProvider.ShowProperty;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.sumzerotrading.data.BarData;
+import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.paradex.common.api.historical.OHLCBar;
 
 /**
- *
- * @author Rob Terpilowski
+ * Utility class for converting and handling historical data formats.
  */
 public class HistoricalDataUtils {
 
-    // public static BitmexRestClient.ChartDataBinSize getBinSize(int length,
-    // BarData.LengthUnit lengthUnit) {
-    // if (lengthUnit == BarData.LengthUnit.DAY) {
-    // if (length == 1) {
-    // return BitmexRestClient.ChartDataBinSize.ONE_DAY;
-    // }
-    // } else if (lengthUnit == BarData.LengthUnit.HOUR) {
-    // if (length == 1) {
-    // return BitmexRestClient.ChartDataBinSize.ONE_HOUR;
-    // }
-    // } else if (lengthUnit == BarData.LengthUnit.MINUTE) {
-    // if (length == 5) {
-    // return BitmexRestClient.ChartDataBinSize.FIVE_MINUTES;
-    // } else if (length == 1) {
-    // return BitmexRestClient.ChartDataBinSize.ONE_MINUTE;
-    // }
-    // }
-
-    // throw new InvalidBarSizeException("Only bar size 1D, 1H, 5M, and 1M bars are
-    // supported");
-    // }
-
-    // public static BarData buildBarData(Ticker ticker, int barlength,
-    // BarData.LengthUnit lengthUnit,
-    // BitmexChartData data) {
-    // ZoneId localZone = ZoneId.systemDefault();
-    // ZonedDateTime localZonedTime =
-    // data.getTimestamp().withZoneSameInstant(localZone);
-    // LocalDateTime localTime = localZonedTime.toLocalDateTime();
-
-    // BarData bar = new BarData(ticker, localTime, new BigDecimal(data.getOpen()),
-    // new BigDecimal(data.getHigh()),
-    // new BigDecimal(data.getLow()), new BigDecimal(data.getClose()), new
-    // BigDecimal(data.getVolume()),
-    // barlength, lengthUnit);
-
-    // return bar;
-    // }
+    public static List<BarData> convertToBarData(Ticker ticker, int barSize, BarData.LengthUnit barSizeUnit,
+            List<OHLCBar> ohlcBars) {
+        List<BarData> barDataList = new ArrayList<>();
+        for (OHLCBar ohlc : ohlcBars) {
+            BarData bar = new BarData(ticker,
+                    java.time.Instant.ofEpochMilli(ohlc.getTime()).atZone(java.time.ZoneId.systemDefault())
+                            .toLocalDateTime(),
+                    BigDecimal.valueOf(ohlc.getOpen()), BigDecimal.valueOf(ohlc.getHigh()),
+                    BigDecimal.valueOf(ohlc.getLow()), BigDecimal.valueOf(ohlc.getClose()),
+                    BigDecimal.valueOf(ohlc.getVolume()), barSize, barSizeUnit);
+            barDataList.add(bar);
+        }
+        return barDataList;
+    }
 
 }

@@ -1,8 +1,6 @@
 /**
  * MIT License
 
-Copyright (c) 2015  Rob Terpilowski
-
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 and associated documentation files (the "Software"), to deal in the Software without restriction, 
 including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
@@ -20,8 +18,6 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 package com.sumzerotrading.paradex.example.market.data;
 
-import java.math.BigDecimal;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,8 +32,7 @@ public class MarketDataParadexExample {
 
     public void start() {
 
-        CryptoTicker cryptoTicker = new CryptoTicker("BTC-USD-PERP", Exchange.HYPERLIQUID);
-        cryptoTicker.setMinimumTickSize(new BigDecimal("1.0"));
+        CryptoTicker cryptoTicker = new CryptoTicker("BTC-USD-PERP", Exchange.PARADEX);
 
         ParadexQuoteEngine quoteEngine = new ParadexQuoteEngine();
 

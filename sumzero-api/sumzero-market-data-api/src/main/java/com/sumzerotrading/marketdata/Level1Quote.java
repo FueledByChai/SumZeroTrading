@@ -23,6 +23,7 @@ import com.sumzerotrading.data.SumZeroException;
 import com.sumzerotrading.data.Ticker;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +38,7 @@ import static javax.management.Query.value;
 public class Level1Quote extends AbstractQuote implements ILevel1Quote {
 
     public Level1Quote(Ticker ticker) {
-        super(ticker, ZonedDateTime.now());
+        super(ticker, ZonedDateTime.now(ZoneOffset.UTC));
     }
 
     /**
