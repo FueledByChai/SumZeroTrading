@@ -1,11 +1,20 @@
 package com.sumzerotrading.paradex.common.api;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -189,7 +198,7 @@ class ParadexUtilTest {
 
         // Verify
         assertNotNull(result);
-        assertEquals(LocalDateTime.ofEpochSecond(epochTime, 0, ZoneOffset.UTC), result.getDateTime());
+        assertEquals(Instant.ofEpochSecond(epochTime).atZone(ZoneOffset.UTC), result.getDateTime());
         assertEquals(new BigDecimal("50000.0"), result.getOpen());
         assertEquals(new BigDecimal("51000.0"), result.getHigh());
         assertEquals(new BigDecimal("49000.0"), result.getLow());
@@ -237,7 +246,7 @@ class ParadexUtilTest {
 
         // Verify first bar
         BarData firstBar = result.get(0);
-        assertEquals(LocalDateTime.ofEpochSecond(1640995200L, 0, ZoneOffset.UTC), firstBar.getDateTime());
+        assertEquals(Instant.ofEpochSecond(1640995200L).atZone(ZoneOffset.UTC), firstBar.getDateTime());
         assertEquals(new BigDecimal("50000.0"), firstBar.getOpen());
         assertEquals(new BigDecimal("51000.0"), firstBar.getHigh());
         assertEquals(new BigDecimal("49000.0"), firstBar.getLow());
@@ -246,7 +255,7 @@ class ParadexUtilTest {
 
         // Verify second bar
         BarData secondBar = result.get(1);
-        assertEquals(LocalDateTime.ofEpochSecond(1640998800L, 0, ZoneOffset.UTC), secondBar.getDateTime());
+        assertEquals(Instant.ofEpochSecond(1640998800L).atZone(ZoneOffset.UTC), secondBar.getDateTime());
         assertEquals(new BigDecimal("50500.0"), secondBar.getOpen());
         assertEquals(new BigDecimal("52000.0"), secondBar.getHigh());
         assertEquals(new BigDecimal("50000.0"), secondBar.getLow());

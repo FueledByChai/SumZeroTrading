@@ -19,20 +19,24 @@
  */
 package com.sumzerotrading.bitmex.historical;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+import java.math.BigDecimal;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
 import com.sumzerotrading.bitmex.client.BitmexRestClient;
 import com.sumzerotrading.bitmex.entity.BitmexChartData;
 import com.sumzerotrading.data.BarData;
 import com.sumzerotrading.data.GenericTicker;
 import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.bitmex.historical.HistoricalDataUtils;
-import com.sumzerotrading.bitmex.historical.InvalidBarSizeException;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import org.junit.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 /**
  *
@@ -111,7 +115,7 @@ public class HistoricalDataUtilsTest {
         BigDecimal low = new BigDecimal(100.23);
         BigDecimal close = new BigDecimal(145.54);
         BigDecimal volume = new BigDecimal(2231);
-        ZonedDateTime timestamp = ZonedDateTime.of(2018, 6, 13, 14, 50, 0, 0, ZoneId.of("UTC"));
+        ZonedDateTime timestamp = ZonedDateTime.of(2018, 6, 13, 7, 50, 0, 0, ZoneId.of("UTC"));
 
         BitmexChartData chartData = new BitmexChartData();
         chartData.setTimestamp(timestamp);

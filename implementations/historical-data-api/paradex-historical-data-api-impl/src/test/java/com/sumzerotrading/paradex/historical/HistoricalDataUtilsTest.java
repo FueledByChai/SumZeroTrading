@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -77,13 +77,12 @@ class HistoricalDataUtilsTest {
         BarData barData = result.get(0);
         assertNotNull(barData);
         assertEquals(mockTicker, barData.getTicker());
-        // Note: BarData constructor has a bug - it doesn't set barLength and lengthUnit
-        assertEquals(1, barData.getBarLength()); // Default value from field initialization
-        assertNull(barData.getLengthUnit()); // Default value is null
+        assertEquals(DEFAULT_BAR_SIZE, barData.getBarLength()); // Default value from field initialization
+        assertEquals(DEFAULT_BAR_SIZE_UNIT, barData.getLengthUnit()); // Default value is null
 
         // Verify time conversion (milliseconds to LocalDateTime)
-        LocalDateTime expectedDateTime = java.time.Instant.ofEpochMilli(1640995200000L).atZone(ZoneId.systemDefault())
-                .toLocalDateTime();
+        ZonedDateTime expectedDateTime = ZonedDateTime.ofInstant(java.time.Instant.ofEpochMilli(1640995200000L),
+                ZoneId.of("UTC"));
         assertEquals(expectedDateTime, barData.getDateTime());
 
         // Verify price data conversion (double to BigDecimal)
@@ -126,16 +125,16 @@ class HistoricalDataUtilsTest {
         // Verify first bar
         BarData firstBar = result.get(0);
         assertEquals(mockTicker, firstBar.getTicker());
-        assertEquals(1, firstBar.getBarLength()); // BarData constructor bug
-        assertNull(firstBar.getLengthUnit()); // BarData constructor bug
+        assertEquals(DEFAULT_BAR_SIZE, firstBar.getBarLength()); // BarData constructor bug
+        assertEquals(DEFAULT_BAR_SIZE_UNIT, firstBar.getLengthUnit()); // BarData constructor bug
         assertEquals(BigDecimal.valueOf(50000.00), firstBar.getOpen());
         assertEquals(BigDecimal.valueOf(50500.00), firstBar.getClose());
 
         // Verify second bar
         BarData secondBar = result.get(1);
         assertEquals(mockTicker, secondBar.getTicker());
-        assertEquals(1, secondBar.getBarLength()); // BarData constructor bug
-        assertNull(secondBar.getLengthUnit()); // BarData constructor bug
+        assertEquals(DEFAULT_BAR_SIZE, secondBar.getBarLength()); // BarData constructor bug
+        assertEquals(DEFAULT_BAR_SIZE_UNIT, secondBar.getLengthUnit()); // BarData constructor bug
         assertEquals(BigDecimal.valueOf(50500.00), secondBar.getOpen());
         assertEquals(BigDecimal.valueOf(51500.00), secondBar.getClose());
     }
@@ -204,8 +203,8 @@ class HistoricalDataUtilsTest {
         BarData barData = result.get(0);
         // BarData constructor has a bug - it doesn't assign barLength and lengthUnit
         // parameters
-        assertEquals(1, barData.getBarLength()); // Default field value
-        assertNull(barData.getLengthUnit()); // Default field value
+        assertEquals(customBarSize, barData.getBarLength()); // Default field value
+        assertEquals(customBarSizeUnit, barData.getLengthUnit()); // Default field value
         assertEquals(mockTicker, barData.getTicker());
     }
 
@@ -319,8 +318,8 @@ class HistoricalDataUtilsTest {
 
         BarData barData = result.get(0);
         assertNull(barData.getTicker());
-        assertEquals(1, barData.getBarLength()); // BarData constructor bug
-        assertNull(barData.getLengthUnit()); // BarData constructor bug
+        assertEquals(DEFAULT_BAR_SIZE, barData.getBarLength()); // BarData constructor bug
+        assertEquals(DEFAULT_BAR_SIZE_UNIT, barData.getLengthUnit()); // BarData constructor bug
     }
 
     @Test
@@ -403,8 +402,7 @@ class HistoricalDataUtilsTest {
         assertEquals(1, result.size());
 
         BarData barData = result.get(0);
-        LocalDateTime expectedDateTime = java.time.Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault())
-                .toLocalDateTime();
+        ZonedDateTime expectedDateTime = java.time.Instant.ofEpochMilli(epochMillis).atZone(ZoneId.of("UTC"));
         assertEquals(expectedDateTime, barData.getDateTime());
     }
 
