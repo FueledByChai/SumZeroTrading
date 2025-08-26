@@ -222,9 +222,8 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
         order.setFilledPrice(avgFillPrice);
 
         try {
-            OrderEvent event = OrderManagmentUtil.createOrderEvent(order, status, (int) filled.longValue(),
-                    (int) remaining.longValue(), avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld,
-                    getZoneDateTime());
+            OrderEvent event = OrderManagmentUtil.createOrderEvent(order, status, filled.value(), remaining.value(),
+                    avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld, getZoneDateTime());
 
             // Check if this order status has been seen in the last minute
             OrderEvent cachedEvent = orderEventMap.get(order.getOrderId());

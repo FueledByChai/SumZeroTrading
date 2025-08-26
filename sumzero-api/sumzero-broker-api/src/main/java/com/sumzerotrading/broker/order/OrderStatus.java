@@ -20,10 +20,11 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 package com.sumzerotrading.broker.order;
 
-import com.sumzerotrading.data.Ticker;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
+
+import com.sumzerotrading.data.Ticker;
 
 /**
  *
@@ -49,6 +50,7 @@ public class OrderStatus implements Serializable {
     protected BigDecimal fillPrice;
     protected Ticker ticker;
     protected ZonedDateTime timestamp;
+    protected CancelReason cancelReason = CancelReason.NONE;
 
     public OrderStatus(Status status, String oldOrderId, String orderId, Ticker ticker, ZonedDateTime timestamp) {
         this.status = status;
@@ -113,6 +115,10 @@ public class OrderStatus implements Serializable {
         return oldOrderid;
     }
 
+    public void setCancelReason(CancelReason cancelReason) {
+        this.cancelReason = cancelReason;
+    }
+
     @Override
     public int hashCode() {
         int hash = 5;
@@ -145,10 +151,10 @@ public class OrderStatus implements Serializable {
         if ((this.oldOrderid == null) ? (other.oldOrderid != null) : !this.oldOrderid.equals(other.oldOrderid)) {
             return false;
         }
-        if (this.filled != other.filled) {
+        if (this.filled != other.filled && (this.filled == null || !this.filled.equals(other.filled))) {
             return false;
         }
-        if (this.remaining != other.remaining) {
+        if (this.remaining != other.remaining && (this.remaining == null || !this.remaining.equals(other.remaining))) {
             return false;
         }
         if (this.fillPrice != other.fillPrice && (this.fillPrice == null || !this.fillPrice.equals(other.fillPrice))) {

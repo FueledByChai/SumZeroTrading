@@ -28,6 +28,7 @@ import com.sumzerotrading.realtime.bar.RealtimeBarRequest;
 import com.sumzerotrading.realtime.bar.ib.BarBuilderJob;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -127,7 +128,7 @@ public class RealtimeBarUtilTest extends TestCase {
 
     @Test
     public void testGetBarDate_ZeroSecond() {
-        LocalDateTime expected = LocalDateTime.of(2012, 6, 1, 5, 30, 0, 0);
+        ZonedDateTime expected = ZonedDateTime.of(2012, 6, 1, 5, 30, 0, 0, ZoneId.systemDefault());
 
         RealtimeBarUtil.testDateTime = expected;
 
@@ -136,9 +137,9 @@ public class RealtimeBarUtilTest extends TestCase {
 
     @Test
     public void testGetBarDate_minus3Seconds() {
-        LocalDateTime testDateTime = LocalDateTime.of(2012, 6, 1, 5, 59, 57, 0);
+        ZonedDateTime testDateTime = ZonedDateTime.of(2012, 6, 1, 5, 59, 57, 0, ZoneId.systemDefault());
 
-        LocalDateTime expected = testDateTime.withSecond(0).withMinute(0).withHour(6);
+        ZonedDateTime expected = testDateTime.withSecond(0).withMinute(0).withHour(6);
 
         RealtimeBarUtil.testDateTime = testDateTime;
 
@@ -147,9 +148,9 @@ public class RealtimeBarUtilTest extends TestCase {
 
     @Test
     public void testGetBarDate_plus3Seconds() {
-        LocalDateTime testDateTime = LocalDateTime.of(2012, 6, 1, 5, 1, 3, 0);
+        ZonedDateTime testDateTime = ZonedDateTime.of(2012, 6, 1, 5, 1, 3, 0, ZoneId.systemDefault());
 
-        LocalDateTime expected = testDateTime.withSecond(0).withMinute(1).withHour(5);
+        ZonedDateTime expected = testDateTime.withSecond(0).withMinute(1).withHour(5);
 
         RealtimeBarUtil.testDateTime = testDateTime;
 

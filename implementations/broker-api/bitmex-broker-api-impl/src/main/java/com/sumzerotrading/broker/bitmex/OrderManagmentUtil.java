@@ -18,7 +18,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.broker.bitmex;
 
 import com.sumzerotrading.bitmex.entity.BitmexOrder;
@@ -37,63 +36,58 @@ import java.time.ZonedDateTime;
  */
 public class OrderManagmentUtil {
 
-    
-    
-    
-    public static BitmexOrder createBitmexOrder( TradeOrder order ) {
+    public static BitmexOrder createBitmexOrder(TradeOrder order) {
         BitmexOrder bitmexOrder = new BitmexOrder();
-        bitmexOrder.setOrderID( order.getOrderId() );
+        bitmexOrder.setOrderID(order.getOrderId());
         bitmexOrder.setOrdType(getBitmexOrderType(order.getType()));
         bitmexOrder.setOrderQty(order.getSize());
         bitmexOrder.setSide(getBitmexSide(order.getDirection()));
-        bitmexOrder.setSymbol( order.getTicker().getSymbol() );
+        bitmexOrder.setSymbol(order.getTicker().getSymbol());
         bitmexOrder.setTimeInForce(getBitmexTIF(order.getDuration()));
-        
+
         return bitmexOrder;
-        
+
     }
-    
-    
-    
-    public static String getBitmexTIF( TradeOrder.Duration duration ) {
-        switch( duration ) {
-            case DAY:
-                return "Day";
-            case GOOD_UNTIL_CANCELED:
-                return "GoodTillCancel";
-            case FILL_OR_KILL:
-                return "FillOrKill";
-            default:
-                throw new SumZeroException("Unsupported duration: " + duration );
-                
+
+    public static String getBitmexTIF(TradeOrder.Duration duration) {
+        switch (duration) {
+        case DAY:
+            return "Day";
+        case GOOD_UNTIL_CANCELED:
+            return "GoodTillCancel";
+        case FILL_OR_KILL:
+            return "FillOrKill";
+        default:
+            throw new SumZeroException("Unsupported duration: " + duration);
+
         }
     }
-    
-    public static String getBitmexSide( TradeDirection direction ) {
-        if( direction == TradeDirection.BUY ||
-                direction == TradeDirection.BUY_TO_COVER ) {
+
+    public static String getBitmexSide(TradeDirection direction) {
+        if (direction == TradeDirection.BUY || direction == TradeDirection.BUY_TO_COVER) {
             return "Buy";
         } else {
             return "Sell";
         }
     }
-    
-    
-    public static String getBitmexOrderType( Type type ) {
-        switch( type ) {
-            case MARKET:
-                return "Market";
-            case LIMIT:
-                return "Limit";
-            case STOP:
-                return "Stop";
-            default:
-                throw new SumZeroException("Order type " + type + " not supported");
+
+    public static String getBitmexOrderType(Type type) {
+        switch (type) {
+        case MARKET:
+            return "Market";
+        case LIMIT:
+            return "Limit";
+        case STOP:
+            return "Stop";
+        default:
+            throw new SumZeroException("Order type " + type + " not supported");
         }
     }
 
     /**
-     * Constructs an OrderEvent and also updates the TradeOrder object with the correct status and fill quantity.
+     * Constructs an OrderEvent and also updates the TradeOrder object with the
+     * correct status and fill quantity.
+     * 
      * @param order
      * @param statusString
      * @param filled
@@ -104,14 +98,17 @@ public class OrderManagmentUtil {
      * @param lastFillPrice
      * @param clientId
      * @param whyHeld
-     * @return 
+     * @return
      */
-    public static OrderEvent createOrderEvent(TradeOrder order, String statusString, int filled, int remaining, double avgFillPrice, int permId, int parentId, double lastFillPrice, int clientId, String whyHeld, ZonedDateTime timestamp) {
+    public static OrderEvent createOrderEvent(TradeOrder order, String statusString, BigDecimal filled,
+            BigDecimal remaining, double avgFillPrice, int permId, int parentId, double lastFillPrice, int clientId,
+            String whyHeld, ZonedDateTime timestamp) {
         OrderStatus.Status status = null;
-        
-        OrderStatus orderStatus = new OrderStatus(status, order.getOrderId(), filled, remaining, new BigDecimal(avgFillPrice), order.getTicker(), timestamp );
-        OrderEvent orderEvent = new OrderEvent( order, orderStatus );
-        
+
+        OrderStatus orderStatus = new OrderStatus(status, order.getOrderId(), filled, remaining,
+                new BigDecimal(avgFillPrice), order.getTicker(), timestamp);
+        OrderEvent orderEvent = new OrderEvent(order, orderStatus);
+
         return orderEvent;
     }
 }

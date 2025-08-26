@@ -18,19 +18,23 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.data;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.Month;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Date;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -59,7 +63,7 @@ public class BarTest {
 
     @Test
     public void testFirstConstructor() {
-        LocalDateTime cal = LocalDateTime.now();
+        ZonedDateTime cal = ZonedDateTime.now();
         String timeLabel = "time";
         BigDecimal open = new BigDecimal(1);
         BigDecimal high = new BigDecimal(2);
@@ -67,7 +71,7 @@ public class BarTest {
         BigDecimal close = new BigDecimal(4);
         BigDecimal volume = new BigDecimal(5);
 
-        BarData bar = new BarData(cal, open, high, low, close, volume);
+        BarData bar = new BarData(cal, open, high, low, close, volume, 0L);
         assertEquals(cal, bar.getDateTime());
         assertEquals(open, bar.getOpen());
         assertEquals(high, bar.getHigh());
@@ -79,7 +83,7 @@ public class BarTest {
 
     @Test
     public void testSecondConstructor() {
-        LocalDateTime cal = LocalDateTime.now();
+        ZonedDateTime cal = ZonedDateTime.now();
         BigDecimal open = new BigDecimal(1);
         BigDecimal high = new BigDecimal(2);
         BigDecimal low = new BigDecimal(3);
@@ -103,15 +107,14 @@ public class BarTest {
     @Test
     public void testGetSetDateTime() {
         System.out.println("getDateTime");
-        LocalDateTime cal = LocalDateTime.now();
+        ZonedDateTime cal = ZonedDateTime.now();
         BarData instance = new BarData();
         Date expResult = new Date();
         instance.setDateTime(cal);
 
-        LocalDateTime result = instance.getDateTime();
+        ZonedDateTime result = instance.getDateTime();
         assertEquals(cal, result);
     }
-
 
     /**
      * Test of setOpen method, of class BarData.
@@ -180,99 +183,94 @@ public class BarTest {
         assertEquals(openInterest, instance.getOpenInterest());
     }
 
-
     /**
      * Test of equals method, of class BarData.
      */
     @Test
     public void testEquals() {
         BarData[] bars = getEqualBars();
-        assertTrue( bars[0].equals(bars[1]) );
+        assertTrue(bars[0].equals(bars[1]));
     }
-    
+
     @Test
     public void testEquals_NullBar() {
         BarData bar = new BarData();
-        assertFalse( bar.equals(null));
-    }      
-    
+        assertFalse(bar.equals(null));
+    }
+
     public void testEquals_WrongClass() {
         BarData bar = new BarData();
-        assertFalse( bar.equals( "123" ) );
+        assertFalse(bar.equals("123"));
     }
-    
+
     @Test
     public void testEquals_differentClose() {
         BarData[] bars = getEqualBars();
         bars[0].setClose(BigDecimal.ZERO);
-        assertFalse( bars[0].equals( bars[1] ) );
+        assertFalse(bars[0].equals(bars[1]));
     }
-    
+
     @Test
     public void testEquals_differentOpen() {
         BarData[] bars = getEqualBars();
         bars[0].setOpen(BigDecimal.ZERO);
-        assertFalse( bars[0].equals( bars[1] ) );
-    }    
-    
+        assertFalse(bars[0].equals(bars[1]));
+    }
+
     @Test
     public void testEquals_differentHigh() {
         BarData[] bars = getEqualBars();
         bars[0].setHigh(BigDecimal.ZERO);
-        assertFalse( bars[0].equals( bars[1] ) );
-    }       
-    
+        assertFalse(bars[0].equals(bars[1]));
+    }
+
     @Test
     public void testEquals_differentLow() {
         BarData[] bars = getEqualBars();
         bars[0].setLow(BigDecimal.ZERO);
-        assertFalse( bars[0].equals( bars[1] ) );
-    }    
-    
+        assertFalse(bars[0].equals(bars[1]));
+    }
+
     @Test
     public void testEquals_differentVolume() {
         BarData[] bars = getEqualBars();
         bars[0].setVolume(BigDecimal.ZERO);
-        assertFalse( bars[0].equals( bars[1] ) );
-    }   
-    
+        assertFalse(bars[0].equals(bars[1]));
+    }
+
     @Test
     public void testEquals_differentOpenInterest() {
         BarData[] bars = getEqualBars();
         bars[0].setOpenInterest(0);
-        assertFalse( bars[0].equals( bars[1] ) );
-    }       
-    
-    
+        assertFalse(bars[0].equals(bars[1]));
+    }
+
     @Test
     public void testEquals_differentDate() throws Exception {
         BarData[] bars = getEqualBars();
         bars[0].setDateTime(null);
-        assertFalse( bars[0].equals( bars[1] ) );
-        
-        
-        LocalDateTime cal = LocalDateTime.of(1980, Month.MARCH, 5,0, 0);
-        bars[0].setDateTime( cal );
-        assertFalse( bars[0].equals( bars[1] ) );
-    }         
-    
-    
-    
+        assertFalse(bars[0].equals(bars[1]));
+
+        ZonedDateTime cal = ZonedDateTime.of(1980, 3, 5, 0, 0, 0, 0, ZoneId.of("UTC"));
+        bars[0].setDateTime(cal);
+        assertFalse(bars[0].equals(bars[1]));
+    }
+
     private BarData[] getEqualBars() {
-        LocalDateTime cal = LocalDateTime.now();
+        ZonedDateTime cal = ZonedDateTime.now();
         BigDecimal open = new BigDecimal(1);
         BigDecimal high = new BigDecimal(2);
         BigDecimal low = new BigDecimal(3);
         BigDecimal close = new BigDecimal(4);
         BigDecimal volume = new BigDecimal(5);
-        long openInterest =  6;
-        
+        long openInterest = 6;
+
         BarData[] bars = new BarData[2];
         bars[0] = new BarData(cal, open, high, low, close, volume, openInterest);
-        
+
         bars[1] = new BarData(cal, open, high, low, close, volume, openInterest);
-        
+
         return bars;
-                
+
     }
 }

@@ -3,6 +3,7 @@ package com.sumzerotrading.paradex.common.api;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -57,7 +58,7 @@ public class ParadexUtil {
     }
 
     public static BarData translateBar(OHLCBar bar) {
-        BarData barData = new BarData(LocalDateTime.ofEpochSecond(bar.getTime(), 0, ZoneOffset.UTC),
+        BarData barData = new BarData(java.time.Instant.ofEpochSecond(bar.getTime()).atZone(ZoneOffset.UTC),
                 new BigDecimal(String.valueOf(bar.getOpen())), new BigDecimal(String.valueOf(bar.getHigh())),
                 new BigDecimal(String.valueOf(bar.getLow())), new BigDecimal(String.valueOf(bar.getClose())),
                 new BigDecimal(String.valueOf(bar.getVolume())));

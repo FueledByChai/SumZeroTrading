@@ -36,48 +36,37 @@ import java.time.ZonedDateTime;
  * @author Rob Terpilowski
  */
 public class HistoricalDataUtils {
-    
-    
-    public static BitmexRestClient.ChartDataBinSize getBinSize( int length, BarData.LengthUnit lengthUnit ) {
-        if( lengthUnit == BarData.LengthUnit.DAY ) {
-            if( length == 1 ) {
+
+    public static BitmexRestClient.ChartDataBinSize getBinSize(int length, BarData.LengthUnit lengthUnit) {
+        if (lengthUnit == BarData.LengthUnit.DAY) {
+            if (length == 1) {
                 return BitmexRestClient.ChartDataBinSize.ONE_DAY;
             }
-        } else if( lengthUnit == BarData.LengthUnit.HOUR ) {
-            if( length == 1 ) {
+        } else if (lengthUnit == BarData.LengthUnit.HOUR) {
+            if (length == 1) {
                 return BitmexRestClient.ChartDataBinSize.ONE_HOUR;
             }
-        } else if( lengthUnit == BarData.LengthUnit.MINUTE ) {
-            if( length == 5 ) {
+        } else if (lengthUnit == BarData.LengthUnit.MINUTE) {
+            if (length == 5) {
                 return BitmexRestClient.ChartDataBinSize.FIVE_MINUTES;
-            } else if( length == 1 ) {
+            } else if (length == 1) {
                 return BitmexRestClient.ChartDataBinSize.ONE_MINUTE;
             }
         }
-        
-        throw new InvalidBarSizeException("Only bar size 1D, 1H, 5M, and 1M bars are supported" );
+
+        throw new InvalidBarSizeException("Only bar size 1D, 1H, 5M, and 1M bars are supported");
     }
-    
-    
-    
-    public static BarData buildBarData( Ticker ticker, int barlength, BarData.LengthUnit lengthUnit, BitmexChartData data ) {
-          ZoneId localZone = ZoneId.systemDefault();
-            ZonedDateTime localZonedTime = data.getTimestamp().withZoneSameInstant(localZone);
-            LocalDateTime localTime = localZonedTime.toLocalDateTime();
-            
-            
-            BarData bar = new BarData(ticker,
-                    localTime,
-                    new BigDecimal(data.getOpen()),
-                    new BigDecimal(data.getHigh()),
-                    new BigDecimal(data.getLow()),
-                    new BigDecimal(data.getClose()),
-                    new BigDecimal(data.getVolume()),
-                    barlength,
-                    lengthUnit);
-        
+
+    public static BarData buildBarData(Ticker ticker, int barlength, BarData.LengthUnit lengthUnit,
+            BitmexChartData data) {
+
+        ZonedDateTime time = data.getTimestamp();
+
+        BarData bar = new BarData(ticker, time, new BigDecimal(data.getOpen()), new BigDecimal(data.getHigh()),
+                new BigDecimal(data.getLow()), new BigDecimal(data.getClose()), new BigDecimal(data.getVolume()),
+                barlength, lengthUnit);
+
         return bar;
     }
-    
-    
+
 }

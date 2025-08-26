@@ -19,6 +19,8 @@
  */
 package com.sumzerotrading.data;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.text.*;
@@ -184,10 +186,20 @@ public abstract class Ticker implements Serializable {
         return true;
     }
 
+    /**
+     * Custom deserialization method to reinitialize transient fields.
+     */
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        // Reinitialize transient decimalFormat field
+        decimalFormat = new DecimalFormat("00");
+    }
+
     @Override
     public String toString() {
+        String decimalFormatInfo = (decimalFormat != null) ? String.valueOf(decimalFormat.getGroupingSize()) : "null";
         return "Ticker{" + "symbol=" + symbol + ", exchange=" + exchange + ", primaryExchange=" + primaryExchange
-                + ", currency=" + currency + ", decimalFormat=" + decimalFormat.getGroupingSize() + ", minimumTickSize="
+                + ", currency=" + currency + ", decimalFormat=" + decimalFormatInfo + ", minimumTickSize="
                 + minimumTickSize + ", contractMultiplier=" + contractMultiplier + ", orderSizeIncrement="
                 + orderSizeIncrement + '}';
     }

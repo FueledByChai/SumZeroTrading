@@ -66,7 +66,7 @@ import org.quartz.Trigger;
 public class BarBuilderTest extends TestCase {
 
     protected Mockery mockery;
-    
+
     @Spy
     protected BarBuilder testBarBuilder;
 
@@ -107,8 +107,9 @@ public class BarBuilderTest extends TestCase {
         BigDecimal barClose = new BigDecimal(1);
         BigDecimal barVolume = new BigDecimal(10);
 
-        barList.add(new BarData(LocalDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2), new BigDecimal(2), new BigDecimal(11)));
-        barList.add(new BarData(LocalDateTime.now(), barOpen, barHigh, barLow, barClose, barVolume));
+        barList.add(new BarData(ZonedDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2),
+                new BigDecimal(2), new BigDecimal(11)));
+        barList.add(new BarData(ZonedDateTime.now(), barOpen, barHigh, barLow, barClose, barVolume));
 
         mockery.checking(new Expectations() {
 
@@ -116,7 +117,9 @@ public class BarBuilderTest extends TestCase {
                 one(mockFactory).getScheduler();
                 will(returnValue(mockScheduler));
 
-                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY, request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES, false);
+                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY,
+                        request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES,
+                        false);
                 will(returnValue(barList));
 
                 one(mockScheduler).scheduleJob(with(any(JobDetail.class)), with(any(Trigger.class)));
@@ -135,7 +138,6 @@ public class BarBuilderTest extends TestCase {
 
     }
 
-    
     @Test
     public void testConstructor_schedulerNotStarted() throws Exception {
         final SchedulerFactory mockFactory = mockery.mock(SchedulerFactory.class);
@@ -146,7 +148,8 @@ public class BarBuilderTest extends TestCase {
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
         final List<BarData> barList = new ArrayList<BarData>();
-        barList.add(new BarData(LocalDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2), new BigDecimal(2), new BigDecimal(10)));
+        barList.add(new BarData(ZonedDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2),
+                new BigDecimal(2), new BigDecimal(10)));
 
         mockery.checking(new Expectations() {
 
@@ -154,7 +157,9 @@ public class BarBuilderTest extends TestCase {
                 one(mockFactory).getScheduler();
                 will(returnValue(mockScheduler));
 
-                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY, request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES, false);
+                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY,
+                        request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES,
+                        false);
                 will(returnValue(barList));
 
                 one(mockScheduler).scheduleJob(with(any(JobDetail.class)), with(any(Trigger.class)));
@@ -169,8 +174,6 @@ public class BarBuilderTest extends TestCase {
         assertEquals(request, builder.realtimeBarRequest);
 
     }
-    
-    
 
     @Test
     public void testConstructor_throwsSchedulerException() throws Exception {
@@ -180,7 +183,8 @@ public class BarBuilderTest extends TestCase {
         Ticker ticker = new StockTicker("qqq");
         final RealtimeBarRequest request = new RealtimeBarRequest(1, ticker, 1, LengthUnit.MINUTE);
         final List<BarData> barList = new ArrayList<BarData>();
-        barList.add(new BarData(LocalDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2), new BigDecimal(2), new BigDecimal(10)));
+        barList.add(new BarData(ZonedDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2),
+                new BigDecimal(2), new BigDecimal(10)));
 
         mockery.checking(new Expectations() {
 
@@ -188,7 +192,9 @@ public class BarBuilderTest extends TestCase {
                 one(mockFactory).getScheduler();
                 will(throwException(new SchedulerException()));
 
-                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 2, request.getTimeUnit(), request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES, false);
+                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 2, request.getTimeUnit(),
+                        request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES,
+                        false);
                 will(returnValue(barList));
             }
         });
@@ -197,12 +203,10 @@ public class BarBuilderTest extends TestCase {
             BarBuilder builder = new BarBuilder(mockFactory, request, mockHistoricalDataProvider);
             fail();
         } catch (IllegalStateException ex) {
-            //this should happen
+            // this should happen
         }
     }
 
-    
-    
     @Test
     public void testQuoteReceived() throws Exception {
         final SchedulerFactory mockFactory = mockery.mock(SchedulerFactory.class);
@@ -214,7 +218,8 @@ public class BarBuilderTest extends TestCase {
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
         final List<BarData> barList = new ArrayList<BarData>();
-        barList.add(new BarData(LocalDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2), new BigDecimal(2), new BigDecimal(10)));
+        barList.add(new BarData(ZonedDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2),
+                new BigDecimal(2), new BigDecimal(10)));
 
         mockery.checking(new Expectations() {
 
@@ -222,23 +227,24 @@ public class BarBuilderTest extends TestCase {
                 one(mockFactory).getScheduler();
                 will(returnValue(mockScheduler));
 
-                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY, request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES, false);
+                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY,
+                        request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES,
+                        false);
                 will(returnValue(barList));
 
                 one(mockScheduler).scheduleJob(with(any(JobDetail.class)), with(any(Trigger.class)));
 
                 one(mockScheduler).isStarted();
                 will(returnValue(true));
-                
+
                 one(mockQuote).containsType(QuoteType.VOLUME);
                 will(returnValue(false));
-                
+
                 one(mockQuote).containsType(QuoteType.LAST_SIZE);
-                will(returnValue(false));                
+                will(returnValue(false));
 
                 one(mockQuote).containsType(QuoteType.LAST);
                 will(returnValue(true));
-
 
                 one(mockQuote).getValue(QuoteType.LAST);
                 will(returnValue(BigDecimal.ONE));
@@ -250,8 +256,6 @@ public class BarBuilderTest extends TestCase {
         builder.quoteRecieved(mockQuote);
         mockery.assertIsSatisfied();
     }
-    
-   
 
     @Test
     public void testQuoteReceived_volume() throws Exception {
@@ -264,7 +268,8 @@ public class BarBuilderTest extends TestCase {
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
         final List<BarData> barList = new ArrayList<BarData>();
-        barList.add(new BarData(LocalDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2), new BigDecimal(2), new BigDecimal(10)));
+        barList.add(new BarData(ZonedDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2),
+                new BigDecimal(2), new BigDecimal(10)));
 
         mockery.checking(new Expectations() {
 
@@ -272,7 +277,9 @@ public class BarBuilderTest extends TestCase {
                 one(mockFactory).getScheduler();
                 will(returnValue(mockScheduler));
 
-                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY, request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES, false);
+                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY,
+                        request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES,
+                        false);
                 will(returnValue(barList));
 
                 one(mockScheduler).scheduleJob(with(any(JobDetail.class)), with(any(Trigger.class)));
@@ -282,9 +289,9 @@ public class BarBuilderTest extends TestCase {
 
                 one(mockQuote).containsType(QuoteType.VOLUME);
                 will(returnValue(true));
-                
+
                 one(mockQuote).containsType(QuoteType.LAST);
-                will(returnValue(false));                
+                will(returnValue(false));
 
                 one(mockQuote).getValue(QuoteType.VOLUME);
                 will(returnValue(BigDecimal.ONE));
@@ -296,8 +303,6 @@ public class BarBuilderTest extends TestCase {
         builder.quoteRecieved(mockQuote);
         mockery.assertIsSatisfied();
     }
-    
-    
 
     @Test
     public void testAddRemoveBarListeners() throws Exception {
@@ -310,7 +315,8 @@ public class BarBuilderTest extends TestCase {
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
         final List<BarData> barList = new ArrayList<BarData>();
-        barList.add(new BarData(LocalDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2), new BigDecimal(2), new BigDecimal(10)));
+        barList.add(new BarData(ZonedDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2),
+                new BigDecimal(2), new BigDecimal(10)));
 
         mockery.checking(new Expectations() {
 
@@ -318,7 +324,9 @@ public class BarBuilderTest extends TestCase {
                 one(mockFactory).getScheduler();
                 will(returnValue(mockScheduler));
 
-                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY, request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES, false);
+                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY,
+                        request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES,
+                        false);
                 will(returnValue(barList));
 
                 one(mockScheduler).isStarted();
@@ -339,10 +347,7 @@ public class BarBuilderTest extends TestCase {
         assertEquals(0, builder.listenerList.size());
         mockery.assertIsSatisfied();
     }
- 
-    
-    
-    
+
     @Test
     public void testSetHigh() throws Exception {
         final SchedulerFactory mockFactory = mockery.mock(SchedulerFactory.class);
@@ -353,7 +358,8 @@ public class BarBuilderTest extends TestCase {
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
         final List<BarData> barList = new ArrayList<BarData>();
-        barList.add(new BarData(LocalDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2), new BigDecimal(2), new BigDecimal(10)));
+        barList.add(new BarData(ZonedDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2),
+                new BigDecimal(2), new BigDecimal(10)));
 
         mockery.checking(new Expectations() {
 
@@ -361,7 +367,9 @@ public class BarBuilderTest extends TestCase {
                 one(mockFactory).getScheduler();
                 will(returnValue(mockScheduler));
 
-                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY, request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES, false);
+                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY,
+                        request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES,
+                        false);
                 will(returnValue(barList));
 
                 one(mockScheduler).scheduleJob(with(any(JobDetail.class)), with(any(Trigger.class)));
@@ -386,7 +394,6 @@ public class BarBuilderTest extends TestCase {
         mockery.assertIsSatisfied();
     }
 
-    
     @Test
     public void testSetLow() throws Exception {
         final SchedulerFactory mockFactory = mockery.mock(SchedulerFactory.class);
@@ -397,7 +404,8 @@ public class BarBuilderTest extends TestCase {
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
         final List<BarData> barList = new ArrayList<BarData>();
-        barList.add(new BarData(LocalDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(200.0), new BigDecimal(2), new BigDecimal(10)));
+        barList.add(new BarData(ZonedDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(200.0),
+                new BigDecimal(2), new BigDecimal(10)));
 
         mockery.checking(new Expectations() {
 
@@ -405,7 +413,9 @@ public class BarBuilderTest extends TestCase {
                 one(mockFactory).getScheduler();
                 will(returnValue(mockScheduler));
 
-                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY, request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES, false);
+                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY,
+                        request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES,
+                        false);
                 will(returnValue(barList));
 
                 one(mockScheduler).scheduleJob(with(any(JobDetail.class)), with(any(Trigger.class)));
@@ -429,7 +439,6 @@ public class BarBuilderTest extends TestCase {
 
         mockery.assertIsSatisfied();
     }
-    
 
     @Test
     public void testSetOpen() throws Exception {
@@ -441,7 +450,8 @@ public class BarBuilderTest extends TestCase {
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
         final List<BarData> barList = new ArrayList<BarData>();
-        barList.add(new BarData(LocalDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2), new BigDecimal(2), new BigDecimal(10)));
+        barList.add(new BarData(ZonedDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2),
+                new BigDecimal(2), new BigDecimal(10)));
 
         mockery.checking(new Expectations() {
 
@@ -449,7 +459,9 @@ public class BarBuilderTest extends TestCase {
                 one(mockFactory).getScheduler();
                 will(returnValue(mockScheduler));
 
-                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY, request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES, false);
+                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY,
+                        request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES,
+                        false);
                 will(returnValue(barList));
 
                 one(mockScheduler).scheduleJob(with(any(JobDetail.class)), with(any(Trigger.class)));
@@ -473,7 +485,6 @@ public class BarBuilderTest extends TestCase {
         mockery.assertIsSatisfied();
     }
 
-    
     @Test
     public void testSetClose() throws Exception {
         final SchedulerFactory mockFactory = mockery.mock(SchedulerFactory.class);
@@ -484,7 +495,8 @@ public class BarBuilderTest extends TestCase {
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
         final List<BarData> barList = new ArrayList<BarData>();
-        barList.add(new BarData(LocalDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2), new BigDecimal(2), new BigDecimal(10)));
+        barList.add(new BarData(ZonedDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2),
+                new BigDecimal(2), new BigDecimal(10)));
 
         mockery.checking(new Expectations() {
 
@@ -492,7 +504,9 @@ public class BarBuilderTest extends TestCase {
                 one(mockFactory).getScheduler();
                 will(returnValue(mockScheduler));
 
-                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY, request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES, false);
+                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY,
+                        request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES,
+                        false);
                 will(returnValue(barList));
 
                 one(mockScheduler).scheduleJob(with(any(JobDetail.class)), with(any(Trigger.class)));
@@ -514,7 +528,6 @@ public class BarBuilderTest extends TestCase {
         mockery.assertIsSatisfied();
     }
 
-    
     @Test
     public void testSetVolume() throws Exception {
         final SchedulerFactory mockFactory = mockery.mock(SchedulerFactory.class);
@@ -525,7 +538,8 @@ public class BarBuilderTest extends TestCase {
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
         final List<BarData> barList = new ArrayList<BarData>();
-        barList.add(new BarData(LocalDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2), new BigDecimal(2), new BigDecimal(10)));
+        barList.add(new BarData(ZonedDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2),
+                new BigDecimal(2), new BigDecimal(10)));
 
         mockery.checking(new Expectations() {
 
@@ -533,7 +547,9 @@ public class BarBuilderTest extends TestCase {
                 one(mockFactory).getScheduler();
                 will(returnValue(mockScheduler));
 
-                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY, request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES, false);
+                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY,
+                        request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES,
+                        false);
                 will(returnValue(barList));
 
                 one(mockScheduler).scheduleJob(with(any(JobDetail.class)), with(any(Trigger.class)));
@@ -555,7 +571,6 @@ public class BarBuilderTest extends TestCase {
         mockery.assertIsSatisfied();
     }
 
-    
     @Test
     public void testBuildBarAndFireEvents() throws Exception {
         final SchedulerFactory mockFactory = mockery.mock(SchedulerFactory.class);
@@ -566,7 +581,8 @@ public class BarBuilderTest extends TestCase {
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
         final List<BarData> barList = new ArrayList<BarData>();
-        barList.add(new BarData(LocalDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2), new BigDecimal(2), new BigDecimal(10)));
+        barList.add(new BarData(ZonedDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2),
+                new BigDecimal(2), new BigDecimal(10)));
         BigDecimal open = new BigDecimal(1.0);
         BigDecimal high = new BigDecimal(2.0);
         BigDecimal low = new BigDecimal(1.0);
@@ -579,7 +595,9 @@ public class BarBuilderTest extends TestCase {
                 one(mockFactory).getScheduler();
                 will(returnValue(mockScheduler));
 
-                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY, request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES, false);
+                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY,
+                        request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES,
+                        false);
                 will(returnValue(barList));
 
                 one(mockScheduler).scheduleJob(with(any(JobDetail.class)), with(any(Trigger.class)));
@@ -602,7 +620,7 @@ public class BarBuilderTest extends TestCase {
         builder.setClose(close);
         builder.setVolume(volume);
 
-        LocalDateTime barDate = RealtimeBarUtil.getBarDate();
+        ZonedDateTime barDate = RealtimeBarUtil.getBarDate();
 
         builder.buildBarAndFireEvents();
         assertEquals(builder.close, builder.open);
@@ -625,7 +643,6 @@ public class BarBuilderTest extends TestCase {
         mockery.assertIsSatisfied();
     }
 
-    
     @Test
     public void testFireEvent() throws Exception {
         final SchedulerFactory mockFactory = mockery.mock(SchedulerFactory.class);
@@ -637,7 +654,8 @@ public class BarBuilderTest extends TestCase {
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
         final RealtimeBarListener mockListener = mockery.mock(RealtimeBarListener.class);
         final List<BarData> barList = new ArrayList<BarData>();
-        barList.add(new BarData(LocalDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2), new BigDecimal(2), new BigDecimal(10)));
+        barList.add(new BarData(ZonedDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2),
+                new BigDecimal(2), new BigDecimal(10)));
         BigDecimal open = new BigDecimal(1.0);
         BigDecimal high = new BigDecimal(2.0);
         BigDecimal low = new BigDecimal(1.0);
@@ -650,7 +668,7 @@ public class BarBuilderTest extends TestCase {
         expectedBar.setLow(low);
         expectedBar.setClose(close);
         expectedBar.setVolume(volume);
-        expectedBar.setDateTime(LocalDateTime.now());
+        expectedBar.setDateTime(ZonedDateTime.now());
 
         mockery.checking(new Expectations() {
 
@@ -658,7 +676,9 @@ public class BarBuilderTest extends TestCase {
                 one(mockFactory).getScheduler();
                 will(returnValue(mockScheduler));
 
-                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY, request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES, false);
+                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY,
+                        request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES,
+                        false);
                 will(returnValue(barList));
 
                 one(mockScheduler).scheduleJob(with(any(JobDetail.class)), with(any(Trigger.class)));
@@ -678,7 +698,6 @@ public class BarBuilderTest extends TestCase {
         mockery.assertIsSatisfied();
     }
 
-    
     @Test
     public void testGetListenerCount() throws Exception {
         final SchedulerFactory mockFactory = mockery.mock(SchedulerFactory.class);
@@ -690,7 +709,8 @@ public class BarBuilderTest extends TestCase {
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
         final RealtimeBarListener mockListener = mockery.mock(RealtimeBarListener.class);
         final List<BarData> barList = new ArrayList<BarData>();
-        barList.add(new BarData(LocalDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2), new BigDecimal(2), new BigDecimal(10)));
+        barList.add(new BarData(ZonedDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2),
+                new BigDecimal(2), new BigDecimal(10)));
 
         mockery.checking(new Expectations() {
 
@@ -698,7 +718,9 @@ public class BarBuilderTest extends TestCase {
                 one(mockFactory).getScheduler();
                 will(returnValue(mockScheduler));
 
-                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY, request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES, false);
+                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY,
+                        request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES,
+                        false);
                 will(returnValue(barList));
 
                 one(mockScheduler).scheduleJob(with(any(JobDetail.class)), with(any(Trigger.class)));
@@ -715,8 +737,6 @@ public class BarBuilderTest extends TestCase {
         mockery.assertIsSatisfied();
     }
 
-    
-    
     @Test
     public void testStop() throws Exception {
         final SchedulerFactory mockFactory = mockery.mock(SchedulerFactory.class);
@@ -729,7 +749,8 @@ public class BarBuilderTest extends TestCase {
         final JobDetail job = RealtimeBarUtil.buildJob(jobName, null);
         final RealtimeBarListener mockListener = mockery.mock(RealtimeBarListener.class);
         final List<BarData> barList = new ArrayList<BarData>();
-        barList.add(new BarData(LocalDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2), new BigDecimal(2), new BigDecimal(10)));
+        barList.add(new BarData(ZonedDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2),
+                new BigDecimal(2), new BigDecimal(10)));
 
         mockery.checking(new Expectations() {
 
@@ -737,7 +758,9 @@ public class BarBuilderTest extends TestCase {
                 one(mockFactory).getScheduler();
                 will(returnValue(mockScheduler));
 
-                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY, request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES, false);
+                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY,
+                        request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES,
+                        false);
                 will(returnValue(barList));
 
                 one(mockScheduler).scheduleJob(with(any(JobDetail.class)), with(any(Trigger.class)));
@@ -754,8 +777,6 @@ public class BarBuilderTest extends TestCase {
 
         mockery.assertIsSatisfied();
     }
-    
-    
 
     @Test
     public void testStop_ThrowsException() throws Exception {
@@ -769,7 +790,8 @@ public class BarBuilderTest extends TestCase {
         final JobDetail job = RealtimeBarUtil.buildJob(jobName, null);
         final RealtimeBarListener mockListener = mockery.mock(RealtimeBarListener.class);
         final List<BarData> barList = new ArrayList<BarData>();
-        barList.add(new BarData(LocalDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2), new BigDecimal(2), new BigDecimal(10)));
+        barList.add(new BarData(ZonedDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2),
+                new BigDecimal(2), new BigDecimal(10)));
 
         mockery.checking(new Expectations() {
 
@@ -777,7 +799,9 @@ public class BarBuilderTest extends TestCase {
                 one(mockFactory).getScheduler();
                 will(returnValue(mockScheduler));
 
-                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY, request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES, false);
+                one(mockHistoricalDataProvider).requestHistoricalData(request.getTicker(), 1, LengthUnit.DAY,
+                        request.getTimeInterval(), request.getTimeUnit(), IHistoricalDataProvider.ShowProperty.TRADES,
+                        false);
                 will(returnValue(barList));
 
                 one(mockScheduler).scheduleJob(with(any(JobDetail.class)), with(any(Trigger.class)));
@@ -795,111 +819,110 @@ public class BarBuilderTest extends TestCase {
             builder.stop();
             fail();
         } catch (IllegalStateException ex) {
-            //this should happen
+            // this should happen
         }
 
         mockery.assertIsSatisfied();
     }
-    
+
     @Test
     public void testGetValue_Currency() {
         testBarBuilder.isCurrency = true;
         Ticker ticker = new GenericTicker("XYZ");
         ZonedDateTime now = ZonedDateTime.now();
-        Map<QuoteType,BigDecimal> quoteValues = new HashMap<>();
-        
+        Map<QuoteType, BigDecimal> quoteValues = new HashMap<>();
+
         Level1Quote quote = new Level1Quote(ticker, now, quoteValues);
-        
+
         assertEquals(BigDecimal.ZERO, testBarBuilder.getValue(quote));
-        
+
         quoteValues.put(QuoteType.BID, BigDecimal.ONE);
         quote = new Level1Quote(ticker, now, quoteValues);
         assertEquals(BigDecimal.ZERO, testBarBuilder.getValue(quote));
-        
+
         quoteValues.clear();
         testBarBuilder.lastBid = BigDecimal.ZERO;
         testBarBuilder.lastAsk = BigDecimal.ZERO;
         quoteValues.put(QuoteType.ASK, BigDecimal.TEN);
         quote = new Level1Quote(ticker, now, quoteValues);
         assertEquals(BigDecimal.ZERO, testBarBuilder.getValue(quote));
-        
+
         testBarBuilder.lastBid = BigDecimal.ZERO;
         testBarBuilder.lastAsk = BigDecimal.ZERO;
         quoteValues.put(QuoteType.BID, BigDecimal.ONE);
         quote = new Level1Quote(ticker, now, quoteValues);
         assertEquals(new BigDecimal(5.5), testBarBuilder.getValue(quote));
     }
-    
+
     @Test
-    public void testGetValue_NotCurrency_Midpoint() {    
+    public void testGetValue_NotCurrency_Midpoint() {
         testBarBuilder.isCurrency = false;
         testBarBuilder.showProperty = IHistoricalDataProvider.ShowProperty.MIDPOINT;
         Ticker ticker = new GenericTicker("XYZ");
         ZonedDateTime now = ZonedDateTime.now();
-        Map<QuoteType,BigDecimal> quoteValues = new HashMap<>();        
-        
+        Map<QuoteType, BigDecimal> quoteValues = new HashMap<>();
+
         Level1Quote quote = new Level1Quote(ticker, now, quoteValues);
         assertEquals(BigDecimal.ZERO, testBarBuilder.getValue(quote));
-        
+
         quoteValues.put(QuoteType.MIDPOINT, BigDecimal.ONE);
-        
+
         assertEquals(BigDecimal.ONE, testBarBuilder.getValue(quote));
     }
-    
-    
+
     @Test
     public void testGetValue_NotCurrency_NotMidpoint() {
         testBarBuilder.isCurrency = false;
         testBarBuilder.showProperty = IHistoricalDataProvider.ShowProperty.TRADES;
         Ticker ticker = new GenericTicker("XYZ");
         ZonedDateTime now = ZonedDateTime.now();
-        Map<QuoteType,BigDecimal> quoteValues = new HashMap<>();        
+        Map<QuoteType, BigDecimal> quoteValues = new HashMap<>();
         quoteValues.put(QuoteType.LAST, BigDecimal.ONE);
-                
-        Level1Quote quote = new Level1Quote(ticker, now, quoteValues);  
-        
+
+        Level1Quote quote = new Level1Quote(ticker, now, quoteValues);
+
         assertEquals(BigDecimal.ONE, testBarBuilder.getValue(quote));
-        
+
     }
-    
-    
+
     @Test
     public void testValidQuote() {
-        Map<QuoteType,BigDecimal> quoteValues = new HashMap<>();
+        Map<QuoteType, BigDecimal> quoteValues = new HashMap<>();
         testBarBuilder.isCurrency = true;
         Level1Quote quote = new Level1Quote(null, null, quoteValues);
-        
-        assertFalse( testBarBuilder.validQuote(quote));
-        
+
+        assertFalse(testBarBuilder.validQuote(quote));
+
         quoteValues.put(QuoteType.BID, BigDecimal.ONE);
-        assertTrue( testBarBuilder.validQuote(quote));
-        
+        assertTrue(testBarBuilder.validQuote(quote));
+
         quoteValues.clear();
         quoteValues.put(QuoteType.ASK, BigDecimal.ONE);
         quote = new Level1Quote(null, null, quoteValues);
-        assertTrue( testBarBuilder.validQuote(quote));
-        
+        assertTrue(testBarBuilder.validQuote(quote));
+
         testBarBuilder.showProperty = IHistoricalDataProvider.ShowProperty.MIDPOINT;
         testBarBuilder.isCurrency = false;
         quoteValues.clear();
         quoteValues.put(QuoteType.MIDPOINT, BigDecimal.ONE);
         quote = new Level1Quote(null, null, quoteValues);
-        assertTrue( testBarBuilder.validQuote(quote) );
-        
+        assertTrue(testBarBuilder.validQuote(quote));
+
         testBarBuilder.showProperty = IHistoricalDataProvider.ShowProperty.TRADES;
         testBarBuilder.isCurrency = false;
         quoteValues.clear();
         quoteValues.put(QuoteType.LAST, BigDecimal.ONE);
         quote = new Level1Quote(null, null, quoteValues);
-        assertTrue( testBarBuilder.validQuote(quote));
-        
+        assertTrue(testBarBuilder.validQuote(quote));
+
     }
 
     private static class MockFireEventBarBuilder extends BarBuilder {
 
         private BarData bar = null;
 
-        public MockFireEventBarBuilder(SchedulerFactory schedulerFactory, RealtimeBarRequest request, IHistoricalDataProvider dataProvider) {
+        public MockFireEventBarBuilder(SchedulerFactory schedulerFactory, RealtimeBarRequest request,
+                IHistoricalDataProvider dataProvider) {
             super(schedulerFactory, request, dataProvider);
         }
 

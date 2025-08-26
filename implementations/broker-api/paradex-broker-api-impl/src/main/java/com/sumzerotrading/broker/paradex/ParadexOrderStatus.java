@@ -1,5 +1,5 @@
 package com.sumzerotrading.broker.paradex;
 
 public enum ParadexOrderStatus {
-    NEW, OPEN, CLOSED
+    NEW, OPEN, CLOSED, UNTRIGGERED
 }

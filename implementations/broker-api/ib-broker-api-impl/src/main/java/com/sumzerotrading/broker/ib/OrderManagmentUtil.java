@@ -18,7 +18,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.broker.ib;
 
 import com.sumzerotrading.broker.order.OrderEvent;
@@ -35,9 +34,10 @@ import java.util.Date;
  */
 public class OrderManagmentUtil {
 
-
     /**
-     * Constructs an OrderEvent and also updates the TradeOrder object with the correct status and fill quantity.
+     * Constructs an OrderEvent and also updates the TradeOrder object with the
+     * correct status and fill quantity.
+     * 
      * @param order
      * @param statusString
      * @param filled
@@ -48,14 +48,17 @@ public class OrderManagmentUtil {
      * @param lastFillPrice
      * @param clientId
      * @param whyHeld
-     * @return 
+     * @return
      */
-    public static OrderEvent createOrderEvent(TradeOrder order, String statusString, int filled, int remaining, double avgFillPrice, int permId, int parentId, double lastFillPrice, int clientId, String whyHeld, ZonedDateTime timestamp) {
+    public static OrderEvent createOrderEvent(TradeOrder order, String statusString, BigDecimal filled,
+            BigDecimal remaining, double avgFillPrice, int permId, int parentId, double lastFillPrice, int clientId,
+            String whyHeld, ZonedDateTime timestamp) {
         OrderStatus.Status status = IbUtils.getOrderStatus(statusString);
-        
-        OrderStatus orderStatus = new OrderStatus(status, order.getOrderId(), filled, remaining, new BigDecimal(avgFillPrice), order.getTicker(), timestamp );
-        OrderEvent orderEvent = new OrderEvent( order, orderStatus );
-        
+
+        OrderStatus orderStatus = new OrderStatus(status, order.getOrderId(), filled, remaining,
+                new BigDecimal(avgFillPrice), order.getTicker(), timestamp);
+        OrderEvent orderEvent = new OrderEvent(order, orderStatus);
+
         return orderEvent;
     }
 }

@@ -61,10 +61,14 @@ public class HistoricalDataUtilsTest {
 
     @Test
     public void testGetBinSize_HappyPaths() {
-        assertEquals(BitmexRestClient.ChartDataBinSize.ONE_DAY, HistoricalDataUtils.getBinSize(1, BarData.LengthUnit.DAY));
-        assertEquals(BitmexRestClient.ChartDataBinSize.ONE_HOUR, HistoricalDataUtils.getBinSize(1, BarData.LengthUnit.HOUR));
-        assertEquals(BitmexRestClient.ChartDataBinSize.FIVE_MINUTES, HistoricalDataUtils.getBinSize(5, BarData.LengthUnit.MINUTE));
-        assertEquals(BitmexRestClient.ChartDataBinSize.ONE_MINUTE, HistoricalDataUtils.getBinSize(1, BarData.LengthUnit.MINUTE));
+        assertEquals(BitmexRestClient.ChartDataBinSize.ONE_DAY,
+                HistoricalDataUtils.getBinSize(1, BarData.LengthUnit.DAY));
+        assertEquals(BitmexRestClient.ChartDataBinSize.ONE_HOUR,
+                HistoricalDataUtils.getBinSize(1, BarData.LengthUnit.HOUR));
+        assertEquals(BitmexRestClient.ChartDataBinSize.FIVE_MINUTES,
+                HistoricalDataUtils.getBinSize(5, BarData.LengthUnit.MINUTE));
+        assertEquals(BitmexRestClient.ChartDataBinSize.ONE_MINUTE,
+                HistoricalDataUtils.getBinSize(1, BarData.LengthUnit.MINUTE));
     }
 
     @Test
@@ -73,27 +77,27 @@ public class HistoricalDataUtilsTest {
             HistoricalDataUtils.getBinSize(1, BarData.LengthUnit.MONTH);
             fail();
         } catch (InvalidBarSizeException ex) {
-            //this should happen
+            // this should happen
         }
         try {
             HistoricalDataUtils.getBinSize(2, BarData.LengthUnit.DAY);
             fail();
         } catch (InvalidBarSizeException ex) {
-            //this should happen
+            // this should happen
         }
 
         try {
             HistoricalDataUtils.getBinSize(2, BarData.LengthUnit.HOUR);
             fail();
         } catch (InvalidBarSizeException ex) {
-            //this should happen
+            // this should happen
         }
 
         try {
             HistoricalDataUtils.getBinSize(2, BarData.LengthUnit.MINUTE);
             fail();
         } catch (InvalidBarSizeException ex) {
-            //this should happen
+            // this should happen
         }
     }
 
@@ -117,7 +121,8 @@ public class HistoricalDataUtilsTest {
         chartData.setClose(close.doubleValue());
         chartData.setVolume(volume.doubleValue());
 
-        BarData expectedData = new BarData(ticker, LocalDateTime.of(2018, 6, 13, 7, 50, 0), open, high, low, close, volume, barLength, lengthUnit);
+        BarData expectedData = new BarData(ticker, ZonedDateTime.of(2018, 6, 13, 7, 50, 0, 0, ZoneId.of("UTC")), open,
+                high, low, close, volume, barLength, lengthUnit);
 
         assertEquals(expectedData, HistoricalDataUtils.buildBarData(ticker, barLength, lengthUnit, chartData));
     }

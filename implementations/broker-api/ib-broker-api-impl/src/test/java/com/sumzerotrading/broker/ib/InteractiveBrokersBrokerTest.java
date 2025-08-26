@@ -150,8 +150,9 @@ public class InteractiveBrokersBrokerTest {
         doNothing().when(b).saveOrderMaps();
         doReturn(now).when(b).getZoneDateTime();
 
-        OrderEvent expectedEvent = OrderManagmentUtil.createOrderEvent(order, status, filled, remaining,
-                averageFilPrice, permId, parentId, lastFillPrice, clientId, whyHeld, now);
+        OrderEvent expectedEvent = OrderManagmentUtil.createOrderEvent(order, status,
+                java.math.BigDecimal.valueOf(filled), java.math.BigDecimal.valueOf(remaining), averageFilPrice, permId,
+                parentId, lastFillPrice, clientId, whyHeld, now);
 
         b.orderStatus(orderId, status, com.ib.client.Decimal.get(filled), com.ib.client.Decimal.get(remaining),
                 averageFilPrice, permId, parentId, lastFillPrice, clientId, whyHeld, 0.0);

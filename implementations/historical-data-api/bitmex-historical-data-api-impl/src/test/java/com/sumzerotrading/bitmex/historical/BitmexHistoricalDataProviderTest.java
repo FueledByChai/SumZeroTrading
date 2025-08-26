@@ -98,10 +98,11 @@ public class BitmexHistoricalDataProviderTest {
     @Test
     public void testRequestHistoricalData_NotTrades() {
         try {
-            testProvider.requestHistoricalData(new GenericTicker("ABC"), 1, BarData.LengthUnit.DAY, 1, BarData.LengthUnit.MINUTE, IHistoricalDataProvider.ShowProperty.ASK, true);
+            testProvider.requestHistoricalData(new GenericTicker("ABC"), 1, BarData.LengthUnit.DAY, 1,
+                    BarData.LengthUnit.MINUTE, IHistoricalDataProvider.ShowProperty.ASK, true);
             fail();
         } catch (SumZeroException ex) {
-            //this should happen
+            // this should happen
         }
 
     }
@@ -118,28 +119,31 @@ public class BitmexHistoricalDataProviderTest {
         BitmexChartData data = new BitmexChartData();
         data.setOpen(0);
         dataList.add(data);
-        
+
         List<BarData> barDataList = new ArrayList<>();
-        BarData barData = new BarData(LocalDateTime.MIN, BigDecimal.ONE, BigDecimal.ZERO, BigDecimal.ONE, BigDecimal.ONE, BigDecimal.ONE);
+        BarData barData = new BarData(ZonedDateTime.now(), BigDecimal.ONE, BigDecimal.ZERO, BigDecimal.ONE,
+                BigDecimal.ONE, BigDecimal.ONE);
         barDataList.add(barData);
-        
-        when(mockClient.getChartData(ticker, duration, BitmexRestClient.ChartDataBinSize.ONE_MINUTE, "", true)).thenReturn(dataList);
+
+        when(mockClient.getChartData(ticker, duration, BitmexRestClient.ChartDataBinSize.ONE_MINUTE, "", true))
+                .thenReturn(dataList);
         doReturn(barDataList).when(testProvider).convertToBarData(ticker, barSize, lengthUnit, dataList);
-                
-        assertEquals( barDataList, testProvider.requestHistoricalData(ticker, duration, lengthUnit, barSize, lengthUnit, IHistoricalDataProvider.ShowProperty.TRADES, true));
+
+        assertEquals(barDataList, testProvider.requestHistoricalData(ticker, duration, lengthUnit, barSize, lengthUnit,
+                IHistoricalDataProvider.ShowProperty.TRADES, true));
     }
-    
-    
+
     @Test
     public void testRequestHistoricalData_OverloadedMethod() {
         try {
-            testProvider.requestHistoricalData(new GenericTicker("ABC"), new Date(), 2, BarData.LengthUnit.MONTH, 10, BarData.LengthUnit.MINUTE, IHistoricalDataProvider.ShowProperty.TRADES, true);
+            testProvider.requestHistoricalData(new GenericTicker("ABC"), new Date(), 2, BarData.LengthUnit.MONTH, 10,
+                    BarData.LengthUnit.MINUTE, IHistoricalDataProvider.ShowProperty.TRADES, true);
             fail();
-        } catch( SumZeroException ex ) {
-            
+        } catch (SumZeroException ex) {
+
         }
     }
-    
+
     @Test
     public void testConvertToBarData() {
         int barLength = 1;
@@ -160,17 +164,18 @@ public class BitmexHistoricalDataProviderTest {
         chartData.setClose(close.doubleValue());
         chartData.setVolume(volume.doubleValue());
 
-        BarData expectedData = new BarData(ticker, LocalDateTime.of(2018, 6, 13, 7, 50, 0), open, high, low, close, volume, barLength, lengthUnit);
+        BarData expectedData = new BarData(ticker, ZonedDateTime.of(2018, 6, 13, 7, 50, 0, 0, ZoneId.of("UTC")), open,
+                high, low, close, volume, barLength, lengthUnit);
 
         List<BitmexChartData> chartDataList = new ArrayList<>();
         chartDataList.add(chartData);
-        
+
         List<BarData> expectedDataList = new ArrayList<>();
         expectedDataList.add(expectedData);
-        
+
         List<BarData> actualDataList = testProvider.convertToBarData(ticker, barLength, lengthUnit, chartDataList);
 
-        assertEquals(1, actualDataList.size() );
+        assertEquals(1, actualDataList.size());
         assertEquals(expectedData, actualDataList.get(0));
     }
 

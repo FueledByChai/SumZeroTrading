@@ -7,14 +7,18 @@ import com.sumzerotrading.data.CryptoTicker;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.paradex.common.api.ParadexRestApi;
 
-public class TickerRegistry {
+public class ParadexTickerRegistry {
 
     protected static Map<String, Ticker> tickerMap = new HashMap<>();
     protected static ParadexRestApi restApi = new ParadexRestApi("foo");
 
-    public static Ticker lookup(String tickerString) {
+    public CryptoTicker lookupByBrokerSymbol(String tickerString) {
         return null;
         // return tickerMap.computeIfAbsent(tickerString, CryptoTicker::new);
+    }
+
+    public CryptoTicker lookupByCommonSymbol(String commonSymbol) {
+        return null;
     }
 
 }

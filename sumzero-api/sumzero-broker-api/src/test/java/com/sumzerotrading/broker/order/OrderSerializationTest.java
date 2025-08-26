@@ -18,7 +18,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.broker.order;
 
 import com.sumzerotrading.data.StockTicker;
@@ -60,35 +59,34 @@ public class OrderSerializationTest {
     @After
     public void tearDown() {
     }
-    
-    
+
     @Test
     public void testOrderStatus() throws Exception {
-        OrderStatus status = new OrderStatus(OrderStatus.Status.NEW, "123", 10, 10, BigDecimal.ZERO, new StockTicker("ABC"), ZonedDateTime.now() );
-        test( status );
+        OrderStatus status = new OrderStatus(OrderStatus.Status.NEW, "123", BigDecimal.valueOf(10),
+                BigDecimal.valueOf(10), BigDecimal.ZERO, new StockTicker("ABC"), ZonedDateTime.now());
+        test(status);
     }
-    
+
     @Test
     public void testTradeOrder() throws Exception {
         TradeOrder order = new TradeOrder("123", new StockTicker("123"), 100, TradeDirection.BUY);
-        test( order );
+        test(order);
     }
-    
+
     @Test
     public void testOrderEvent() throws Exception {
         TradeOrder order = new TradeOrder("123", new StockTicker("123"), 100, TradeDirection.BUY);
-        OrderStatus status = new OrderStatus(OrderStatus.Status.NEW, "123", 10, 10, BigDecimal.ZERO, new StockTicker("ABC"), ZonedDateTime.now() );
+        OrderStatus status = new OrderStatus(OrderStatus.Status.NEW, "123", BigDecimal.valueOf(10),
+                BigDecimal.valueOf(10), BigDecimal.ZERO, new StockTicker("ABC"), ZonedDateTime.now());
         OrderEvent event = new OrderEvent(order, status);
-        test( event );
+        test(event);
     }
-    
+
     @Test
     public void testOrderEventFilter() throws Exception {
         OrderEventFilter filter = new OrderEventFilter();
-        test( filter );
+        test(filter);
     }
-    
-    
 
     public void test(Object object) throws Exception {
         byte[] serialized = serialize(object);

@@ -347,7 +347,7 @@ class HistoricalDataUtilsTest {
             assertNotNull(result);
             assertEquals(1, result.size());
             // BarData constructor has a bug - it doesn't assign lengthUnit parameter
-            assertNull(result.get(0).getLengthUnit());
+            assertEquals(unit, result.get(0).getLengthUnit());
         }
     }
 

@@ -22,7 +22,7 @@ package com.sumzerotrading.data;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Objects;
 
 /**
@@ -58,14 +58,13 @@ public class BarData implements Serializable {
     protected BigDecimal volume = BigDecimal.ZERO;
     protected long openInterest = 0;
     protected int barLength = 1;
-    protected LocalDateTime dateTime;
+    protected ZonedDateTime dateTime;
     protected LengthUnit lengthUnit;
-    // protected Logger logger = Logger.getLogger( BarData.class );
 
     public BarData() {
     }
 
-    public BarData(Ticker ticker, LocalDateTime dateTime, BigDecimal open, BigDecimal high, BigDecimal low,
+    public BarData(Ticker ticker, ZonedDateTime dateTime, BigDecimal open, BigDecimal high, BigDecimal low,
             BigDecimal close, BigDecimal volume, int barLength, LengthUnit lengthUnit) {
         this.ticker = ticker;
         this.dateTime = dateTime;
@@ -88,7 +87,7 @@ public class BarData implements Serializable {
      * @param close  The closing price.
      * @param volume The volume for the bar.
      */
-    public BarData(LocalDateTime dateTime, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close,
+    public BarData(ZonedDateTime dateTime, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close,
             BigDecimal volume) {
         this(null, dateTime, open, high, low, close, volume, 1, LengthUnit.DAY);
     }// constructor()
@@ -104,17 +103,17 @@ public class BarData implements Serializable {
      * @param volume       The volume for the bar.
      * @param openInterest The open interest for the bar.
      */
-    public BarData(LocalDateTime dateTime, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close,
+    public BarData(ZonedDateTime dateTime, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close,
             BigDecimal volume, long openInterest) {
         this(dateTime, open, high, low, close, volume);
         this.openInterest = openInterest;
     }// constructor()
 
-    public LocalDateTime getDateTime() {
+    public ZonedDateTime getDateTime() {
         return dateTime;
     }
 
-    public void setDateTime(LocalDateTime dateTime) {
+    public void setDateTime(ZonedDateTime dateTime) {
         this.dateTime = dateTime;
     }
 

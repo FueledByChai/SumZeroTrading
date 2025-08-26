@@ -38,8 +38,7 @@ public class HistoricalDataUtils {
         List<BarData> barDataList = new ArrayList<>();
         for (OHLCBar ohlc : ohlcBars) {
             BarData bar = new BarData(ticker,
-                    java.time.Instant.ofEpochMilli(ohlc.getTime()).atZone(java.time.ZoneId.systemDefault())
-                            .toLocalDateTime(),
+                    java.time.Instant.ofEpochMilli(ohlc.getTime()).atZone(java.time.ZoneId.of("UTC")),
                     BigDecimal.valueOf(ohlc.getOpen()), BigDecimal.valueOf(ohlc.getHigh()),
                     BigDecimal.valueOf(ohlc.getLow()), BigDecimal.valueOf(ohlc.getClose()),
                     BigDecimal.valueOf(ohlc.getVolume()), barSize, barSizeUnit);

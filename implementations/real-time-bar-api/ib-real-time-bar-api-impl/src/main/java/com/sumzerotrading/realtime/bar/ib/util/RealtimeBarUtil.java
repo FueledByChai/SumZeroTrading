@@ -10,6 +10,7 @@ import com.sumzerotrading.realtime.bar.ib.BarBuilderJob;
 import com.sumzerotrading.realtime.bar.ib.IBarBuilder;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
@@ -25,8 +26,8 @@ import org.quartz.TriggerBuilder;
 public class RealtimeBarUtil {
 
     public static final String BAR_BUILDER_DATA = "BarBuilder";
-    protected static LocalDateTime testDateTime = null;
-    
+    protected static ZonedDateTime testDateTime = null;
+
     public static JobDetail buildJob(String jobName, IBarBuilder barBuilder) {
         JobDataMap jobDataMap = new JobDataMap();
         jobDataMap.put(BAR_BUILDER_DATA, barBuilder);
@@ -34,47 +35,50 @@ public class RealtimeBarUtil {
     }
 
     public static Trigger getTrigger(String jobName, int interval, LengthUnit units) {
-        //always assume minutes, for now
-        return TriggerBuilder.newTrigger().withIdentity(jobName).startAt(getFirstScheduledDate(new Date(), interval)).forJob(jobName).withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(interval).repeatForever()).build();
+        // always assume minutes, for now
+        return TriggerBuilder.newTrigger().withIdentity(jobName).startAt(getFirstScheduledDate(new Date(), interval))
+                .forJob(jobName)
+                .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(interval).repeatForever())
+                .build();
 
     }
 
-
     public static Date getFirstScheduledDate(Date date, int interval) {
-        LocalDateTime ldt = LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
+        ZonedDateTime ldt = ZonedDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
         ldt = ldt.withNano(0).withSecond(0).plusMinutes(1);
-         
+
         while (ldt.getMinute() % interval != 0) {
             ldt = ldt.plusMinutes(1);
         }
-        
-        return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
 
-    }        
+        return Date.from(ldt.toInstant());
 
-    public static String getJobName(RealtimeBarRequest realtimeBarRequest) {
-        return "ticker: " + realtimeBarRequest.getTicker().getSymbol() + " type: " + realtimeBarRequest.getTicker().getInstrumentType() + " barLength:" + realtimeBarRequest.getTimeInterval() + realtimeBarRequest.getTimeUnit();
     }
 
-    
-    public static LocalDateTime getBarDate() {
-        LocalDateTime dateTime;
-        if(testDateTime == null) {
-            dateTime = LocalDateTime.now();
+    public static String getJobName(RealtimeBarRequest realtimeBarRequest) {
+        return "ticker: " + realtimeBarRequest.getTicker().getSymbol() + " type: "
+                + realtimeBarRequest.getTicker().getInstrumentType() + " barLength:"
+                + realtimeBarRequest.getTimeInterval() + realtimeBarRequest.getTimeUnit();
+    }
+
+    public static ZonedDateTime getBarDate() {
+        ZonedDateTime dateTime;
+        if (testDateTime == null) {
+            dateTime = ZonedDateTime.now();
         } else {
             dateTime = testDateTime;
         }
-        
+
         int currentSecond = dateTime.getSecond();
         dateTime = dateTime.withNano(0).withSecond(0);
 
-        //Round up to the next minute if more than 30 seconds in.
+        // Round up to the next minute if more than 30 seconds in.
         if (currentSecond >= 30) {
             dateTime = dateTime.plusMinutes(1);
         }
 
         return dateTime;
-        
+
     }
-    
+
 }
