@@ -27,6 +27,7 @@ import com.ib.client.Execution;
 import com.ib.client.ExecutionFilter;
 import com.ib.client.Order;
 import com.ib.client.OrderState;
+import com.sumzerotrading.broker.BrokerAccountInfoListener;
 import com.sumzerotrading.broker.BrokerError;
 import com.sumzerotrading.broker.BrokerErrorListener;
 import com.sumzerotrading.broker.IBroker;
@@ -53,6 +54,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -146,6 +148,18 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
     }
 
     @Override
+    public void addBrokerAccountInfoListener(BrokerAccountInfoListener listener) {
+        throw new UnsupportedOperationException("Not supported yet.");
+
+    }
+
+    @Override
+    public void removeBrokerAccountInfoListener(BrokerAccountInfoListener listener) {
+        throw new UnsupportedOperationException("Not supported yet.");
+
+    }
+
+    @Override
     public boolean isConnected() {
         System.out.println("Checking if connected to IB: " + ibSocket.isConnected());
         return ibSocket.isConnected();
@@ -218,8 +232,8 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
             return;
         }
 
-        order.setFilledSize(filled.longValue());
-        order.setFilledPrice(avgFillPrice);
+        order.setFilledSize(filled.value());
+        order.setFilledPrice(BigDecimal.valueOf(avgFillPrice));
 
         try {
             OrderEvent event = OrderManagmentUtil.createOrderEvent(order, status, filled.value(), remaining.value(),
@@ -562,13 +576,15 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
             if (order.getLimitPrice() == null) {
                 throw new IllegalStateException("Limit price not set for LMT order: " + order.getOrderId());
             }
-            double limitPrice = QuoteUtil.getBigDecimalValue(order.getTicker(), order.getLimitPrice()).doubleValue();
+            double limitPrice = QuoteUtil.getBigDecimalValue(order.getTicker(), order.getLimitPrice().doubleValue())
+                    .doubleValue();
             ibOrder.lmtPrice(limitPrice);
         } else if (order.getType() == TradeOrder.Type.STOP) {
             if (order.getStopPrice() == null) {
                 throw new IllegalStateException("Stop price not set for StopLoss order: " + order.getOrderId());
             }
-            double stopPrice = QuoteUtil.getBigDecimalValue(order.getTicker(), order.getStopPrice()).doubleValue();
+            double stopPrice = QuoteUtil.getBigDecimalValue(order.getTicker(), order.getStopPrice().doubleValue())
+                    .doubleValue();
             ibOrder.auxPrice(stopPrice);
         }
 

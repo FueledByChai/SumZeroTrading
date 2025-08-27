@@ -74,15 +74,15 @@ public class EODTradingStrategyTest {
         mockIbClient = mock(InteractiveBrokersClientInterface.class);
         InteractiveBrokersClient.setMockInteractiveBrokersClient(mockIbClient, ibHost, ibPort, ibClientId);
         strategy = spy(EODTradingStrategy.class);
-        strategy.timeToPlaceOrders  = LocalTime.of(12, 40, 0);
-        strategy.marketCloseTime = LocalTime.of(13,0);
+        strategy.timeToPlaceOrders = LocalTime.of(12, 40, 0);
+        strategy.marketCloseTime = LocalTime.of(13, 0);
         strategy.ibHost = ibHost;
         strategy.ibPort = ibPort;
         strategy.ibClientId = ibClientId;
         strategy.entryOrderType = TradeOrder.Type.MARKET_ON_CLOSE;
         strategy.exitOrderType = TradeOrder.Type.MARKET_ON_OPEN;
         strategy.exitSeconds = 0;
-        propFile = Paths.get( getClass().getResource("/eod.test.properties").toURI()).toString();
+        propFile = Paths.get(getClass().getResource("/eod.test.properties").toURI()).toString();
         doReturn(mockReportGenerator).when(strategy).getReportGenerator(any(String.class));
     }
 
@@ -93,7 +93,7 @@ public class EODTradingStrategyTest {
     @Test
     public void testStart() {
 
-        TradeOrder order = new TradeOrder("123", longTicker, 100, TradeDirection.SELL);
+        TradeOrder order = new TradeOrder("123", longTicker, BigDecimal.valueOf(100), TradeDirection.SELL);
         List<TradeOrder> openOrders = new ArrayList<>();
         openOrders.add(order);
         when(mockIbClient.getOpenOrders()).thenReturn(openOrders);
@@ -101,7 +101,6 @@ public class EODTradingStrategyTest {
 
         strategy.start(propFile);
 
-        
         verify(mockIbClient).addOrderStatusListener(mockReportGenerator);
         verify(mockIbClient).subscribeLevel1(eq(new StockTicker("QQQ")), any(Level1QuoteListener.class));
         verify(mockIbClient).subscribeLevel1(eq(new StockTicker("SPY")), any(Level1QuoteListener.class));
@@ -113,8 +112,8 @@ public class EODTradingStrategyTest {
     @Test
     public void testPlaceMOCOrders() {
         String corrId = "123";
-        int longSize = 100;
-        int shortSize = 200;
+        BigDecimal longSize = BigDecimal.valueOf(100);
+        BigDecimal shortSize = BigDecimal.valueOf(200);
         ZonedDateTime currentDateTime = ZonedDateTime.of(2016, 3, 3, 5, 5, 1, 0, ZoneId.systemDefault());
         ZonedDateTime orderTime = ZonedDateTime.now();
         strategy.ibClient = mockIbClient;
@@ -149,7 +148,6 @@ public class EODTradingStrategyTest {
 
         strategy.placeMOCOrders(longTicker, shortTicker, currentDateTime);
 
-        
         verify(mockIbClient).placeOrder(expectedLongOrder);
         verify(mockIbClient).placeOrder(expectedShortOrder);
     }
@@ -234,8 +232,7 @@ public class EODTradingStrategyTest {
         verify(strategy, never()).placeMOCOrders(any(Ticker.class), any(Ticker.class), any(ZonedDateTime.class));
     }
 
-    
-        @Test
+    @Test
     public void testQuoteReceived_AllPricesInitialized_OrdersNotPlaced_AfterTradeTime_AfterMarketClose() {
         ZonedDateTime local = ZonedDateTime.of(2015, 6, 15, 0, 0, 0, 0, ZoneId.systemDefault());
         ZoneOffset offset = local.getOffset();
@@ -261,15 +258,14 @@ public class EODTradingStrategyTest {
         verify(strategy).setAllPricesInitialized();
         verify(strategy, never()).placeMOCOrders(any(Ticker.class), any(Ticker.class), any(ZonedDateTime.class));
     }
-    
-    
+
     @Test
     public void testQuoteReceived_AllPricesInitialized_OrdersNotPlaced_AfterTradeTime() {
         ZonedDateTime local = ZonedDateTime.of(2015, 6, 15, 0, 0, 0, 0, ZoneId.systemDefault());
         ZoneOffset offset = local.getOffset();
         ZonedDateTime zdt = ZonedDateTime.of(2015, 6, 15, 21, 50, 0, 0, ZoneId.of("Z"));
         System.out.println("Offset: " + offset.getTotalSeconds() / 3600);
-        int hour = strategy.timeToPlaceOrders.getHour()+ (-offset.getTotalSeconds() / (3600));
+        int hour = strategy.timeToPlaceOrders.getHour() + (-offset.getTotalSeconds() / (3600));
         zdt = zdt.withHour(hour);
         zdt = zdt.plusMinutes(1);
         ILevel1Quote mockQuote = mock(ILevel1Quote.class);
@@ -289,21 +285,21 @@ public class EODTradingStrategyTest {
         verify(strategy).setAllPricesInitialized();
         verify(strategy).placeMOCOrders(longTicker, shortTicker, zdt);
     }
-    
+
     @Test
     public void testGetNextBusinessDay_ExitSecondsSet() {
         ZonedDateTime ldt = ZonedDateTime.of(2016, 2, 25, 6, 45, 55, 0, ZoneId.systemDefault());
         ZonedDateTime expectedDatetime = ZonedDateTime.of(2016, 2, 25, 6, 46, 55, 0, ZoneId.systemDefault());
         strategy.exitSeconds = 60;
-        
+
         assertEquals(expectedDatetime, strategy.getNextBusinessDay(ldt));
-    }    
+    }
 
     @Test
     public void testGetNextBusinessDay_Thursday() {
         ZonedDateTime ldt = ZonedDateTime.of(2016, 2, 25, 6, 45, 55, 0, ZoneId.systemDefault());
         ZonedDateTime expectedDatetime = ZonedDateTime.of(2016, 2, 26, 6, 30, 2, 0, ZoneId.systemDefault());
-        strategy.exitTime = LocalTime.of(6,30,2);
+        strategy.exitTime = LocalTime.of(6, 30, 2);
 
         assertEquals(expectedDatetime, strategy.getNextBusinessDay(ldt));
     }
@@ -312,7 +308,7 @@ public class EODTradingStrategyTest {
     public void testGetNextBusinessDay_Friday() {
         ZonedDateTime ldt = ZonedDateTime.of(2016, 2, 26, 6, 45, 55, 0, ZoneId.systemDefault());
         ZonedDateTime expectedDatetime = ZonedDateTime.of(2016, 2, 29, 6, 30, 2, 0, ZoneId.systemDefault());
-        strategy.exitTime = LocalTime.of(6,30,2);
+        strategy.exitTime = LocalTime.of(6, 30, 2);
 
         assertEquals(expectedDatetime, strategy.getNextBusinessDay(ldt));
     }
@@ -321,12 +317,11 @@ public class EODTradingStrategyTest {
     public void testGetNextBusinessDay_Satruday() {
         ZonedDateTime ldt = ZonedDateTime.of(2016, 2, 27, 6, 45, 55, 0, ZoneId.systemDefault());
         ZonedDateTime expectedDatetime = ZonedDateTime.of(2016, 2, 29, 6, 30, 2, 0, ZoneId.systemDefault());
-        strategy.exitTime = LocalTime.of(6,30,2);
+        strategy.exitTime = LocalTime.of(6, 30, 2);
 
         assertEquals(expectedDatetime, strategy.getNextBusinessDay(ldt));
     }
 
-    
     @Test
     public void testInitProps() {
         strategy.initProps(propFile);
@@ -335,8 +330,8 @@ public class EODTradingStrategyTest {
         assertEquals(1, strategy.ibClientId);
         assertEquals(1000, strategy.orderSizeInDollars);
         assertEquals(LocalTime.of(12, 40), strategy.timeToPlaceOrders);
-        assertEquals(LocalTime.of(13,0), strategy.marketCloseTime);
-        assertEquals(LocalTime.of(6,30,2), strategy.exitTime);
+        assertEquals(LocalTime.of(13, 0), strategy.marketCloseTime);
+        assertEquals(LocalTime.of(6, 30, 2), strategy.exitTime);
         assertEquals(2, strategy.longShortPairMap.size());
         assertEquals(new StockTicker("SPY"), strategy.longShortPairMap.get(new StockTicker("QQQ")));
         assertEquals(new StockTicker("IWM"), strategy.longShortPairMap.get(new StockTicker("DIA")));
@@ -345,12 +340,12 @@ public class EODTradingStrategyTest {
         assertEquals(TradeOrder.Type.MARKET, strategy.exitOrderType);
         assertEquals(3, strategy.exitSeconds);
     }
-    
+
     @Test
     public void testGetOrderSize() {
         strategy.start(propFile);
         strategy.lastPriceMap.put(longTicker, 50.00);
-        int expectedSize = 20;
+        BigDecimal expectedSize = BigDecimal.valueOf(20);
 
         assertEquals(expectedSize, strategy.getOrderSize(longTicker));
     }
@@ -410,7 +405,7 @@ public class EODTradingStrategyTest {
     @Test
     public void testCheckOpenOrders_NoMocOrders() {
         List<TradeOrder> orders = new ArrayList<>();
-        orders.add(new TradeOrder("123", new StockTicker("ABC"), 10, TradeDirection.SELL));
+        orders.add(new TradeOrder("123", new StockTicker("ABC"), BigDecimal.valueOf(10), TradeDirection.SELL));
 
         assertFalse(strategy.checkOpenOrders(orders, new HashMap<>()));
     }
@@ -418,7 +413,7 @@ public class EODTradingStrategyTest {
     @Test
     public void testCheckOpenOrders_MocOrdersDontMatchTickers() {
         List<TradeOrder> orders = new ArrayList<>();
-        TradeOrder order = new TradeOrder("123", new StockTicker("ABC"), 10, TradeDirection.SELL);
+        TradeOrder order = new TradeOrder("123", new StockTicker("ABC"), BigDecimal.valueOf(10), TradeDirection.SELL);
         order.setType(TradeOrder.Type.MARKET_ON_CLOSE);
         orders.add(order);
         Map<Ticker, Ticker> tickerMap = new HashMap<>();
@@ -430,7 +425,7 @@ public class EODTradingStrategyTest {
     @Test
     public void testCheckOpenOrders_HappyPath() {
         List<TradeOrder> orders = new ArrayList<>();
-        TradeOrder order = new TradeOrder("123", new StockTicker("ABC"), 10, TradeDirection.SELL);
+        TradeOrder order = new TradeOrder("123", new StockTicker("ABC"), BigDecimal.valueOf(10), TradeDirection.SELL);
         order.setType(TradeOrder.Type.MARKET_ON_CLOSE);
         orders.add(order);
         Map<Ticker, Ticker> tickerMap = new HashMap<>();

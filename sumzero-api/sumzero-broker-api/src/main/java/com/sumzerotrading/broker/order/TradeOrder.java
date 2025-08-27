@@ -49,11 +49,10 @@ public class TradeOrder implements Serializable {
     protected Type type;
     protected ZonedDateTime goodAfterTime = null;
     protected ZonedDateTime goodUntilTime = null;
-    protected Double limitPrice = null;
-    protected Double stopPrice = null;
+    protected BigDecimal limitPrice = null;
+    protected BigDecimal stopPrice = null;
     protected Duration duration;
-    protected int size;
-    protected BigDecimal sizeAsBigDecimal;
+    protected BigDecimal size;
     protected String orderId;
     protected String parentOrderId = "";
     protected String ocaGroup;
@@ -67,17 +66,12 @@ public class TradeOrder implements Serializable {
     protected ZonedDateTime orderFilledTime;
     protected double orderTimeInForceMinutes = 0;
 
-    protected double filledSize = 0;
-    protected double filledPrice = 0;
-    protected double commission = 0;
+    protected BigDecimal filledSize = BigDecimal.ZERO;
+    protected BigDecimal filledPrice = BigDecimal.ZERO;
+    protected BigDecimal commission = BigDecimal.ZERO;
     protected Status currentStatus = Status.NEW;
 
     public TradeOrder() {
-    }
-
-    public TradeOrder(String orderId, Ticker ticker, int size, TradeDirection tradeDirection) {
-        this(orderId, ticker, BigDecimal.valueOf(size), tradeDirection);
-        this.size = size;
     }
 
     public TradeOrder(String orderId, Ticker ticker, BigDecimal size, TradeDirection tradeDirection) {
@@ -86,7 +80,7 @@ public class TradeOrder implements Serializable {
         direction = TradeDirection.BUY;
         this.ticker = ticker;
         this.orderId = orderId;
-        this.sizeAsBigDecimal = size;
+        this.size = size;
         this.direction = tradeDirection;
     }
 
@@ -150,27 +144,23 @@ public class TradeOrder implements Serializable {
         this.goodUntilTime = goodUntilTime;
     }
 
-    public Double getLimitPrice() {
+    public BigDecimal getLimitPrice() {
         return limitPrice;
     }
 
-    public void setLimitPrice(Double price) {
+    public void setLimitPrice(BigDecimal price) {
         this.limitPrice = price;
     }
 
-    public BigDecimal getLimitPriceAsBigDecimal() {
-        return BigDecimal.valueOf(limitPrice);
-    }
-
-    public Double getStopPrice() {
+    public BigDecimal getStopPrice() {
         return stopPrice;
     }
 
     public BigDecimal getStopPriceAsBigDecimal() {
-        return BigDecimal.valueOf(stopPrice);
+        return stopPrice;
     }
 
-    public void setStopPrice(Double stopPrice) {
+    public void setStopPrice(BigDecimal stopPrice) {
         this.stopPrice = stopPrice;
     }
 
@@ -182,11 +172,11 @@ public class TradeOrder implements Serializable {
         this.duration = duration;
     }
 
-    public int getSize() {
+    public BigDecimal getSize() {
         return size;
     }
 
-    public void setSize(int size) {
+    public void setSize(BigDecimal size) {
         this.size = size;
     }
 
@@ -283,19 +273,19 @@ public class TradeOrder implements Serializable {
         this.orderTimeInForceMinutes = orderTimeInForceMinutes;
     }
 
-    public double getFilledSize() {
+    public BigDecimal getFilledSize() {
         return filledSize;
     }
 
-    public void setFilledSize(double filledSize) {
+    public void setFilledSize(BigDecimal filledSize) {
         this.filledSize = filledSize;
     }
 
-    public double getFilledPrice() {
+    public BigDecimal getFilledPrice() {
         return filledPrice;
     }
 
-    public void setFilledPrice(double filledPrice) {
+    public void setFilledPrice(BigDecimal filledPrice) {
         this.filledPrice = filledPrice;
     }
 
@@ -315,20 +305,12 @@ public class TradeOrder implements Serializable {
         this.orderFilledTime = orderFilledTime;
     }
 
-    public double getCommission() {
+    public BigDecimal getCommission() {
         return commission;
     }
 
-    public void setCommission(double commission) {
+    public void setCommission(BigDecimal commission) {
         this.commission = commission;
-    }
-
-    public BigDecimal getSizeAsBigDecimal() {
-        return sizeAsBigDecimal;
-    }
-
-    public void setSizeAsBigDecimal(BigDecimal sizeAsBigDecimal) {
-        this.sizeAsBigDecimal = sizeAsBigDecimal;
     }
 
     @Override
@@ -342,7 +324,7 @@ public class TradeOrder implements Serializable {
         hash = 71 * hash + Objects.hashCode(this.limitPrice);
         hash = 71 * hash + Objects.hashCode(this.stopPrice);
         hash = 71 * hash + Objects.hashCode(this.duration);
-        hash = 71 * hash + this.size;
+        hash = 71 * hash + (this.size != null ? this.size.hashCode() : 0);
         hash = 71 * hash + Objects.hashCode(this.orderId);
         hash = 71 * hash + Objects.hashCode(this.parentOrderId);
         hash = 71 * hash + Objects.hashCode(this.ocaGroup);
@@ -356,12 +338,9 @@ public class TradeOrder implements Serializable {
         hash = 71 * hash + Objects.hashCode(this.orderFilledTime);
         hash = 71 * hash + (int) (Double.doubleToLongBits(this.orderTimeInForceMinutes)
                 ^ (Double.doubleToLongBits(this.orderTimeInForceMinutes) >>> 32));
-        hash = 71 * hash
-                + (int) (Double.doubleToLongBits(this.filledSize) ^ (Double.doubleToLongBits(this.filledSize) >>> 32));
-        hash = 71 * hash + (int) (Double.doubleToLongBits(this.filledPrice)
-                ^ (Double.doubleToLongBits(this.filledPrice) >>> 32));
-        hash = 71 * hash
-                + (int) (Double.doubleToLongBits(this.commission) ^ (Double.doubleToLongBits(this.commission) >>> 32));
+        hash = 71 * hash + Objects.hashCode(this.filledSize);
+        hash = 71 * hash + Objects.hashCode(this.filledPrice);
+        hash = 71 * hash + Objects.hashCode(this.commission);
         hash = 71 * hash + Objects.hashCode(this.currentStatus);
         return hash;
     }
@@ -378,7 +357,7 @@ public class TradeOrder implements Serializable {
             return false;
         }
         final TradeOrder other = (TradeOrder) obj;
-        if (this.size != other.size) {
+        if (!Objects.equals(this.size, other.size)) {
             return false;
         }
         if (this.submitted != other.submitted) {
@@ -391,13 +370,13 @@ public class TradeOrder implements Serializable {
                 .doubleToLongBits(other.orderTimeInForceMinutes)) {
             return false;
         }
-        if (Double.doubleToLongBits(this.filledSize) != Double.doubleToLongBits(other.filledSize)) {
+        if (!Objects.equals(this.filledSize, other.filledSize)) {
             return false;
         }
-        if (Double.doubleToLongBits(this.filledPrice) != Double.doubleToLongBits(other.filledPrice)) {
+        if (!Objects.equals(this.filledPrice, other.filledPrice)) {
             return false;
         }
-        if (Double.doubleToLongBits(this.commission) != Double.doubleToLongBits(other.commission)) {
+        if (!Objects.equals(this.commission, other.commission)) {
             return false;
         }
         if (!Objects.equals(this.orderId, other.orderId)) {

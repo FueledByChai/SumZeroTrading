@@ -18,27 +18,15 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-
 package com.sumzerotrading.broker;
-
 
 /**
  * @author Rob Terpilowski
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
  */
-public interface BrokerListener {
-	
-	
-	public abstract void accountEquityUpdated( double equity );
-	
-	//public abstract void orderStatusUpdated( OrderStatusEvent event );
-	
-	public abstract void availableFundsUpdated( double availableFunds );
-        
-        
-	
+public interface BrokerAccountInfoListener {
 
+	void accountEquityUpdated(double equity);
+
+	void availableFundsUpdated(double availableFunds);
 
 }

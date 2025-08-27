@@ -14,7 +14,7 @@ public class ParadexBrokerUtil {
 
     protected static ParadexTickerRegistry tickerRegistry = new ParadexTickerRegistry();
 
-    public static OrderStatus translateOrderStatus(ParadoxOrderStatusUpdate paradexStatus) {
+    public static OrderStatus translateOrderStatus(IParadexOrderStatusUpdate paradexStatus) {
 
         Ticker ticker = tickerRegistry.lookupByBrokerSymbol(paradexStatus.getTickerString());
         Status status = translateStatusCode(paradexStatus.getStatus(), paradexStatus.getCancelReason(),
@@ -22,8 +22,9 @@ public class ParadexBrokerUtil {
         OrderStatus orderStatus = null;
         BigDecimal filledSize = paradexStatus.getOriginalSize().subtract(paradexStatus.getRemainingSize());
 
-        ZonedDateTime timestamp = paradexStatus.timestamp == 0 ? ZonedDateTime.now()
-                : ZonedDateTime.ofInstant(java.time.Instant.ofEpochMilli(paradexStatus.timestamp), ZoneId.of("UTC"));
+        ZonedDateTime timestamp = paradexStatus.getTimestamp() == 0 ? ZonedDateTime.now()
+                : ZonedDateTime.ofInstant(java.time.Instant.ofEpochMilli(paradexStatus.getTimestamp()),
+                        ZoneId.of("UTC"));
 
         orderStatus = new OrderStatus(status, paradexStatus.getOrderId(), filledSize, paradexStatus.getRemainingSize(),
                 paradexStatus.getAverageFillPrice(), ticker, timestamp);

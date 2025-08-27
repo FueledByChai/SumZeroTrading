@@ -21,6 +21,7 @@ import com.sumzerotrading.intraday.trading.strategy.TradeReferenceLine.Direction
 import com.sumzerotrading.realtime.bar.RealtimeBarListener;
 import com.sumzerotrading.realtime.bar.RealtimeBarRequest;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -84,7 +85,8 @@ public class IntradayTradingStrategy implements OrderEventListener, BrokerErrorL
 
         logger.info("Requesting historical data for: " + mainTicker);
 
-        List<BarData> data = ibClient.requestHistoricalData(mainTicker, 5, BarData.LengthUnit.DAY, 1, BarData.LengthUnit.DAY, IHistoricalDataProvider.ShowProperty.TRADES);
+        List<BarData> data = ibClient.requestHistoricalData(mainTicker, 5, BarData.LengthUnit.DAY, 1,
+                BarData.LengthUnit.DAY, IHistoricalDataProvider.ShowProperty.TRADES);
         for (BarData bar : data) {
             logger.info("Historical Data: " + bar);
         }
@@ -121,7 +123,8 @@ public class IntradayTradingStrategy implements OrderEventListener, BrokerErrorL
         if (bias == Bias.LONG) {
             if (!(barTime.isBefore(longStartTime) || barTime.isAfter(longStopTime))) {
                 if (bar.getClose().doubleValue() < yesterdayClose * 1.01) {
-                    placeOrder(ticker, TradeDirection.BUY, (int) Math.round(orderSizeInDollars / bar.getClose().doubleValue()), longCloseTime);
+                    placeOrder(ticker, TradeDirection.BUY,
+                            (int) Math.round(orderSizeInDollars / bar.getClose().doubleValue()), longCloseTime);
                 } else {
                     logger.info("Long Bias, within start/stop time, the bar close NOT less than yesterdayClose * 1.01");
                 }
@@ -129,10 +132,10 @@ public class IntradayTradingStrategy implements OrderEventListener, BrokerErrorL
                 logger.info("Long Bias, not within long start/stop time");
             }
         }
-        
 
         if (!(barTime.isBefore(shortStartTime) || barTime.isAfter(shortStopTime))) {
-            placeOrder(ticker, TradeDirection.SELL, (int) Math.round(orderSizeInDollars / bar.getClose().doubleValue()), shortCloseTime);
+            placeOrder(ticker, TradeDirection.SELL, (int) Math.round(orderSizeInDollars / bar.getClose().doubleValue()),
+                    shortCloseTime);
         } else {
             logger.info("Short Bias: Outside Short start/end time");
         }
@@ -150,12 +153,15 @@ public class IntradayTradingStrategy implements OrderEventListener, BrokerErrorL
             exitDirection = TradeDirection.BUY;
         }
 
-        ZonedDateTime zdt = ZonedDateTime.of(LocalDate.now(ZoneId.systemDefault()), closeTime, ZoneId.systemDefault());
+        ZonedDateTime zdt = ZonedDateTime.of(LocalDate.now(ZoneId.of("GMT")), closeTime, ZoneId.of("GMT"));
 
-        TradeOrder entryOrder = new TradeOrder(ibClient.getNextOrderId(), ticker, size, direction);
-        entryOrder.setReference("Intraday-Strategy-" + ticker.getSymbol() + ":" + correlationId + ":Entry:" + tradeReferenceDirection + "*");
-        TradeOrder exitOrder = new TradeOrder(ibClient.getNextOrderId(), ticker, size, exitDirection);
-        exitOrder.setReference("Intraday-Strategy-" + ticker.getSymbol() + ":" + correlationId + ":Exit:" + tradeReferenceDirection + "*");
+        TradeOrder entryOrder = new TradeOrder(ibClient.getNextOrderId(), ticker, BigDecimal.valueOf(size), direction);
+        entryOrder.setReference("Intraday-Strategy-" + ticker.getSymbol() + ":" + correlationId + ":Entry:"
+                + tradeReferenceDirection + "*");
+        TradeOrder exitOrder = new TradeOrder(ibClient.getNextOrderId(), ticker, BigDecimal.valueOf(size),
+                exitDirection);
+        exitOrder.setReference("Intraday-Strategy-" + ticker.getSymbol() + ":" + correlationId + ":Exit:"
+                + tradeReferenceDirection + "*");
         exitOrder.setGoodAfterTime(zdt);
         entryOrder.addChildOrder(exitOrder);
 
@@ -207,7 +213,8 @@ public class IntradayTradingStrategy implements OrderEventListener, BrokerErrorL
 
     public static void main(String[] args) {
         String propFile = args[0];
-        //String propFile = "/Users/RobTerpilowski/Downloads/ZoiData/EodTest/intraday.props";
+        // String propFile =
+        // "/Users/RobTerpilowski/Downloads/ZoiData/EodTest/intraday.props";
         IntradayTradingStrategy strategy = new IntradayTradingStrategy();
         strategy.start(propFile);
     }

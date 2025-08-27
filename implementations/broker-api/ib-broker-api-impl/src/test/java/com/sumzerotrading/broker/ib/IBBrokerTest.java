@@ -34,6 +34,8 @@ import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.ib.IBConnectionInterface;
 import com.sumzerotrading.ib.IBDataQueue;
 import com.sumzerotrading.ib.IBSocket;
+
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
@@ -133,7 +135,7 @@ public class IBBrokerTest {
     public void testCancelTradeOrder() {
         final String id = "99";
         final int intId = Integer.parseInt(id);
-        final TradeOrder tradeOrder = new TradeOrder(id, null, 1, TradeDirection.BUY);
+        final TradeOrder tradeOrder = new TradeOrder(id, null, BigDecimal.valueOf(1), TradeDirection.BUY);
 
         testBroker.cancelOrder(tradeOrder);
 

@@ -19,6 +19,12 @@
  */
 package com.sumzerotrading.ib.example.trading;
 
+import java.math.BigDecimal;
+import java.time.ZonedDateTime;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.broker.order.TradeDirection;
@@ -27,12 +33,8 @@ import com.sumzerotrading.data.CurrencyTicker;
 import com.sumzerotrading.data.Exchange;
 import com.sumzerotrading.data.FuturesTicker;
 import com.sumzerotrading.data.StockTicker;
-import com.sumzerotrading.ib.OrderStatusListener;
 import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClient;
 import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClientInterface;
-import java.time.ZonedDateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TradingExampleWithOrderStatusListener implements OrderEventListener {
 
@@ -65,7 +67,7 @@ public class TradingExampleWithOrderStatusListener implements OrderEventListener
         int contracts = 1;
 
         // Create the order and send to Interactive Brokers
-        TradeOrder order = new TradeOrder(orderId, futuresTicker, contracts, TradeDirection.BUY);
+        TradeOrder order = new TradeOrder(orderId, futuresTicker, BigDecimal.valueOf(contracts), TradeDirection.BUY);
         order.setGoodAfterTime(date);
         ibClient.placeOrder(order);
     }
@@ -79,7 +81,7 @@ public class TradingExampleWithOrderStatusListener implements OrderEventListener
         String orderId = ibClient.getNextOrderId();
         int shares = 500;
 
-        TradeOrder order = new TradeOrder(orderId, amazonTicker, shares, TradeDirection.SELL);
+        TradeOrder order = new TradeOrder(orderId, amazonTicker, BigDecimal.valueOf(shares), TradeDirection.SELL);
 
         ibClient.placeOrder(order);
     }
@@ -94,13 +96,14 @@ public class TradingExampleWithOrderStatusListener implements OrderEventListener
         String orderId = ibClient.getNextOrderId();
         int amount = 50000;
 
-        TradeOrder order = new TradeOrder(orderId, eurTicker, amount, TradeDirection.BUY);
+        TradeOrder order = new TradeOrder(orderId, eurTicker, BigDecimal.valueOf(amount), TradeDirection.BUY);
 
         ibClient.placeOrder(order);
 
         Thread.sleep(90 * 1000);
 
-        ibClient.placeOrder(new TradeOrder(ibClient.getNextOrderId(), eurTicker, amount, TradeDirection.SELL));
+        ibClient.placeOrder(
+                new TradeOrder(ibClient.getNextOrderId(), eurTicker, BigDecimal.valueOf(amount), TradeDirection.SELL));
     }
 
     @Override

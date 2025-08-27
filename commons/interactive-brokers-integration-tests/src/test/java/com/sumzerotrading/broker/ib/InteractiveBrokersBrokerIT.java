@@ -14,6 +14,8 @@ import com.sumzerotrading.data.StockTicker;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.ib.IBConnectionUtil;
 import com.sumzerotrading.ib.IBSocket;
+
+import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -111,7 +113,7 @@ public class InteractiveBrokersBrokerIT implements OrderEventListener {
 
         String orderId = broker.getNextOrderId();
         System.out.println("Order id: " + orderId);
-        TradeOrder order = new TradeOrder(orderId, qqqTicker, 100, TradeDirection.BUY);
+        TradeOrder order = new TradeOrder(orderId, qqqTicker, BigDecimal.valueOf(100), TradeDirection.BUY);
         broker.placeOrder(order);
 
         // If the order is executed immediately we problably won't get a 'presubmitted',
@@ -134,7 +136,7 @@ public class InteractiveBrokersBrokerIT implements OrderEventListener {
             }
 
             System.out.println("Filled size: " + event.getOrder().getFilledSize());
-            if (event.getOrder().getFilledSize() == 100) {
+            if (event.getOrder().getFilledSize().compareTo(java.math.BigDecimal.valueOf(100)) == 0) {
                 filledSizeCorrect = true;
             }
 
@@ -162,7 +164,7 @@ public class InteractiveBrokersBrokerIT implements OrderEventListener {
 
         String orderId = broker.getNextOrderId();
         System.out.println("Order id: " + orderId);
-        TradeOrder order = new TradeOrder(orderId, qqqTicker, orderSize, TradeDirection.BUY);
+        TradeOrder order = new TradeOrder(orderId, qqqTicker, BigDecimal.valueOf(orderSize), TradeDirection.BUY);
         order.setGoodAfterTime(date);
         broker.placeOrder(order);
 
@@ -186,7 +188,7 @@ public class InteractiveBrokersBrokerIT implements OrderEventListener {
             }
 
             System.out.println("Filled size: " + event.getOrder().getFilledSize());
-            if (event.getOrder().getFilledSize() == orderSize) {
+            if (event.getOrder().getFilledSize().compareTo(java.math.BigDecimal.valueOf(orderSize)) == 0) {
                 filledSizeCorrect = true;
             }
 

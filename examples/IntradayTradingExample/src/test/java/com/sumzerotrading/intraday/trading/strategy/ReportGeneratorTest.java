@@ -19,6 +19,7 @@ import static com.sumzerotrading.intraday.trading.strategy.TradeReferenceLine.Si
 import static com.sumzerotrading.intraday.trading.strategy.TradeReferenceLine.Side.EXIT;
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -71,7 +72,7 @@ public class ReportGeneratorTest {
     public void setUp() throws Exception {
         orderFilledTime = ZonedDateTime.of(2015, 3, 15, 12, 30, 33, 0, ZoneId.systemDefault());
         reportGenerator = spy(ReportGenerator.class);
-        order = new TradeOrder("123", new StockTicker("QQQ"), 100, TradeDirection.BUY);
+        order = new TradeOrder("123", new StockTicker("QQQ"), BigDecimal.valueOf(100), TradeDirection.BUY);
         order.setOrderFilledTime(orderFilledTime);
         String systemTmpDir = System.getProperty("java.io.tmpdir");
         if (!systemTmpDir.endsWith("/")) {
@@ -112,7 +113,8 @@ public class ReportGeneratorTest {
         roundTrip.addTradeReference(order, tradeReferenceLine);
 
         order.setCurrentStatus(OrderStatus.Status.FILLED);
-        OrderEvent orderEvent = new OrderEvent(order, new OrderStatus(OrderStatus.Status.NEW, "", "", new StockTicker("QQQ"), ZonedDateTime.now()));
+        OrderEvent orderEvent = new OrderEvent(order,
+                new OrderStatus(OrderStatus.Status.NEW, "", "", new StockTicker("QQQ"), ZonedDateTime.now()));
 
         TradeReferenceLine longExitLine = buildReferenceLine("123", LONG, EXIT);
         TradeReferenceLine shortEntryLine = buildReferenceLine("123", SHORT, ENTRY);
@@ -145,7 +147,8 @@ public class ReportGeneratorTest {
     @Test
     public void testOrderEvent_NotFilled() {
         order.setCurrentStatus(OrderStatus.Status.NEW);
-        OrderEvent orderEvent = new OrderEvent(order, new OrderStatus(OrderStatus.Status.NEW, "", "", new StockTicker("QQQ"), ZonedDateTime.now()));
+        OrderEvent orderEvent = new OrderEvent(order,
+                new OrderStatus(OrderStatus.Status.NEW, "", "", new StockTicker("QQQ"), ZonedDateTime.now()));
         reportGenerator.orderEvent(orderEvent);
 
         verify(reportGenerator, never()).writeRoundTripToFile(any(RoundTrip.class));
@@ -156,7 +159,8 @@ public class ReportGeneratorTest {
         TradeReferenceLine tradeReferenceLine = new TradeReferenceLine();
         tradeReferenceLine.correlationId = "123";
         order.setCurrentStatus(OrderStatus.Status.FILLED);
-        OrderEvent orderEvent = new OrderEvent(order, new OrderStatus(OrderStatus.Status.NEW, "", "", new StockTicker("QQQ"), ZonedDateTime.now()));
+        OrderEvent orderEvent = new OrderEvent(order,
+                new OrderStatus(OrderStatus.Status.NEW, "", "", new StockTicker("QQQ"), ZonedDateTime.now()));
 
         doReturn(tradeReferenceLine).when(reportGenerator).getTradeReferenceLine(any(String.class));
         doNothing().when(reportGenerator).savePartial(any(String.class), any(RoundTrip.class));
@@ -176,11 +180,12 @@ public class ReportGeneratorTest {
         tradeReferenceLine.correlationId = "123";
         tradeReferenceLine.direction = TradeReferenceLine.Direction.LONG;
         tradeReferenceLine.side = TradeReferenceLine.Side.ENTRY;
-        
+
         roundTrip.addTradeReference(order, tradeReferenceLine);
 
         order.setCurrentStatus(OrderStatus.Status.FILLED);
-        OrderEvent orderEvent = new OrderEvent(order, new OrderStatus(OrderStatus.Status.NEW, "", "", new StockTicker("QQQ"), ZonedDateTime.now()));
+        OrderEvent orderEvent = new OrderEvent(order,
+                new OrderStatus(OrderStatus.Status.NEW, "", "", new StockTicker("QQQ"), ZonedDateTime.now()));
 
         reportGenerator.roundTripMap.put("123", roundTrip);
 
@@ -206,7 +211,8 @@ public class ReportGeneratorTest {
         roundTrip.addTradeReference(order, tradeReferenceLine);
 
         order.setCurrentStatus(OrderStatus.Status.FILLED);
-        OrderEvent orderEvent = new OrderEvent(order, new OrderStatus(OrderStatus.Status.NEW, "", "", new StockTicker("QQQ"), ZonedDateTime.now()));
+        OrderEvent orderEvent = new OrderEvent(order,
+                new OrderStatus(OrderStatus.Status.NEW, "", "", new StockTicker("QQQ"), ZonedDateTime.now()));
 
         TradeReferenceLine longExitLine = buildReferenceLine("123", LONG, EXIT);
         TradeReferenceLine shortEntryLine = buildReferenceLine("123", SHORT, ENTRY);
@@ -238,10 +244,10 @@ public class ReportGeneratorTest {
 
         Ticker longTicker = new StockTicker("ABC");
         Ticker shortTicker = new StockTicker("XYZ");
-        int longSize = 100;
-        int shortSize = 50;
-        double longEntryFillPrice = 100.23;
-        double longExitFillPrice = 101.23;
+        BigDecimal longSize = BigDecimal.valueOf(100);
+        BigDecimal shortSize = BigDecimal.valueOf(50);
+        BigDecimal longEntryFillPrice = BigDecimal.valueOf(100.23);
+        BigDecimal longExitFillPrice = BigDecimal.valueOf(101.23);
         ZonedDateTime entryTime = ZonedDateTime.of(2016, 3, 19, 7, 1, 10, 0, ZoneId.systemDefault());
         ZonedDateTime exitTime = ZonedDateTime.of(2016, 3, 20, 6, 1, 10, 0, ZoneId.systemDefault());
 
@@ -249,10 +255,9 @@ public class ReportGeneratorTest {
         longEntry.setFilledPrice(longEntryFillPrice);
         longEntry.setOrderFilledTime(entryTime);
         TradeReferenceLine entryLine = new TradeReferenceLine();
-        entryLine.correlationId="123";
+        entryLine.correlationId = "123";
         entryLine.direction = Direction.LONG;
         entryLine.side = Side.ENTRY;
-        
 
         TradeOrder longExit = new TradeOrder("123", longTicker, longSize, TradeDirection.SELL);
         longExit.setFilledPrice(longExitFillPrice);
@@ -261,7 +266,6 @@ public class ReportGeneratorTest {
         exitLine.correlationId = "123";
         exitLine.direction = LONG;
         exitLine.side = Side.EXIT;
-
 
         RoundTrip roundTrip = new RoundTrip();
         roundTrip.addTradeReference(longEntry, entryLine);
@@ -296,19 +300,17 @@ public class ReportGeneratorTest {
         System.out.println("Creating directory at: " + directory);
         ReportGenerator generator = new ReportGenerator(directory);
 
-        TradeOrder longEntryOrder = new TradeOrder("123", longTicker, 100, TradeDirection.BUY);
-        longEntryOrder.setFilledPrice(100.00);
+        TradeOrder longEntryOrder = new TradeOrder("123", longTicker, BigDecimal.valueOf(100), TradeDirection.BUY);
+        longEntryOrder.setFilledPrice(BigDecimal.valueOf(100.00));
         longEntryOrder.setReference("Intraday-Strategy:guid-123:Entry:Long*");
         longEntryOrder.setCurrentStatus(OrderStatus.Status.FILLED);
         longEntryOrder.setOrderFilledTime(entryOrderTime);
 
-
         generator.orderEvent(new OrderEvent(longEntryOrder, null));
         assertFalse(Files.exists(reportPath));
 
-
-        TradeOrder longExitOrder = new TradeOrder("1234", longTicker, 100, TradeDirection.SELL);
-        longExitOrder.setFilledPrice(105.00);
+        TradeOrder longExitOrder = new TradeOrder("1234", longTicker, BigDecimal.valueOf(100), TradeDirection.SELL);
+        longExitOrder.setFilledPrice(BigDecimal.valueOf(105.00));
         longExitOrder.setReference("Intraday-Strategy:guid-123:Exit:Long*");
         longExitOrder.setCurrentStatus(OrderStatus.Status.FILLED);
         longExitOrder.setOrderFilledTime(exitOrderTime);

@@ -34,7 +34,7 @@ public class ParadexUtil {
             paradoxOrder.setSide(Side.SELL);
         }
 
-        paradoxOrder.setSize(order.getSizeAsBigDecimal());
+        paradoxOrder.setSize(order.getSize());
 
         if (order.getType() == TradeOrder.Type.MARKET) {
             paradoxOrder.setOrderType(OrderType.MARKET);
@@ -47,7 +47,7 @@ public class ParadexUtil {
         }
 
         if (order.getType() == TradeOrder.Type.LIMIT) {
-            paradoxOrder.setLimitPrice(order.getLimitPriceAsBigDecimal());
+            paradoxOrder.setLimitPrice(order.getLimitPrice());
         }
 
         return paradoxOrder;

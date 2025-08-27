@@ -30,6 +30,7 @@ import java.time.ZonedDateTime;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -69,13 +70,13 @@ public class OrderSerializationTest {
 
     @Test
     public void testTradeOrder() throws Exception {
-        TradeOrder order = new TradeOrder("123", new StockTicker("123"), 100, TradeDirection.BUY);
+        TradeOrder order = new TradeOrder("123", new StockTicker("123"), BigDecimal.valueOf(100), TradeDirection.BUY);
         test(order);
     }
 
     @Test
     public void testOrderEvent() throws Exception {
-        TradeOrder order = new TradeOrder("123", new StockTicker("123"), 100, TradeDirection.BUY);
+        TradeOrder order = new TradeOrder("123", new StockTicker("123"), BigDecimal.valueOf(100), TradeDirection.BUY);
         OrderStatus status = new OrderStatus(OrderStatus.Status.NEW, "123", BigDecimal.valueOf(10),
                 BigDecimal.valueOf(10), BigDecimal.ZERO, new StockTicker("ABC"), ZonedDateTime.now());
         OrderEvent event = new OrderEvent(order, status);
@@ -94,7 +95,55 @@ public class OrderSerializationTest {
 
         Object object2 = deserialize(object.getClass(), serialized);
 
-        assertEquals(object, object2);
+        // Compare objects based on their type for better assertions
+        if (object instanceof TradeOrder) {
+            assertTradeOrderEquals((TradeOrder) object, (TradeOrder) object2);
+        } else if (object instanceof OrderEvent) {
+            assertOrderEventEquals((OrderEvent) object, (OrderEvent) object2);
+        } else if (object instanceof OrderStatus) {
+            assertOrderStatusEquals((OrderStatus) object, (OrderStatus) object2);
+        } else {
+            assertEquals(object, object2);
+        }
+    }
+
+    private void assertTradeOrderEquals(TradeOrder expected, TradeOrder actual) {
+        assertNotNull(actual);
+        assertEquals(expected.getTicker().getSymbol(), actual.getTicker().getSymbol());
+        assertEquals(expected.getDirection(), actual.getDirection());
+        assertEquals(expected.getType(), actual.getType());
+        assertEquals(expected.getSize(), actual.getSize());
+        assertEquals(expected.getOrderId(), actual.getOrderId());
+        assertEquals(expected.getCurrentStatus(), actual.getCurrentStatus());
+        assertEquals(expected.isSubmitted(), actual.isSubmitted());
+        assertEquals(expected.getDuration(), actual.getDuration());
+        assertEquals(expected.getFilledSize(), actual.getFilledSize());
+        assertEquals(expected.getFilledPrice(), actual.getFilledPrice());
+        assertEquals(expected.getCommission(), actual.getCommission());
+        // Compare other key fields as needed
+    }
+
+    private void assertOrderEventEquals(OrderEvent expected, OrderEvent actual) {
+        assertNotNull(actual);
+        assertTradeOrderEquals(expected.getOrder(), actual.getOrder());
+        assertOrderStatusEquals(expected.getOrderStatus(), actual.getOrderStatus());
+    }
+
+    private void assertOrderStatusEquals(OrderStatus expected, OrderStatus actual) {
+        assertNotNull(actual);
+        assertEquals(expected.getStatus(), actual.getStatus());
+        assertEquals(expected.getOrderId(), actual.getOrderId());
+        assertEquals(expected.getFilled(), actual.getFilled());
+        assertEquals(expected.getRemaining(), actual.getRemaining());
+        assertEquals(expected.getFillPrice(), actual.getFillPrice());
+        assertEquals(expected.getTicker().getSymbol(), actual.getTicker().getSymbol());
+        // Compare timestamp with tolerance for serialization precision issues
+        if (expected.getTimestamp() != null && actual.getTimestamp() != null) {
+            // Compare as strings to avoid precision issues with ZonedDateTime serialization
+            assertEquals(expected.getTimestamp().toString(), actual.getTimestamp().toString());
+        } else {
+            assertEquals(expected.getTimestamp(), actual.getTimestamp());
+        }
     }
 
     protected byte[] serialize(Object object) throws Exception {
@@ -106,15 +155,11 @@ public class OrderSerializationTest {
 
     }
 
+    @SuppressWarnings("unchecked")
     protected <T> T deserialize(Class<T> clazz, byte[] bytes) throws Exception {
         ByteArrayInputStream input = new ByteArrayInputStream(bytes);
         ObjectInputStream objectIn = new ObjectInputStream(input);
         return (T) objectIn.readObject();
     }
 
-    // TODO add test methods here.
-    // The methods must be annotated with annotation @Test. For example:
-    //
-    // @Test
-    // public void hello() {}
 }

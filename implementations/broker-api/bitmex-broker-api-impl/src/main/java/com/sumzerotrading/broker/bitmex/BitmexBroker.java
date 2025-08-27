@@ -19,10 +19,10 @@
  */
 package com.sumzerotrading.broker.bitmex;
 
-
 import com.sumzerotrading.bitmex.client.IBitmexClient;
 import com.sumzerotrading.bitmex.common.api.BitmexClientRegistry;
 import com.sumzerotrading.bitmex.entity.BitmexOrder;
+import com.sumzerotrading.broker.BrokerAccountInfoListener;
 import com.sumzerotrading.broker.BrokerError;
 import com.sumzerotrading.broker.BrokerErrorListener;
 import com.sumzerotrading.broker.IBroker;
@@ -66,7 +66,8 @@ public class BitmexBroker implements IBroker {
     protected BlockingQueue<ZonedDateTime> brokerTimeQueue = new LinkedBlockingQueue<>();
     protected BlockingQueue<BrokerError> brokerErrorQueue = new LinkedBlockingQueue<>();
     protected BlockingQueue<OrderEvent> orderEventQueue = new LinkedBlockingQueue<>();
-   // protected BlockingQueue<ContractDetails> contractDetailsQueue = new LinkedBlockingDeque<>();
+    // protected BlockingQueue<ContractDetails> contractDetailsQueue = new
+    // LinkedBlockingDeque<>();
     protected int nextOrderId = -1;
     protected SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
     protected DateTimeFormatter zonedDateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
@@ -83,14 +84,11 @@ public class BitmexBroker implements IBroker {
     protected Map<String, OrderEvent> orderEventMap;
     protected CountDownLatch getPositionsCountdownLatch = null;
     protected List<Position> positionsList = new ArrayList<>();
-    
-    
+
     protected IBitmexClient bitmexClient;
     protected Map<String, BitmexOrder> openOrderMap = new HashMap<>();
     protected Map<String, TradeOrder> completedOrderMap = new HashMap<>();
-    
-    
-    
+
     @Override
     public void cancelOrder(String id) {
         checkConnected();
@@ -116,38 +114,57 @@ public class BitmexBroker implements IBroker {
     }
 
     @Override
+    public void addBrokerAccountInfoListener(BrokerAccountInfoListener listener) {
+        throw new UnsupportedOperationException("Not supported yet.");
+
+    }
+
+    @Override
+    public void removeBrokerAccountInfoListener(BrokerAccountInfoListener listener) {
+        throw new UnsupportedOperationException("Not supported yet.");
+
+    }
+
+    @Override
     public void addOrderEventListener(OrderEventListener listener) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
+                                                                       // Tools | Templates.
     }
 
     @Override
     public void removeOrderEventListener(OrderEventListener listener) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
+                                                                       // Tools | Templates.
     }
 
     @Override
     public void addBrokerErrorListener(BrokerErrorListener listener) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
+                                                                       // Tools | Templates.
     }
 
     @Override
     public void removeBrokerErrorListener(BrokerErrorListener listener) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
+                                                                       // Tools | Templates.
     }
 
     @Override
     public String getFormattedDate(int hour, int minute, int second) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
+                                                                       // Tools | Templates.
     }
 
     @Override
     public String getFormattedDate(ZonedDateTime date) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
+                                                                       // Tools | Templates.
     }
 
     @Override
     public ZonedDateTime getCurrentTime() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
+                                                                       // Tools | Templates.
     }
 
     @Override
@@ -157,71 +174,80 @@ public class BitmexBroker implements IBroker {
 
     @Override
     public void disconnect() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
+                                                                       // Tools | Templates.
     }
 
     @Override
     public boolean isConnected() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
+                                                                       // Tools | Templates.
     }
 
     @Override
     public void aquireLock() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
+                                                                       // Tools | Templates.
     }
 
     @Override
     public void releaseLock() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
+                                                                       // Tools | Templates.
     }
 
     @Override
     public ComboTicker buildComboTicker(Ticker ticker1, Ticker ticker2) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
+                                                                       // Tools | Templates.
     }
 
     @Override
     public ComboTicker buildComboTicker(Ticker ticker1, int ratio1, Ticker ticker2, int ratio2) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
+                                                                       // Tools | Templates.
     }
 
     @Override
     public TradeOrder requestOrderStatus(String orderId) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
+                                                                       // Tools | Templates.
     }
 
     @Override
     public List<TradeOrder> getOpenOrders() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
+                                                                       // Tools | Templates.
     }
 
     @Override
     public void cancelAndReplaceOrder(String originalOrderId, TradeOrder newOrder) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
+                                                                       // Tools | Templates.
     }
 
     @Override
     public void addTimeUpdateListener(TimeUpdatedListener listener) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
+                                                                       // Tools | Templates.
     }
 
     @Override
     public void removeTimeUpdateListener(TimeUpdatedListener listener) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
+                                                                       // Tools | Templates.
     }
 
     @Override
     public List<Position> getAllPositions() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
+                                                                       // Tools | Templates.
     }
-    
-    
-    
+
     protected void checkConnected() {
-        if( bitmexClient == null ) {
+        if (bitmexClient == null) {
             throw new SumZeroException("Not connected to broker, call connect() first");
         }
     }
-    
-    
+
 }

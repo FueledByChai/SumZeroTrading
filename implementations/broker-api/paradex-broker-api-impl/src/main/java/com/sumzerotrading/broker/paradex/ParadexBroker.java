@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -38,12 +39,14 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sumzerotrading.broker.BrokerAccountInfoListener;
 import com.sumzerotrading.broker.BrokerError;
 import com.sumzerotrading.broker.BrokerErrorListener;
 import com.sumzerotrading.broker.IBroker;
 import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderEventListener;
+import com.sumzerotrading.broker.order.OrderStatus;
 import com.sumzerotrading.broker.order.TradeOrder;
 import com.sumzerotrading.data.ComboTicker;
 import com.sumzerotrading.data.Ticker;
@@ -74,6 +77,7 @@ public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
     protected ParadexWebSocketClient accountInfoWSClient;
     protected ParadexWebSocketClient orderStatusWSClient;
     protected OrderStatusWebSocketProcessor orderStatusProcessor;
+    protected AccountWebSocketProcessor accountWebSocketProcessor;
 
     protected Set<TradeOrder> currencyOrderList = new HashSet<>();
     protected BlockingQueue<Integer> nextIdQueue = new LinkedBlockingQueue<>();
@@ -87,10 +91,11 @@ public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
     protected DateTimeFormatter zonedDateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
 
     protected List<OrderEventListener> orderEventListeners = new ArrayList<>();
-    protected BitmexOrderEventProcessor orderProcessor;
+    protected List<BrokerAccountInfoListener> brokerAccountInfoListeners = new ArrayList<>();
     protected Set<String> filledOrderSet = new HashSet<>();
     protected Timer currencyOrderTimer;
     protected ScheduledExecutorService authenticationScheduler;
+    protected ExecutorService orderEventExecutor;
     protected Object lock = new Object();
     protected Semaphore semaphore = new Semaphore(1);
     protected Semaphore tradeFileSemaphore = new Semaphore(1);
@@ -99,6 +104,7 @@ public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
     protected Map<String, OrderEvent> orderEventMap;
     protected CountDownLatch getPositionsCountdownLatch = null;
     protected List<Position> positionsList = new ArrayList<>();
+    protected Map<String, TradeOrder> tradeOrderMap = new HashMap<>();
 
     protected Map<String, TradeOrder> completedOrderMap = new HashMap<>();
 
@@ -117,7 +123,9 @@ public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
     @Override
     public void placeOrder(TradeOrder order) {
         checkConnected();
-        restApi.placeOrder(jwtToken, order);
+        String orderId = restApi.placeOrder(jwtToken, order);
+        order.setOrderId(orderId);
+        tradeOrderMap.put(orderId, order);
     }
 
     @Override
@@ -127,14 +135,22 @@ public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
 
     @Override
     public void addOrderEventListener(OrderEventListener listener) {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
+        orderEventListeners.add(listener);
     }
 
     @Override
     public void removeOrderEventListener(OrderEventListener listener) {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
+        orderEventListeners.remove(listener);
+    }
+
+    @Override
+    public void addBrokerAccountInfoListener(BrokerAccountInfoListener listener) {
+        brokerAccountInfoListeners.add(listener);
+    }
+
+    @Override
+    public void removeBrokerAccountInfoListener(BrokerAccountInfoListener listener) {
+        brokerAccountInfoListeners.remove(listener);
     }
 
     @Override
@@ -170,6 +186,7 @@ public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
     @Override
     public void connect() {
         startAuthenticationScheduler();
+        orderEventExecutor = Executors.newCachedThreadPool();
         orderStatusProcessor = new OrderStatusWebSocketProcessor(this, () -> {
             logger.info("Order status WebSocket closed, trying to restart...");
             startOrderStatusWSClient();
@@ -180,6 +197,7 @@ public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
     @Override
     public void disconnect() {
         stopAuthenticationScheduler();
+        stopOrderEventExecutor();
         connected = false;
     }
 
@@ -203,14 +221,16 @@ public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
 
     @Override
     public ComboTicker buildComboTicker(Ticker ticker1, Ticker ticker2) {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
+        throw new UnsupportedOperationException("Not supported for paradex."); // To change body of generated methods,
+                                                                               // choose
+        // Tools | Templates.
     }
 
     @Override
     public ComboTicker buildComboTicker(Ticker ticker1, int ratio1, Ticker ticker2, int ratio2) {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
+        throw new UnsupportedOperationException("Not supported for paradex."); // To change body of generated methods,
+                                                                               // choose
+        // Tools | Templates.
     }
 
     @Override
@@ -257,7 +277,28 @@ public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
 
     @Override
     public void orderStatusUpdated(IParadexOrderStatusUpdate orderStatus) {
-        // Handle the order status update
+        OrderStatus status = ParadexBrokerUtil.translateOrderStatus(orderStatus);
+        TradeOrder order = tradeOrderMap.get(orderStatus.getOrderId());
+        order.setCurrentStatus(status.getStatus());
+        order.setFilledPrice(status.getFillPrice());
+        order.setFilledSize(status.getFilled());
+        // Can't set the order commission here, only on fill events.
+
+        OrderEvent event = new OrderEvent(order, status);
+        if (status.getStatus() == OrderStatus.Status.FILLED || status.getStatus() == OrderStatus.Status.CANCELED) {
+            tradeOrderMap.remove(orderStatus.getOrderId());
+        }
+        for (OrderEventListener listener : orderEventListeners) {
+            if (orderEventExecutor != null && !orderEventExecutor.isShutdown()) {
+                orderEventExecutor.submit(() -> {
+                    try {
+                        listener.orderEvent(event);
+                    } catch (Exception e) {
+                        logger.error("Error notifying order event listener", e);
+                    }
+                });
+            }
+        }
     }
 
     private void startAuthenticationScheduler() {
@@ -296,6 +337,21 @@ public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
                 logger.info("Authentication scheduler stopped");
             } catch (InterruptedException e) {
                 authenticationScheduler.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    private void stopOrderEventExecutor() {
+        if (orderEventExecutor != null && !orderEventExecutor.isShutdown()) {
+            orderEventExecutor.shutdown();
+            try {
+                if (!orderEventExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+                    orderEventExecutor.shutdownNow();
+                }
+                logger.info("Order event executor stopped");
+            } catch (InterruptedException e) {
+                orderEventExecutor.shutdownNow();
                 Thread.currentThread().interrupt();
             }
         }

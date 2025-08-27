@@ -17,6 +17,8 @@ import com.sumzerotrading.marketdata.ILevel1Quote;
 import com.sumzerotrading.marketdata.Level1QuoteListener;
 import com.sumzerotrading.marketdata.ib.IBQuoteEngine;
 import static java.lang.Thread.sleep;
+
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,10 +33,6 @@ public class MainClass implements OrderEventListener, Level1QuoteListener {
         System.out.println("Quote: " + quote);
     }
 
-    
-    
-    
-    
     public void start() throws Exception {
 
         IBConnectionUtil util = new IBConnectionUtil("localhost", 7999, 1);
@@ -52,14 +50,14 @@ public class MainClass implements OrderEventListener, Level1QuoteListener {
 
         String orderId = broker.getNextOrderId();
         System.out.println("Order id: " + orderId);
-        TradeOrder order = new TradeOrder(orderId, qqqTicker, 100, TradeDirection.BUY);
+        TradeOrder order = new TradeOrder(orderId, qqqTicker, BigDecimal.valueOf(100), TradeDirection.BUY);
         broker.placeOrder(order);
 
         Thread thread = new Thread(() -> {
             sleep(10000);
             String orderId2 = broker.getNextOrderId();
             System.out.println("Order id: " + orderId);
-            TradeOrder order2 = new TradeOrder(orderId2, qqqTicker, 200, TradeDirection.BUY);
+            TradeOrder order2 = new TradeOrder(orderId2, qqqTicker, BigDecimal.valueOf(200), TradeDirection.BUY);
             broker.placeOrder(order2);
 
             new Thread(() -> {

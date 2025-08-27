@@ -40,7 +40,7 @@ public class OrderManagmentUtil {
         BitmexOrder bitmexOrder = new BitmexOrder();
         bitmexOrder.setOrderID(order.getOrderId());
         bitmexOrder.setOrdType(getBitmexOrderType(order.getType()));
-        bitmexOrder.setOrderQty(order.getSize());
+        bitmexOrder.setOrderQty(order.getSize().doubleValue());
         bitmexOrder.setSide(getBitmexSide(order.getDirection()));
         bitmexOrder.setSymbol(order.getTicker().getSymbol());
         bitmexOrder.setTimeInForce(getBitmexTIF(order.getDuration()));

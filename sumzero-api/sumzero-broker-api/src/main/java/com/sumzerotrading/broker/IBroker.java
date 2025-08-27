@@ -18,7 +18,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.broker;
 
 import com.sumzerotrading.broker.order.OrderEventListener;
@@ -30,10 +29,6 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 /**
- * @author Rob Terpilowski
- *
- * TODO To change the template for this generated type comment go to Window -
- * Preferences - Java - Code Style - Code Templates
  */
 public interface IBroker {
 
@@ -61,8 +56,7 @@ public interface IBroker {
     /**
      * Gets the next order ID, or -1 if there was a problem getting the orderId
      *
-     * @return the next order id or -1 if there was a problem getting the
-     * orderId
+     * @return the next order id or -1 if there was a problem getting the orderId
      */
     public abstract String getNextOrderId();
 
@@ -79,28 +73,33 @@ public interface IBroker {
      * @param listener
      */
     public abstract void removeOrderEventListener(OrderEventListener listener);
-    
-    
-    /**
-     * Add a listener to receive broker errors
-     * @param listener 
-     */
-    public abstract void addBrokerErrorListener( BrokerErrorListener listener );
-    
-    /**
-     * Remove the specified BrokerErrorListener
-     * @param listener 
-     */
-    public abstract void removeBrokerErrorListener( BrokerErrorListener listener );
+
+    void addBrokerAccountInfoListener(BrokerAccountInfoListener listener);
+
+    void removeBrokerAccountInfoListener(BrokerAccountInfoListener listener);
 
     /**
-     * Returns a properly formatted string for today's date with the specified
-     * hour and minute
+     * Add a listener to receive broker errors
+     * 
+     * @param listener
+     */
+    public abstract void addBrokerErrorListener(BrokerErrorListener listener);
+
+    /**
+     * Remove the specified BrokerErrorListener
+     * 
+     * @param listener
+     */
+    public abstract void removeBrokerErrorListener(BrokerErrorListener listener);
+
+    /**
+     * Returns a properly formatted string for today's date with the specified hour
+     * and minute
      *
      * @param hour
      * @param minute
-     * @return a properly formatted string for today's date with the specified
-     * hour and minute. Formatted to the broker's specs.
+     * @return a properly formatted string for today's date with the specified hour
+     *         and minute. Formatted to the broker's specs.
      */
     public abstract String getFormattedDate(int hour, int minute, int second);
 
@@ -118,8 +117,7 @@ public interface IBroker {
      * @return the current date/time from the broker.
      */
     public abstract ZonedDateTime getCurrentTime();
-    
-    
+
     /**
      * Establishes the initial connection to the broker.
      */
@@ -163,36 +161,39 @@ public interface IBroker {
      * @return The TradeOrder for the specified ID, or null if no trade was found.
      */
     public TradeOrder requestOrderStatus(String orderId);
-    
+
     /**
      * Requests all open orders
      * 
      * @return A list of all open orders.
      */
     public List<TradeOrder> getOpenOrders();
-    
+
     /**
-     * Cancels the order with the specified ID, and replaced it with the specified order
+     * Cancels the order with the specified ID, and replaced it with the specified
+     * order
+     * 
      * @param originalOrderId The ID of the order to cancel
-     * @param newOrder The order to replace the canceled order with.
+     * @param newOrder        The order to replace the canceled order with.
      */
-    public void cancelAndReplaceOrder(String originalOrderId, TradeOrder newOrder );
-    
-    
+    public void cancelAndReplaceOrder(String originalOrderId, TradeOrder newOrder);
+
     /**
-     * The broker will send out updates once per second so that the trading strategies are 
-     * synced off the broker's time, and not from the PC's time.  Useful when backtestings
+     * The broker will send out updates once per second so that the trading
+     * strategies are synced off the broker's time, and not from the PC's time.
+     * Useful when backtestings
+     * 
      * @param listener The listener to update.
      */
-    public void addTimeUpdateListener( TimeUpdatedListener listener );
-    
+    public void addTimeUpdateListener(TimeUpdatedListener listener);
+
     /**
      * Remove the specified timeUpdateListener
-     * @param listener 
+     * 
+     * @param listener
      */
-    public void removeTimeUpdateListener( TimeUpdatedListener listener );
-    
-    
+    public void removeTimeUpdateListener(TimeUpdatedListener listener);
+
     /**
      * Request all open positions for this client.
      *

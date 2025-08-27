@@ -5,6 +5,32 @@
  */
 package com.sumzerotrading.broker.ib;
 
+import static org.jmock.Expectations.any;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.HashMap;
+import java.util.concurrent.BlockingQueue;
+
+import org.apache.log4j.Logger;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
+
 import com.ib.client.EClientSocket;
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.TradeDirection;
@@ -14,28 +40,6 @@ import com.sumzerotrading.data.SumZeroException;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.ib.IBConnectionInterface;
 import com.sumzerotrading.ib.IBSocket;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.HashMap;
-import java.util.concurrent.BlockingQueue;
-import org.apache.log4j.Logger;
-import static org.jmock.Expectations.any;
-import org.junit.After;
-import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  *
@@ -145,7 +149,7 @@ public class InteractiveBrokersBrokerTest {
         String whyHeld = "";
 
         Ticker ticker = new StockTicker("ABC");
-        TradeOrder order = new TradeOrder(orderIdString, ticker, size, TradeDirection.BUY);
+        TradeOrder order = new TradeOrder(orderIdString, ticker, BigDecimal.valueOf(size), TradeDirection.BUY);
         b.orderMap.put(orderIdString, order);
         doNothing().when(b).saveOrderMaps();
         doReturn(now).when(b).getZoneDateTime();

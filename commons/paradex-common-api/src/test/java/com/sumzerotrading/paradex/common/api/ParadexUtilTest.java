@@ -66,7 +66,7 @@ class ParadexUtilTest {
         when(mockTradeOrder.getTicker()).thenReturn(mockTicker);
         when(mockTicker.getSymbol()).thenReturn("BTC-USD");
         when(mockTradeOrder.getTradeDirection()).thenReturn(TradeDirection.BUY);
-        when(mockTradeOrder.getSizeAsBigDecimal()).thenReturn(new BigDecimal("1.5"));
+        when(mockTradeOrder.getSize()).thenReturn(new BigDecimal("1.5"));
         when(mockTradeOrder.getType()).thenReturn(TradeOrder.Type.MARKET);
 
         // Execute
@@ -82,8 +82,8 @@ class ParadexUtilTest {
         assertNull(result.getLimitPrice()); // Market orders don't have limit price
 
         // Verify method calls
-        verify(mockTradeOrder).getSizeAsBigDecimal();
-        verify(mockTradeOrder, never()).getLimitPriceAsBigDecimal();
+        verify(mockTradeOrder).getSize();
+        verify(mockTradeOrder, never()).getLimitPrice();
     }
 
     @Test
@@ -93,9 +93,9 @@ class ParadexUtilTest {
         when(mockTradeOrder.getTicker()).thenReturn(mockTicker);
         when(mockTicker.getSymbol()).thenReturn("ETH-USD");
         when(mockTradeOrder.getTradeDirection()).thenReturn(TradeDirection.SELL);
-        when(mockTradeOrder.getSizeAsBigDecimal()).thenReturn(new BigDecimal("2.0"));
+        when(mockTradeOrder.getSize()).thenReturn(new BigDecimal("2.0"));
         when(mockTradeOrder.getType()).thenReturn(TradeOrder.Type.LIMIT);
-        when(mockTradeOrder.getLimitPriceAsBigDecimal()).thenReturn(new BigDecimal("3000.50"));
+        when(mockTradeOrder.getLimitPrice()).thenReturn(new BigDecimal("3000.50"));
 
         // Execute
         ParadexOrder result = ParadexUtil.translateOrder(mockTradeOrder);
@@ -117,7 +117,7 @@ class ParadexUtilTest {
         when(mockTradeOrder.getTicker()).thenReturn(mockTicker);
         when(mockTicker.getSymbol()).thenReturn("SOL-USD");
         when(mockTradeOrder.getTradeDirection()).thenReturn(TradeDirection.BUY);
-        when(mockTradeOrder.getSizeAsBigDecimal()).thenReturn(new BigDecimal("10.0"));
+        when(mockTradeOrder.getSize()).thenReturn(new BigDecimal("10.0"));
         when(mockTradeOrder.getType()).thenReturn(TradeOrder.Type.STOP);
 
         // Execute
@@ -139,7 +139,7 @@ class ParadexUtilTest {
         when(mockTradeOrder.getTicker()).thenReturn(mockTicker);
         when(mockTicker.getSymbol()).thenReturn("ADA-USD");
         when(mockTradeOrder.getTradeDirection()).thenReturn(TradeDirection.BUY);
-        when(mockTradeOrder.getSizeAsBigDecimal()).thenReturn(new BigDecimal("100.0"));
+        when(mockTradeOrder.getSize()).thenReturn(new BigDecimal("100.0"));
 
         // Create a mock for an unsupported order type
         TradeOrder.Type unsupportedType = mock(TradeOrder.Type.class);
@@ -287,7 +287,7 @@ class ParadexUtilTest {
         when(mockTradeOrder.getTicker()).thenReturn(mockTicker);
         when(mockTicker.getSymbol()).thenReturn("TEST-USD");
         when(mockTradeOrder.getTradeDirection()).thenReturn(TradeDirection.BUY);
-        when(mockTradeOrder.getSizeAsBigDecimal()).thenReturn(new BigDecimal("1.0"));
+        when(mockTradeOrder.getSize()).thenReturn(new BigDecimal("1.0"));
         when(mockTradeOrder.getType()).thenReturn(TradeOrder.Type.MARKET);
 
         ParadexOrder result = ParadexUtil.translateOrder(mockTradeOrder);
