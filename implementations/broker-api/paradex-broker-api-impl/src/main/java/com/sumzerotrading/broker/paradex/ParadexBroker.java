@@ -50,6 +50,8 @@ import com.sumzerotrading.broker.order.OrderStatus;
 import com.sumzerotrading.broker.order.TradeOrder;
 import com.sumzerotrading.data.ComboTicker;
 import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.paradex.common.api.ParadexApiFactory;
+import com.sumzerotrading.paradex.common.api.ParadexConfiguration;
 import com.sumzerotrading.paradex.common.api.ParadexRestApi;
 import com.sumzerotrading.paradex.common.api.ParadexWebSocketClient;
 import com.sumzerotrading.time.TimeUpdatedListener;
@@ -63,8 +65,6 @@ import com.sumzerotrading.time.TimeUpdatedListener;
  */
 public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
     protected static Logger logger = LoggerFactory.getLogger(ParadexBroker.class);
-
-    protected static final String WS_URL = "";
 
     protected static int contractRequestId = 1;
     protected static int executionRequestId = 1;
@@ -107,6 +107,30 @@ public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
     protected Map<String, TradeOrder> tradeOrderMap = new HashMap<>();
 
     protected Map<String, TradeOrder> completedOrderMap = new HashMap<>();
+
+    /**
+     * Default constructor - uses centralized configuration for API initialization.
+     */
+    public ParadexBroker() {
+        // Initialize using centralized configuration
+        this.restApi = ParadexApiFactory.getPrivateApi();
+
+        // Get JWT refresh interval from configuration
+        ParadexConfiguration config = ParadexConfiguration.getInstance();
+        this.jwtRefreshInSeconds = config.getJwtRefreshSeconds();
+
+        logger.info("ParadexBroker initialized with configuration: {}", ParadexApiFactory.getConfigurationInfo());
+    }
+
+    /**
+     * Constructor for testing or custom configuration.
+     * 
+     * @param restApi custom ParadexRestApi instance
+     */
+    public ParadexBroker(ParadexRestApi restApi) {
+        this.restApi = restApi;
+        this.jwtRefreshInSeconds = 60; // default
+    }
 
     @Override
     public void cancelOrder(String id) {
@@ -366,9 +390,10 @@ public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
     public void startOrderStatusWSClient() {
         logger.info("Starting order status WebSocket client");
         String jwtToken = restApi.getJwtToken();
+        String wsUrl = ParadexApiFactory.getWebSocketUrl();
 
         try {
-            orderStatusWSClient = new ParadexWebSocketClient(WS_URL, "orders.ALL", orderStatusProcessor, jwtToken);
+            orderStatusWSClient = new ParadexWebSocketClient(wsUrl, "orders.ALL", orderStatusProcessor, jwtToken);
             orderStatusWSClient.connect();
         } catch (Exception e) {
             throw new IllegalStateException(e);

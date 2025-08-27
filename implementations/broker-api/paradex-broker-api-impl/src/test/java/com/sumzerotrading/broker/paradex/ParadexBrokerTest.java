@@ -38,6 +38,7 @@ import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.broker.order.OrderStatus;
 import com.sumzerotrading.broker.order.TradeOrder;
 import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.paradex.common.api.ParadexConfiguration;
 import com.sumzerotrading.paradex.common.api.ParadexRestApi;
 import com.sumzerotrading.paradex.common.api.ParadexWebSocketClient;
 import com.sumzerotrading.time.TimeUpdatedListener;
@@ -86,8 +87,7 @@ public class ParadexBrokerTest {
 
     @BeforeEach
     public void setUp() {
-        broker = new ParadexBroker();
-        broker.restApi = mockRestApi;
+        broker = new ParadexBroker(mockRestApi);
         broker.orderStatusWSClient = mockOrderStatusWSClient;
         broker.orderStatusProcessor = mockOrderStatusProcessor;
         broker.authenticationScheduler = mockAuthenticationScheduler;
@@ -484,8 +484,11 @@ public class ParadexBrokerTest {
 
     @Test
     public void testStaticFields_AccessAndModification() {
-        // Test static field access
-        assertEquals("", ParadexBroker.WS_URL);
+        // Test configuration access
+        ParadexConfiguration config = ParadexConfiguration.getInstance();
+        String wsUrl = config.getWebSocketUrl();
+        assertNotNull(wsUrl);
+        assertTrue(wsUrl.contains("testnet") || wsUrl.contains("prod"));
 
         // Test static field modifications
         int originalContractId = ParadexBroker.contractRequestId;
