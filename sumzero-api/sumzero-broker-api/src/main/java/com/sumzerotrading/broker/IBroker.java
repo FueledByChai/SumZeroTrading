@@ -47,6 +47,18 @@ public interface IBroker {
     public abstract void cancelOrder(TradeOrder order);
 
     /**
+     * Cancels all orders for the specified ticker.
+     * 
+     * @param ticker The ticker for which to cancel all orders.
+     */
+    void cancelAllOrders(Ticker ticker);
+
+    /**
+     * Cancels all open orders.
+     */
+    void cancelAllOrders();
+
+    /**
      * places the specified order with the broker
      *
      * @param order The order to place with the broker.
