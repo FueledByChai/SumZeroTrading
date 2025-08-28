@@ -250,4 +250,15 @@ public class BitmexBroker implements IBroker {
         }
     }
 
+    @Override
+    public void cancelAllOrders(Ticker ticker) {
+        throw new UnsupportedOperationException("Cancel all orders by ticker not implemented yet");
+    }
+
+    @Override
+    public void cancelAllOrders() {
+        throw new UnsupportedOperationException("Cancel all orders not implemented yet");
+
+    }
+
 }

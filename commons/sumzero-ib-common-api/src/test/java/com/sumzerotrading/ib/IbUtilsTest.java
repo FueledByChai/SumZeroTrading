@@ -73,7 +73,7 @@ public class IbUtilsTest {
         assertEquals("DAY", IbUtils.getTif(TradeOrder.Duration.DAY));
         assertEquals("GTC", IbUtils.getTif(TradeOrder.Duration.GOOD_UNTIL_CANCELED));
         assertEquals("IOC", IbUtils.getTif(TradeOrder.Duration.FILL_OR_KILL));
-        assertEquals("GTD", IbUtils.getTif(TradeOrder.Duration.GOOD_UTNIL_TIME));
+        assertEquals("GTD", IbUtils.getTif(TradeOrder.Duration.GOOD_UNTIL_TIME));
         assertEquals("OPG", IbUtils.getTif(TradeOrder.Duration.MARKET_ON_OPEN));
         assertEquals("DAY", IbUtils.getTif(null));
     }
@@ -102,9 +102,6 @@ public class IbUtilsTest {
 
         // First make sure we have a mapping for all types.
         TradeOrder.Type[] values = TradeOrder.Type.values();
-        for (TradeOrder.Type value : values) {
-            assertNotNull(IbUtils.getOrderType(value));
-        }
 
         assertEquals("MKT", IbUtils.getOrderType(TradeOrder.Type.MARKET));
         assertEquals("LMT", IbUtils.getOrderType(TradeOrder.Type.LIMIT));
@@ -114,6 +111,27 @@ public class IbUtilsTest {
 
         try {
             IbUtils.getOrderType(null);
+            fail();
+        } catch (IllegalStateException ex) {
+            // this should happen
+        }
+
+        try {
+            IbUtils.getOrderType(TradeOrder.Type.STOP_LIMIT);
+            fail();
+        } catch (IllegalStateException ex) {
+            // this should happen
+        }
+
+        try {
+            IbUtils.getOrderType(TradeOrder.Type.TRAILING_STOP);
+            fail();
+        } catch (IllegalStateException ex) {
+            // this should happen
+        }
+
+        try {
+            IbUtils.getOrderType(TradeOrder.Type.TRAILING_STOP_LIMIT);
             fail();
         } catch (IllegalStateException ex) {
             // this should happen

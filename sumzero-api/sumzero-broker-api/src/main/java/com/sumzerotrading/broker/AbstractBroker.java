@@ -5,95 +5,94 @@
  */
 package com.sumzerotrading.broker;
 
+import java.util.Set;
+import java.util.TreeSet;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.time.TimeUpdatedListener;
-import java.util.Set;
-import java.util.TreeSet;
-import org.apache.log4j.Logger;
 
 /**
  *
  * @author RobTerpilowski
  */
-public abstract class AbstractBroker implements IBroker{
-    
+public abstract class AbstractBroker implements IBroker {
+
     protected Set<OrderEventListener> orderEventListeners = new TreeSet<>();
     protected Set<BrokerErrorListener> brokerErrorListeners = new TreeSet<>();
     protected Set<TimeUpdatedListener> timeUpdatedListeners = new TreeSet<>();
-    protected static Logger logger = Logger.getLogger(AbstractBroker.class);
-    
-    
+    protected static Logger logger = LoggerFactory.getLogger(AbstractBroker.class);
 
     @Override
     public void addOrderEventListener(OrderEventListener listener) {
-        synchronized(orderEventListeners) {
+        synchronized (orderEventListeners) {
             orderEventListeners.add(listener);
         }
     }
 
     @Override
     public void addBrokerErrorListener(BrokerErrorListener listener) {
-        synchronized(brokerErrorListeners) {
+        synchronized (brokerErrorListeners) {
             brokerErrorListeners.add(listener);
         }
     }
 
     @Override
     public void addTimeUpdateListener(TimeUpdatedListener listener) {
-        synchronized(timeUpdatedListeners) {
+        synchronized (timeUpdatedListeners) {
             timeUpdatedListeners.add(listener);
         }
     }
 
     @Override
     public void removeOrderEventListener(OrderEventListener listener) {
-        synchronized(orderEventListeners) {
+        synchronized (orderEventListeners) {
             orderEventListeners.remove(listener);
         }
     }
 
     @Override
     public void removeBrokerErrorListener(BrokerErrorListener listener) {
-        synchronized(brokerErrorListeners) {
+        synchronized (brokerErrorListeners) {
             brokerErrorListeners.remove(listener);
         }
     }
 
     @Override
     public void removeTimeUpdateListener(TimeUpdatedListener listener) {
-        synchronized(timeUpdatedListeners) {
+        synchronized (timeUpdatedListeners) {
             timeUpdatedListeners.remove(listener);
         }
     }
-    
-    
-    
+
     protected void fireOrderEvent(OrderEvent event) {
-        synchronized(orderEventListeners) {
-            for(OrderEventListener listener: orderEventListeners) {
+        synchronized (orderEventListeners) {
+            for (OrderEventListener listener : orderEventListeners) {
                 try {
                     listener.orderEvent(event);
-                } catch( Exception ex ){
+                } catch (Exception ex) {
                     logger.error(ex.getMessage(), ex);
                 }
             }
         }
     }
-    
+
     protected void fireBrokerError(BrokerError error) {
-        synchronized(brokerErrorListeners) {
-            for(BrokerErrorListener listener : brokerErrorListeners ) { 
+        synchronized (brokerErrorListeners) {
+            for (BrokerErrorListener listener : brokerErrorListeners) {
                 try {
                     listener.brokerErrorFired(error);
-                } catch( Exception ex ) {
+                } catch (Exception ex) {
                     logger.error(ex.getMessage(), ex);
                 }
             }
         }
     }
-    
+
     protected void fireTimeUpdate() {
-        
+
     }
 }

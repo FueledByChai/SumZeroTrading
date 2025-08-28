@@ -34,16 +34,21 @@ import com.sumzerotrading.broker.BrokerAccountInfoListener;
 import com.sumzerotrading.broker.BrokerErrorListener;
 import com.sumzerotrading.broker.IBroker;
 import com.sumzerotrading.broker.Position;
+import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.broker.order.OrderStatus;
 import com.sumzerotrading.broker.order.OrderStatus.CancelReason;
+import com.sumzerotrading.broker.order.OrderStatus.Status;
+import com.sumzerotrading.broker.order.TradeDirection;
 import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.TradeOrder.Modifier;
+import com.sumzerotrading.broker.order.TradeOrder.Type;
 import com.sumzerotrading.data.ComboTicker;
 import com.sumzerotrading.data.CryptoTicker;
-import com.sumzerotrading.data.Exchange;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.marketdata.ILevel1Quote;
 import com.sumzerotrading.marketdata.Level1QuoteListener;
+import com.sumzerotrading.marketdata.MarketDepthBook.Side;
 import com.sumzerotrading.marketdata.OrderBook;
 import com.sumzerotrading.marketdata.QuoteEngine;
 import com.sumzerotrading.time.TimeUpdatedListener;
@@ -94,10 +99,13 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
 
     protected Map<String, TradeOrder> openOrders = new LinkedHashMap<>(); // Map to hold open orders, ordered by
                                                                           // insertion
-    // order
-
     protected final Set<TradeOrder> executedOrders = java.util.Collections
-            .synchronizedSet(new TreeSet<>((o1, o2) -> o2.getOrderEntryTime().compareTo(o1.getOrderEntryTime())));
+            .synchronizedSet(new TreeSet<TradeOrder>(new java.util.Comparator<TradeOrder>() {
+                @Override
+                public int compare(TradeOrder o1, TradeOrder o2) {
+                    return o2.getOrderEntryTime().compareTo(o1.getOrderEntryTime());
+                }
+            }));
 
     protected OrderBook orderBook; // Order book for managing market data
 
@@ -256,7 +264,7 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
         } else if (openAsks.containsKey(orderId)) {
             TradeOrder order = openAsks.remove(orderId); // Remove the order from open asks
             if (order != null) {
-                cancelOrder(order, CancelReason.USER_CANCELED); // Notify listeners of cancellation
+                cancelOrder(orderId, CancelReason.USER_CANCELED); // Notify listeners of cancellation
             }
             logger.info("Order {} cancelled from asks.", orderId);
         } else {
@@ -281,24 +289,12 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
     }
 
     @Override
-    public IPositionInfo getOpenPosition(CryptoTicker ticker) {
-        delay(); // Simulate network delay
-        ParadexPositionInfo positionInfo = new ParadexPositionInfo(ticker, currentPosition.doubleValue(), 0.0); // Create
-                                                                                                                // a new
-        // position info
-        // object
-        return positionInfo; // Return the position info
-    }
-
-    @Override
     public List<Position> getAllPositions() {
         delay(); // Simulate network delay
         List<Position> positions = new ArrayList<>(); // List to hold position info
         if (!currentPosition.equals(BigDecimal.ZERO)) { // Only add position if there is an inventory
-            CryptoTicker ticker = new CryptoTicker("BTC/USD", Exchange.HYPERLIQUID); // Example ticker, replace with
-                                                                                     // actual
-            positions.add(new ParadexPositionInfo(ticker, currentPosition.doubleValue(), 0.0)); // Add the position info
-                                                                                                // to the list
+            Position position = new Position(ticker, currentPosition, BigDecimal.valueOf(averageEntryPrice));
+            positions.add(position);
         }
         return positions; // Return the list of positions
     }
@@ -314,31 +310,31 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
         executorService.submit(() -> {
             try {
                 delay(); // Simulate network delay
-                if (order.getOrderType() == OrderType.LIMIT) {
-                    if (order.getSide() == Side.BUY) {
-                        if (order.getTimeInForce() == OrderTIF.POST_ONLY
+                if (order.getType() == Type.LIMIT) {
+                    if (order.getDirection() == TradeDirection.BUY) {
+                        if (order.containsModifier(Modifier.POST_ONLY)
                                 && order.getLimitPrice().doubleValue() >= bestAskPrice) {
                             logger.warn("Limit buy order would cross the best ask price. Cancelling order.");
-                            cancelOrder(order, CancelReason.POST_ONLY_WOULD_CROSS);
+                            cancelOrder(orderId, CancelReason.POST_ONLY_WOULD_CROSS);
                             return;
                         }
                         openBids.put(orderId, order);
                         logger.info("Limit buy order placed: {}", order);
-                    } else if (order.getSide() == Side.SELL) {
-                        if (order.getTimeInForce() == OrderTIF.POST_ONLY
+                    } else if (order.getDirection() == TradeDirection.SELL) {
+                        if (order.containsModifier(Modifier.POST_ONLY)
                                 && order.getLimitPrice().doubleValue() <= bestBidPrice) {
                             logger.warn("Limit sell order would cross the best bid price. Cancelling order.");
-                            cancelOrder(order, CancelReason.POST_ONLY_WOULD_CROSS);
+                            cancelOrder(orderId, CancelReason.POST_ONLY_WOULD_CROSS);
                             return;
                         }
                         openAsks.put(orderId, order);
                         logger.info("Limit sell order placed: {}", order);
                     }
-                } else if (order.getOrderType() == OrderType.MARKET) {
-                    if (order.getSide() == Side.BUY) {
+                } else if (order.getType() == Type.MARKET) {
+                    if (order.getDirection() == TradeDirection.BUY) {
                         fillOrder(order, bestAskPrice);
                         logger.info("Market buy executed: {}", order);
-                    } else if (order.getSide() == Side.SELL) {
+                    } else if (order.getDirection() == TradeDirection.SELL) {
                         fillOrder(order, bestBidPrice);
                         logger.info("Market sell executed: {}", order);
                     }
@@ -348,7 +344,13 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
             }
         });
 
-        return orderId; // Return immediately
+        // return orderId; // Return immediately
+    }
+
+    @Override
+    public void cancelAllOrders() {
+        throw new UnsupportedOperationException("Not supported yet.");
+
     }
 
     public double getUnrealizedPnL() {
@@ -400,7 +402,6 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
         }
     }
 
-    @Override
     public void askUpdated(BigDecimal newAsk) {
         bestAskPrice = newAsk.doubleValue();
 
@@ -408,23 +409,22 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
 
     }
 
-    @Override
     public void bidUpdated(BigDecimal newBid) {
         bestBidPrice = newBid.doubleValue();
         checkAsksFills(newBid.doubleValue()); // Check for filled orders based on the new bid price
 
     }
 
-    protected List<IOrder> checkAsksFills(double bestBid) {
-        List<IOrder> filledOrders = new ArrayList<>();
+    protected List<TradeOrder> checkAsksFills(double bestBid) {
+        List<TradeOrder> filledOrders = new ArrayList<>();
         bidsLock.lock(); // Lock the bids to ensure thread safety
         try {
             bestBidPrice = bestBid; // Update the best ask price
             midPrice = (bestBidPrice + bestAskPrice) / 2.0; // Update the mid price
 
-            for (Iterator<Map.Entry<String, IOrder>> it = openAsks.entrySet().iterator(); it.hasNext();) {
-                Map.Entry<String, IOrder> entry = it.next();
-                IOrder order = entry.getValue();
+            for (Iterator<Map.Entry<String, TradeOrder>> it = openAsks.entrySet().iterator(); it.hasNext();) {
+                Map.Entry<String, TradeOrder> entry = it.next();
+                TradeOrder order = entry.getValue();
 
                 boolean filled = order.getLimitPrice().doubleValue() < bestBidPrice; // Check if the order can be filled
                                                                                      // at
@@ -443,16 +443,16 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
         return filledOrders;
     }
 
-    protected List<IOrder> checkBidsFills(double askPrice) {
-        List<IOrder> filledOrders = new ArrayList<>();
+    protected List<TradeOrder> checkBidsFills(double askPrice) {
+        List<TradeOrder> filledOrders = new ArrayList<>();
         asksLock.lock(); // Lock the asks to ensure thread safety
         try {
             bestAskPrice = askPrice; // Update the best bid price
             midPrice = (bestBidPrice + bestAskPrice) / 2.0; // Update the mid price
 
-            for (Iterator<Map.Entry<String, IOrder>> it = openBids.entrySet().iterator(); it.hasNext();) {
-                Map.Entry<String, IOrder> entry = it.next();
-                IOrder order = entry.getValue();
+            for (Iterator<Map.Entry<String, TradeOrder>> it = openBids.entrySet().iterator(); it.hasNext();) {
+                Map.Entry<String, TradeOrder> entry = it.next();
+                TradeOrder order = entry.getValue();
 
                 boolean filled = order.getLimitPrice().doubleValue() > askPrice; // Check if the order can be filled at
                                                                                  // the
@@ -497,7 +497,7 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
         }
     }
 
-    protected void fillOrder(IOrder order, double price) {
+    protected void fillOrder(TradeOrder order, double price) {
         logger.debug("Attempting to remove order with ID: {} from openOrders", order.getOrderId());
         if (openOrders.containsKey(order.getOrderId())) {
             logger.debug("Order with ID: {} exists in openOrders before removal", order.getOrderId());
@@ -513,72 +513,56 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
         String orderId = order.getOrderId();
         BigDecimal remainingSize = BigDecimal.ZERO;
         BigDecimal originalSize = order.getSize();
-        String status = OrderStatus.CLOSED.name();
-        String cancelReasonAsString = "";
         BigDecimal averageFillPrice = BigDecimal.valueOf(price); // Use the fill price
-        String orderType = order.getOrderType().name();
-        String side = order.getSide().name();
-        long timestamp = System.currentTimeMillis(); // Use current timestamp
-        order.setFilledTime(ZonedDateTime.now()); // Set the filled time for the order
-        order.setRemainingSize(remainingSize);
+        order.setFilledPrice(averageFillPrice);
+        order.setFilledSize(originalSize);
+        order.setCurrentStatus(Status.FILLED);
+        order.setOrderFilledTime(getCurrentTime());
         // Increment the total number of orders placed
 
         logger.info("Filling order: {} at price: {} with size: {}", order, price, order.getSize());
 
         try {
-            updatePosition(order.getSide(), order.getSize(), price, order.getOrderType() != OrderType.MARKET); // Update
-                                                                                                               // position
-                                                                                                               // based
-                                                                                                               // on
-                                                                                                               // order
-                                                                                                               // type
+            updatePosition(order.getTradeDirection(), order.getSize(), price, order.getType() != Type.MARKET);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
         }
 
-        IOrderStatusUpdate orderStatus = new ParadoxOrderStatusUpdate(orderId, remainingSize, originalSize, status,
-                cancelReasonAsString, averageFillPrice, orderType, side, timestamp);
+        OrderStatus orderStatus = new OrderStatus(Status.FILLED, orderId, orderId, originalSize, remainingSize,
+                averageFillPrice, ticker, getCurrentTime());
+        OrderEvent event = new OrderEvent(order, orderStatus);
 
-        fireOrderStatusUpdate(orderStatus); // Notify listeners of the order status update
-        executedOrders.add(order); // Add the order to the executed orders list
+        executedOrders.add(order);
+        fireOrderStatusUpdate(event); // Notify listeners of the order status update
 
-        writeTradeToCsv(order, price,
-                calcFee(price, order.getSize().doubleValue(), order.getOrderType() != OrderType.MARKET)); // Write the
-                                                                                                          // trade to
-                                                                                                          // CSV
+        writeTradeToCsv(order, price, calcFee(price, order.getSize().doubleValue(), order.getType() != Type.MARKET));
 
     }
 
-    protected synchronized void cancelOrder(IOrder order, CancelReason reason) {
-        logger.debug("Attempting to remove order with ID: {} from openOrders", order.getOrderId());
-        openOrders.remove(order.getOrderId());
-        String orderId = order.getOrderId();
-        BigDecimal remainingSize = order.getRemainingSize();
-        BigDecimal originalSize = order.getSize();
-        if (remainingSize == null) {
-            remainingSize = originalSize;
-        }
+    protected synchronized void cancelOrder(String orderId, CancelReason reason) {
+        logger.debug("Attempting to remove order with ID: {} from openOrders", orderId);
+        TradeOrder order = openOrders.remove(orderId);
+        BigDecimal remainingSize = BigDecimal.ZERO;
 
-        String status = OrderStatus.CLOSED.name(); // Set status to closed
+        Status status = OrderStatus.Status.CANCELED;
         String cancelReasonAsString = reason.name(); // Use the name of the cancel reason enum
         BigDecimal averageFillPrice = BigDecimal.ZERO; // No fill price since it's cancelled
-        String orderType = order.getOrderType().name();
-        String side = order.getSide().name();
-        long timestamp = System.currentTimeMillis(); // Use current timestamp
-        order.setCancelledTime(ZonedDateTime.now());
 
-        IOrderStatusUpdate orderStatus = new ParadoxOrderStatusUpdate(orderId, remainingSize, originalSize, status,
-                cancelReasonAsString, averageFillPrice, orderType, side, timestamp);
+        OrderStatus orderStatus = new OrderStatus(status, orderId, orderId, averageFillPrice, remainingSize,
+                averageFillPrice, ticker, getCurrentTime());
+        orderStatus.setCancelReason(reason);
 
-        fireOrderStatusUpdate(orderStatus); // Notify listeners of the cancellation
+        OrderEvent event = new OrderEvent(order, orderStatus);
+
+        fireOrderStatusUpdate(event); // Notify listeners of the cancellation
     }
 
-    protected void fireOrderStatusUpdate(IOrderStatusUpdate orderStatus) {
-        for (OrderStatusListener listener : orderStatusListeners) {
+    protected void fireOrderStatusUpdate(OrderEvent orderStatus) {
+        for (OrderEventListener listener : orderEventListeners) {
             try {
                 executorService.submit(() -> {
                     try {
-                        listener.orderStatusUpdated(orderStatus); // Notify the listener with the order status update
+                        listener.orderEvent(orderStatus);
                     } catch (Exception e) {
                         logger.error(e.getLocalizedMessage(), e);
                     }
@@ -606,10 +590,10 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
         }
     }
 
-    protected void updatePosition(Side side, BigDecimal orderSize, double price, boolean isMaker) {
+    protected void updatePosition(TradeDirection side, BigDecimal orderSize, double price, boolean isMaker) {
         BigDecimal size = orderSize; // Use the initial size passed to the method
         double notional = size.doubleValue() * price;
-        if (side == Side.BUY) {
+        if (side == TradeDirection.BUY) {
             if (currentPosition.compareTo(BigDecimal.ZERO) < 0) {
                 BigDecimal closingSize = currentPosition.negate().min(size);
 
@@ -694,11 +678,11 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
                     // Prepare the trade details as a CSV line
                     String csvLine = String.format("%s,%s,%s,%.5f,%s,%s,%s,%.5f,%.5f,%d", asset, order.getOrderId(), // Order
                                                                                                                      // ID
-                            order.getSide(), // Side (BUY/SELL)
+                            order.getDirection(), // Side (BUY/SELL)
                             order.getSize(), // Size
-                            order.getOrderType(), order.getSubmittedTime().format(DateTimeFormatter.ISO_INSTANT), // Submitted
-                                                                                                                  // Time
-                            order.getFilledTime().format(DateTimeFormatter.ISO_INSTANT), // Filled Time
+                            order.getType(), order.getOrderEntryTime().format(DateTimeFormatter.ISO_INSTANT), // Submitted
+                                                                                                              // Time
+                            order.getOrderFilledTime().format(DateTimeFormatter.ISO_INSTANT), // Filled Time
                             price, // Price
                             fee, // Fee
                             System.currentTimeMillis()); // Timestamp
@@ -740,8 +724,6 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
     @Override
     public void addBrokerAccountInfoListener(BrokerAccountInfoListener listener) {
         brokerAccountInfoListeners.add(listener);
-    }
-
     }
 
     @Override
@@ -797,11 +779,6 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
     public void disconnect() {
         throw new UnsupportedOperationException("Disconnect not supported in PaperBroker");
 
-    }
-
-    @Override
-    public List<Position> getAllPositions() {
-        throw new UnsupportedOperationException("getAllPositions not supported in PaperBroker");
     }
 
     @Override

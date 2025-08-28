@@ -564,7 +564,7 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
             ibOrder.parentId(Integer.parseInt(order.getParentOrderId()));
         }
 
-        if (order.getDuration() == TradeOrder.Duration.GOOD_UTNIL_TIME) {
+        if (order.getDuration() == TradeOrder.Duration.GOOD_UNTIL_TIME) {
             if (order.getGoodUntilTime() != null) {
                 ibOrder.goodTillDate(getFormattedDate(order.getGoodUntilTime()));
             } else {
@@ -647,4 +647,16 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
             return order;
         }
     }
+
+    @Override
+    public void cancelAllOrders(Ticker ticker) {
+        throw new UnsupportedOperationException("Cancel all orders by ticker not implemented yet");
+    }
+
+    @Override
+    public void cancelAllOrders() {
+        throw new UnsupportedOperationException("Cancel all orders not implemented yet");
+
+    }
+
 }

@@ -100,7 +100,7 @@ public class IbUtils {
             return "DAY";
         case GOOD_UNTIL_CANCELED:
             return "GTC";
-        case GOOD_UTNIL_TIME:
+        case GOOD_UNTIL_TIME:
             return "GTD";
         case FILL_OR_KILL:
             return "IOC";
