@@ -23,9 +23,8 @@ package com.sumzerotrading.data;
 /**
  * @author Rob Terpilowski
  *
- *         TODO To change the template for this generated type comment go to
- *         Window - Preferences - Java - Code Style - Code Templates
  */
 public enum InstrumentType {
-        STOCK, FUTURES, OPTION, FOREX, INDEX, COMBO, CFD, CRYPTO_SPOT, CRYPTO_PERP_FUTURES, NONE;
+        STOCK, FUTURES, OPTION, FOREX, INDEX, COMBO, CFD, CRYPTO_SPOT, PERPETUAL_FUTURES, PERPETUAL_OPTIONS,
+        SPOT_METALS, NONE;
 }

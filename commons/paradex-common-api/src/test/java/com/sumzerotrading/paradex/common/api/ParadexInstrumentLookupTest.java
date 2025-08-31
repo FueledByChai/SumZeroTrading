@@ -23,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.sumzerotrading.data.CryptoTicker;
 import com.sumzerotrading.data.Exchange;
 import com.sumzerotrading.data.InstrumentDescriptor;
+import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.StockTicker;
 
 @ExtendWith(MockitoExtension.class)
@@ -283,18 +284,18 @@ class ParadexInstrumentLookupTest {
 
     // Helper methods to create test data
     private InstrumentDescriptor createBitcoinDescriptor() {
-        return new InstrumentDescriptor(Exchange.PARADEX, "BTC", "BTC-USD-PERP", "BTC", "USD",
-                new BigDecimal("0.00001"), new BigDecimal("0.1"), 100, 8);
+        return new InstrumentDescriptor(InstrumentType.PERPETUAL_FUTURES, Exchange.PARADEX, "BTC", "BTC-USD-PERP",
+                "BTC", "USD", new BigDecimal("0.00001"), new BigDecimal("0.1"), 100, 8);
     }
 
     private InstrumentDescriptor createEthereumDescriptor() {
-        return new InstrumentDescriptor(Exchange.PARADEX, "ETH", "ETH-USD-PERP", "ETH", "USD", new BigDecimal("0.0001"),
-                new BigDecimal("0.01"), 50, 8);
+        return new InstrumentDescriptor(InstrumentType.PERPETUAL_FUTURES, Exchange.PARADEX, "ETH", "ETH-USD-PERP",
+                "ETH", "USD", new BigDecimal("0.0001"), new BigDecimal("0.01"), 50, 8);
     }
 
     private InstrumentDescriptor createDogeDescriptor() {
-        return new InstrumentDescriptor(Exchange.PARADEX, "DOGE", "DOGE-USD-PERP", "DOGE", "USD", new BigDecimal("1.0"),
-                new BigDecimal("0.00001"), 10, 4);
+        return new InstrumentDescriptor(InstrumentType.PERPETUAL_FUTURES, Exchange.PARADEX, "DOGE", "DOGE-USD-PERP",
+                "DOGE", "USD", new BigDecimal("1.0"), new BigDecimal("0.00001"), 10, 4);
     }
 
     /**

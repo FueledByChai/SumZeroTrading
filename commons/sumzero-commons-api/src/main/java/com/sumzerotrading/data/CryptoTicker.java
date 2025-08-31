@@ -10,7 +10,7 @@ public class CryptoTicker extends GenericTicker {
 
     @Override
     public InstrumentType getInstrumentType() {
-        return InstrumentType.CRYPTO_PERP_FUTURES;
+        return InstrumentType.CRYPTO_SPOT;
     }
 
     @Override

@@ -7,6 +7,7 @@ import java.util.Map;
 import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.order.TradeOrder;
 import com.sumzerotrading.data.InstrumentDescriptor;
+import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.paradex.common.api.historical.OHLCBar;
 
 public interface IParadexRestApi {
@@ -43,5 +44,7 @@ public interface IParadexRestApi {
     boolean isPublicApiOnly();
 
     InstrumentDescriptor getInstrumentDescriptor(String symbol);
+
+    InstrumentDescriptor[] getAllInstrumentsForType(InstrumentType instrumentType);
 
 }

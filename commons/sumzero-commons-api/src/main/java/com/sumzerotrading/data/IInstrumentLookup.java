@@ -8,4 +8,6 @@ public interface IInstrumentLookup {
 
     public InstrumentDescriptor lookupByTicker(Ticker ticker);
 
+    public InstrumentDescriptor[] getAllInstrumentsForType(InstrumentType type);
+
 }

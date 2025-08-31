@@ -13,10 +13,12 @@ public class InstrumentDescriptor {
     protected BigDecimal priceTickSize;
     protected int minNotionalOrderSize = 1;
     protected int fundingPeriodHours = 8;
+    protected InstrumentType instrumentType;
 
-    public InstrumentDescriptor(Exchange exchange, String commonSymbol, String exchangeSymbol, String baseCurrency,
-            String quoteCurrency, BigDecimal orderSizeIncrement, BigDecimal priceTickSize, int minNotionalOrderSize,
-            int fundingPeriodHours) {
+    public InstrumentDescriptor(InstrumentType instrumentType, Exchange exchange, String commonSymbol,
+            String exchangeSymbol, String baseCurrency, String quoteCurrency, BigDecimal orderSizeIncrement,
+            BigDecimal priceTickSize, int minNotionalOrderSize, int fundingPeriodHours) {
+        this.instrumentType = instrumentType;
         this.exchange = exchange;
         this.commonSymbol = commonSymbol;
         this.exchangeSymbol = exchangeSymbol;
@@ -64,10 +66,15 @@ public class InstrumentDescriptor {
         return fundingPeriodHours;
     }
 
+    public InstrumentType getInstrumentType() {
+        return instrumentType;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
+        result = prime * result + ((instrumentType == null) ? 0 : instrumentType.hashCode());
         result = prime * result + ((exchange == null) ? 0 : exchange.hashCode());
         result = prime * result + ((commonSymbol == null) ? 0 : commonSymbol.hashCode());
         result = prime * result + ((exchangeSymbol == null) ? 0 : exchangeSymbol.hashCode());
@@ -89,6 +96,8 @@ public class InstrumentDescriptor {
         if (getClass() != obj.getClass())
             return false;
         InstrumentDescriptor other = (InstrumentDescriptor) obj;
+        if (instrumentType != other.instrumentType)
+            return false;
         if (exchange == null) {
             if (other.exchange != null)
                 return false;
@@ -133,10 +142,11 @@ public class InstrumentDescriptor {
 
     @Override
     public String toString() {
-        return "InstrumentDescriptor [exchange=" + exchange + ", commonSymbol=" + commonSymbol + ", exchangeSymbol="
-                + exchangeSymbol + ", baseCurrency=" + baseCurrency + ", quoteCurrency=" + quoteCurrency
-                + ", orderSizeIncrement=" + orderSizeIncrement + ", priceTickSize=" + priceTickSize
-                + ", minNotionalOrderSize=" + minNotionalOrderSize + ", fundingPeriodHours=" + fundingPeriodHours + "]";
+        return "InstrumentDescriptor [instrumentType=" + instrumentType + ", exchange=" + exchange + ", commonSymbol="
+                + commonSymbol + ", exchangeSymbol=" + exchangeSymbol + ", baseCurrency=" + baseCurrency
+                + ", quoteCurrency=" + quoteCurrency + ", orderSizeIncrement=" + orderSizeIncrement + ", priceTickSize="
+                + priceTickSize + ", minNotionalOrderSize=" + minNotionalOrderSize + ", fundingPeriodHours="
+                + fundingPeriodHours + "]";
     }
 
 }

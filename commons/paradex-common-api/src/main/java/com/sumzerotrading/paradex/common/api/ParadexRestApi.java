@@ -31,6 +31,7 @@ import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.order.TradeOrder;
 import com.sumzerotrading.data.Exchange;
 import com.sumzerotrading.data.InstrumentDescriptor;
+import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.SumZeroException;
 import com.sumzerotrading.paradex.common.api.historical.OHLCBar;
 import com.sumzerotrading.paradex.common.api.order.OrderType;
@@ -244,6 +245,34 @@ public class ParadexRestApi implements IParadexRestApi {
 
         }, 3, 500); // Retry up to 3 times with 500ms backoff
 
+    }
+
+    @Override
+    public InstrumentDescriptor[] getAllInstrumentsForType(InstrumentType instrumentType) {
+        return executeWithRetry(() -> {
+            String path = "/markets";
+            String url = baseUrl + path;
+            HttpUrl.Builder urlBuilder = HttpUrl.parse(url).newBuilder();
+            String newUrl = urlBuilder.build().toString();
+
+            Request request = new Request.Builder().url(newUrl).get().build();
+            logger.info("Request: " + request);
+
+            try (Response response = client.newCall(request).execute()) {
+                if (!response.isSuccessful()) {
+                    logger.error("Error response: " + response.body().string());
+                    throw new IOException("Unexpected code " + response);
+                }
+
+                String responseBody = response.body().string();
+                logger.info("Response output: " + responseBody);
+                return parseInstrumentDescriptors(instrumentType, responseBody);
+
+            } catch (IOException e) {
+                logger.error(e.getMessage(), e);
+                throw new RuntimeException(e);
+            }
+        }, 3, 500);
     }
 
     protected void cancelAllOrders(String jwtToken, String market) {
@@ -672,6 +701,19 @@ public class ParadexRestApi implements IParadexRestApi {
             // Parse the first instrument from the results array
             JsonObject instrumentObj = results.get(0).getAsJsonObject();
 
+            // Validate that this is a perpetual futures instrument
+            String assetKind = null;
+            if (instrumentObj.has("asset_kind") && !instrumentObj.get("asset_kind").isJsonNull()) {
+                assetKind = instrumentObj.get("asset_kind").getAsString();
+            }
+
+            if (!"PERP".equals(assetKind)) {
+                String symbol = instrumentObj.has("symbol") ? instrumentObj.get("symbol").getAsString() : "unknown";
+                logger.error("Expected PERP asset_kind for instrument '{}', but found '{}'", symbol, assetKind);
+                throw new SumZeroException("Invalid asset_kind '" + assetKind + "' for instrument '" + symbol
+                        + "'. Expected 'PERP' for perpetual futures.");
+            }
+
             // Extract required fields for InstrumentDescriptor
             String symbol = instrumentObj.get("symbol").getAsString();
             String baseCurrency = instrumentObj.get("base_currency").getAsString();
@@ -690,12 +732,104 @@ public class ParadexRestApi implements IParadexRestApi {
             int fundingPeriodHours = instrumentObj.get("funding_period_hours").getAsInt();
 
             // Create and return the InstrumentDescriptor
-            return new InstrumentDescriptor(Exchange.PARADEX, commonSymbol, exchangeSymbol, baseCurrency, quoteCurrency,
-                    orderSizeIncrement, priceTickSize, minNotionalOrderSize, fundingPeriodHours);
+            return new InstrumentDescriptor(InstrumentType.PERPETUAL_FUTURES, Exchange.PARADEX, commonSymbol,
+                    exchangeSymbol, baseCurrency, quoteCurrency, orderSizeIncrement, priceTickSize,
+                    minNotionalOrderSize, fundingPeriodHours);
 
         } catch (Exception e) {
             logger.error("Error parsing instrument descriptor: " + e.getMessage(), e);
             throw new SumZeroException(e);
+        }
+    }
+
+    protected InstrumentDescriptor[] parseInstrumentDescriptors(InstrumentType instrumentType, String responseBody) {
+        try {
+            JsonObject root = JsonParser.parseString(responseBody).getAsJsonObject();
+            JsonArray results = null;
+
+            // Handle the case where results might be null or not an array
+            if (root.has("results") && !root.get("results").isJsonNull()) {
+                results = root.getAsJsonArray("results");
+            }
+
+            if (results == null || results.size() == 0) {
+                logger.warn("No results found in instrument descriptors response");
+                return new InstrumentDescriptor[0];
+            }
+
+            List<InstrumentDescriptor> descriptors = new ArrayList<>();
+
+            // Parse each instrument from the results array
+            for (int i = 0; i < results.size(); i++) {
+                JsonObject instrumentObj = results.get(i).getAsJsonObject();
+
+                // Validate asset_kind matches the expected instrument type
+                String assetKind = null;
+                if (instrumentObj.has("asset_kind") && !instrumentObj.get("asset_kind").isJsonNull()) {
+                    assetKind = instrumentObj.get("asset_kind").getAsString();
+                }
+
+                if (assetKind == null || !isValidAssetKindForInstrumentType(assetKind, instrumentType)) {
+                    logger.warn("Skipping instrument with asset_kind '{}' as it doesn't match expected type '{}'",
+                            assetKind, instrumentType);
+                    continue;
+                }
+
+                // Extract required fields for InstrumentDescriptor
+                String symbol = instrumentObj.get("symbol").getAsString();
+                String baseCurrency = instrumentObj.get("base_currency").getAsString();
+                String quoteCurrency = instrumentObj.get("quote_currency").getAsString();
+
+                // Create common symbol (without exchange-specific suffix)
+                String commonSymbol = symbol.split("-")[0];
+                String exchangeSymbol = symbol;
+
+                // Parse tick size and order size increment from the JSON
+                BigDecimal priceTickSize = instrumentObj.get("price_tick_size").getAsBigDecimal();
+                BigDecimal orderSizeIncrement = instrumentObj.get("order_size_increment").getAsBigDecimal();
+
+                // Parse min_notional and funding_period_hours
+                int minNotionalOrderSize = instrumentObj.get("min_notional").getAsInt();
+                int fundingPeriodHours = instrumentObj.get("funding_period_hours").getAsInt();
+
+                // Create the InstrumentDescriptor with the provided instrument type
+                InstrumentDescriptor descriptor = new InstrumentDescriptor(instrumentType, Exchange.PARADEX,
+                        commonSymbol, exchangeSymbol, baseCurrency, quoteCurrency, orderSizeIncrement, priceTickSize,
+                        minNotionalOrderSize, fundingPeriodHours);
+
+                descriptors.add(descriptor);
+            }
+
+            return descriptors.toArray(new InstrumentDescriptor[0]);
+
+        } catch (Exception e) {
+            logger.error("Error parsing instrument descriptors: " + e.getMessage(), e);
+            throw new SumZeroException(e);
+        }
+    }
+
+    /**
+     * Validates that the asset_kind from JSON matches the expected InstrumentType
+     */
+    protected boolean isValidAssetKindForInstrumentType(String assetKind, InstrumentType instrumentType) {
+        // Handle null asset_kind
+        if (assetKind == null) {
+            return false;
+        }
+
+        switch (instrumentType) {
+        case PERPETUAL_FUTURES:
+            return "PERP".equals(assetKind);
+        case FUTURES:
+            return "FUTURE".equals(assetKind);
+        case OPTION:
+            return "OPTION".equals(assetKind);
+        case CRYPTO_SPOT:
+            return "SPOT".equals(assetKind);
+        default:
+            // For unknown instrument types, log a warning but allow processing
+            logger.warn("Unknown instrument type '{}' - allowing asset_kind '{}'", instrumentType, assetKind);
+            return true;
         }
     }
 
