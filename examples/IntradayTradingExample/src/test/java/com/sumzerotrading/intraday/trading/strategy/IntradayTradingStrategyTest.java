@@ -98,7 +98,7 @@ public class IntradayTradingStrategyTest {
         TradeOrder expectedExitOrder = new TradeOrder(exitOrderId, ticker, BigDecimal.valueOf(100),
                 TradeDirection.SELL);
         expectedExitOrder.setReference(exitOrderReference);
-        ZonedDateTime zdt = ZonedDateTime.of(LocalDate.now(ZoneId.systemDefault()), closeTime, ZoneId.of("GMT"));
+        ZonedDateTime zdt = ZonedDateTime.of(LocalDate.now(ZoneId.of("GMT")), closeTime, ZoneId.of("GMT"));
         expectedExitOrder.setGoodAfterTime(zdt);
 
         expectedEntryOrder.addChildOrder(expectedExitOrder);

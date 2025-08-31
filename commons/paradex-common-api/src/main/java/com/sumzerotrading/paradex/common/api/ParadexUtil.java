@@ -69,4 +69,9 @@ public class ParadexUtil {
         return bars.stream().map(ParadexUtil::translateBar).collect(Collectors.toList());
     }
 
+    public static String commonSymbolToParadexSymbol(String commonSymbol) {
+        String paradexSymbol = commonSymbol.toUpperCase() + "-USD-PERP"; // Placeholder for actual conversion logic
+        return paradexSymbol;
+    }
+
 }

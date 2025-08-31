@@ -29,6 +29,9 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.data.Exchange;
+import com.sumzerotrading.data.InstrumentDescriptor;
+import com.sumzerotrading.data.SumZeroException;
 import com.sumzerotrading.paradex.common.api.historical.OHLCBar;
 import com.sumzerotrading.paradex.common.api.order.OrderType;
 import com.sumzerotrading.paradex.common.api.order.ParadexOrder;
@@ -43,25 +46,21 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class ParadexRestApi {
+public class ParadexRestApi implements IParadexRestApi {
     protected static Logger logger = LoggerFactory.getLogger(ParadexRestApi.class);
     private final Gson gson;
 
-    protected static ParadexRestApi publicOnlyApi;
-    protected static ParadexRestApi privateApi;
+    protected static IParadexRestApi publicOnlyApi;
+    protected static IParadexRestApi privateApi;
 
-    public enum HistoricalPriceKind {
-        LAST, MARK
-    }
-
-    public static ParadexRestApi getPublicOnlyApi(String baseUrl) {
+    public static IParadexRestApi getPublicOnlyApi(String baseUrl) {
         if (publicOnlyApi == null) {
             publicOnlyApi = new ParadexRestApi(baseUrl);
         }
         return publicOnlyApi;
     }
 
-    public static ParadexRestApi getPrivateApi(String baseUrl, String accountAddress, String privateKey) {
+    public static IParadexRestApi getPrivateApi(String baseUrl, String accountAddress, String privateKey) {
         if (privateApi == null) {
             privateApi = new ParadexRestApi(baseUrl, accountAddress, privateKey);
         }
@@ -98,6 +97,7 @@ public class ParadexRestApi {
         publicApiOnly = accountAddressString == null || privateKeyString == null;
     }
 
+    @Override
     public List<Position> getPositionInfo(String jwtToken) {
         return executeWithRetry(() -> {
 
@@ -137,6 +137,7 @@ public class ParadexRestApi {
      * @param priceKind
      * @return
      */
+    @Override
     public List<OHLCBar> getOHLCBars(String symbol, int resolutionInMinutes, int lookbackInMinutes,
             HistoricalPriceKind priceKind) {
 
@@ -181,6 +182,7 @@ public class ParadexRestApi {
         }, 3, 500); // Retry up to 3 times with 500ms backoff
     }
 
+    @Override
     public List<TradeOrder> getOpenOrders(String jwtToken, String market) {
         return executeWithRetry(() -> {
 
@@ -214,6 +216,7 @@ public class ParadexRestApi {
         }, 3, 500); // Retry up to 3 times with 500ms backoff
     }
 
+    @Override
     public void cancelOrder(String jwtToken, String orderId) {
         executeWithRetry(() -> {
 
@@ -274,6 +277,7 @@ public class ParadexRestApi {
         }, 3, 500); // Retry up to 3 times with 500ms backoff
     }
 
+    @Override
     public String placeOrder(String jwtToken, TradeOrder tradeOrder) {
         return executeWithRetry(() -> {
             ParadexOrder order = ParadexUtil.translateOrder(tradeOrder);
@@ -331,6 +335,7 @@ public class ParadexRestApi {
         }, 3, 500); // Retry up to 3 times with 1 second backoff
     }
 
+    @Override
     public String getJwtToken() {
         return executeWithRetry(() -> {
 
@@ -340,6 +345,7 @@ public class ParadexRestApi {
         }, 3, 500); // Retry up to 3 times with 500ms backoff
     }
 
+    @Override
     public String getJwtToken(Map<String, String> headers) throws IOException {
 
         String path = "/auth";
@@ -369,6 +375,35 @@ public class ParadexRestApi {
 
         throw new IllegalStateException("JWT Token not found in response");
 
+    }
+
+    @Override
+    public InstrumentDescriptor getInstrumentDescriptor(String symbol) {
+        return executeWithRetry(() -> {
+            String path = "/markets";
+            String url = baseUrl + path;
+            HttpUrl.Builder urlBuilder = HttpUrl.parse(url).newBuilder();
+            urlBuilder.addQueryParameter("market", symbol);
+            String newUrl = urlBuilder.build().toString();
+
+            Request request = new Request.Builder().url(newUrl).get().build();
+            logger.info("Request: " + request);
+
+            try (Response response = client.newCall(request).execute()) {
+                if (!response.isSuccessful()) {
+                    logger.error("Error response: " + response.body().string());
+                    throw new IOException("Unexpected code " + response);
+                }
+
+                String responseBody = response.body().string();
+                logger.info("Response output: " + responseBody);
+                return parseInstrumentDescriptor(responseBody);
+
+            } catch (IOException e) {
+                logger.error(e.getMessage(), e);
+                throw new RuntimeException(e);
+            }
+        }, 3, 500);
     }
 
     protected void executeWithRetry(RetryableAction action, int maxRetries, long retryDelayMillis) {
@@ -475,6 +510,7 @@ public class ParadexRestApi {
         return getJwtToken(requestHeaders);
     }
 
+    @Override
     public String getOrderMessageSignature(String orderMessage) throws Exception {
 
         // Convert the account address and private key to Felt types
@@ -510,6 +546,7 @@ public class ParadexRestApi {
         return signatureStr;
     }
 
+    @Override
     public boolean isPublicApiOnly() {
         return publicApiOnly;
     }
@@ -620,6 +657,46 @@ public class ParadexRestApi {
         }
 
         return ohlcBars;
+    }
+
+    protected InstrumentDescriptor parseInstrumentDescriptor(String responseBody) {
+        try {
+            JsonObject root = JsonParser.parseString(responseBody).getAsJsonObject();
+            JsonArray results = root.getAsJsonArray("results");
+
+            if (results == null || results.size() == 0) {
+                logger.warn("No results found in instrument descriptor response");
+                return null;
+            }
+
+            // Parse the first instrument from the results array
+            JsonObject instrumentObj = results.get(0).getAsJsonObject();
+
+            // Extract required fields for InstrumentDescriptor
+            String symbol = instrumentObj.get("symbol").getAsString();
+            String baseCurrency = instrumentObj.get("base_currency").getAsString();
+            String quoteCurrency = instrumentObj.get("quote_currency").getAsString();
+
+            // Create common symbol (without exchange-specific suffix)
+            String commonSymbol = symbol.split("-")[0];
+            String exchangeSymbol = symbol;
+
+            // Parse tick size and order size increment from the JSON
+            BigDecimal priceTickSize = instrumentObj.get("price_tick_size").getAsBigDecimal();
+            BigDecimal orderSizeIncrement = instrumentObj.get("order_size_increment").getAsBigDecimal();
+
+            // Parse min_notional and funding_period_hours
+            int minNotionalOrderSize = instrumentObj.get("min_notional").getAsInt();
+            int fundingPeriodHours = instrumentObj.get("funding_period_hours").getAsInt();
+
+            // Create and return the InstrumentDescriptor
+            return new InstrumentDescriptor(Exchange.PARADEX, commonSymbol, exchangeSymbol, baseCurrency, quoteCurrency,
+                    orderSizeIncrement, priceTickSize, minNotionalOrderSize, fundingPeriodHours);
+
+        } catch (Exception e) {
+            logger.error("Error parsing instrument descriptor: " + e.getMessage(), e);
+            throw new SumZeroException(e);
+        }
     }
 
     protected List<Position> parsePositionInfo(String responseBody) {

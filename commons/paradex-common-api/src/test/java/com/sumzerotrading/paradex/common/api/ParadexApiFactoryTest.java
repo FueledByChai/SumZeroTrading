@@ -44,7 +44,7 @@ class ParadexApiFactoryTest {
         assertFalse(ParadexApiFactory.isPrivateApiAvailable());
 
         // Public API should be available
-        ParadexRestApi publicApi = ParadexApiFactory.getPublicApi();
+        IParadexRestApi publicApi = ParadexApiFactory.getPublicApi();
         assertNotNull(publicApi);
 
         // WebSocket URL should be testnet
@@ -94,7 +94,7 @@ class ParadexApiFactoryTest {
 
         assertTrue(ParadexApiFactory.isPrivateApiAvailable());
 
-        ParadexRestApi privateApi = ParadexApiFactory.getPrivateApi();
+        IParadexRestApi privateApi = ParadexApiFactory.getPrivateApi();
         assertNotNull(privateApi);
     }
 

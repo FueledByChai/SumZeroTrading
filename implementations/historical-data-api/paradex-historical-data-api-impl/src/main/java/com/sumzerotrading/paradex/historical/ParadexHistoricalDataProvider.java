@@ -31,6 +31,8 @@ import com.sumzerotrading.data.BarData.LengthUnit;
 import com.sumzerotrading.data.SumZeroException;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.historicaldata.IHistoricalDataProvider;
+import com.sumzerotrading.paradex.common.api.HistoricalPriceKind;
+import com.sumzerotrading.paradex.common.api.IParadexRestApi;
 import com.sumzerotrading.paradex.common.api.ParadexRestApi;
 import com.sumzerotrading.paradex.common.api.historical.OHLCBar;
 
@@ -42,7 +44,7 @@ public class ParadexHistoricalDataProvider implements IHistoricalDataProvider {
 
     protected Logger logger = LoggerFactory.getLogger(ParadexHistoricalDataProvider.class);
     protected boolean connected = true;
-    protected ParadexRestApi paradoxApi;
+    protected IParadexRestApi paradoxApi;
 
     @Override
     public boolean isConnected() {
@@ -90,8 +92,7 @@ public class ParadexHistoricalDataProvider implements IHistoricalDataProvider {
         int lookbackInMinutes = getDurationInMinutes(duration, durationLengthUnit);
 
         List<OHLCBar> bars = paradoxApi.getOHLCBars(ticker.getSymbol(), resolutionInMinutes, lookbackInMinutes,
-                whatToShow == ShowProperty.MARK_PRICE ? ParadexRestApi.HistoricalPriceKind.MARK
-                        : ParadexRestApi.HistoricalPriceKind.LAST);
+                whatToShow == ShowProperty.MARK_PRICE ? HistoricalPriceKind.MARK : HistoricalPriceKind.LAST);
 
         return HistoricalDataUtils.convertToBarData(ticker, barSize, barSizeUnit, bars);
 

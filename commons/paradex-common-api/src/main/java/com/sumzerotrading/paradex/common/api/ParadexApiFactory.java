@@ -11,8 +11,8 @@ import org.slf4j.LoggerFactory;
 public class ParadexApiFactory {
     private static final Logger logger = LoggerFactory.getLogger(ParadexApiFactory.class);
 
-    private static volatile ParadexRestApi publicApiInstance;
-    private static volatile ParadexRestApi privateApiInstance;
+    private static volatile IParadexRestApi publicApiInstance;
+    private static volatile IParadexRestApi privateApiInstance;
     private static final Object lock = new Object();
 
     private ParadexApiFactory() {
@@ -25,7 +25,7 @@ public class ParadexApiFactory {
      * 
      * @return ParadexRestApi instance for public endpoints
      */
-    public static ParadexRestApi getPublicApi() {
+    public static IParadexRestApi getPublicApi() {
         if (publicApiInstance == null) {
             synchronized (lock) {
                 if (publicApiInstance == null) {
@@ -45,7 +45,7 @@ public class ParadexApiFactory {
      * @return ParadexRestApi instance for private endpoints
      * @throws IllegalStateException if private key configuration is not available
      */
-    public static ParadexRestApi getPrivateApi() {
+    public static IParadexRestApi getPrivateApi() {
         if (privateApiInstance == null) {
             synchronized (lock) {
                 if (privateApiInstance == null) {
@@ -73,7 +73,7 @@ public class ParadexApiFactory {
      * 
      * @return ParadexRestApi instance (private if configured, otherwise public)
      */
-    public static ParadexRestApi getApi() {
+    public static IParadexRestApi getApi() {
         ParadexConfiguration config = ParadexConfiguration.getInstance();
         if (config.hasPrivateKeyConfiguration()) {
             return getPrivateApi();

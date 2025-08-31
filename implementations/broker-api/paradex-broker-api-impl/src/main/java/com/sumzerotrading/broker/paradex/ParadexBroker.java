@@ -50,9 +50,9 @@ import com.sumzerotrading.broker.order.OrderStatus;
 import com.sumzerotrading.broker.order.TradeOrder;
 import com.sumzerotrading.data.ComboTicker;
 import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.paradex.common.api.IParadexRestApi;
 import com.sumzerotrading.paradex.common.api.ParadexApiFactory;
 import com.sumzerotrading.paradex.common.api.ParadexConfiguration;
-import com.sumzerotrading.paradex.common.api.ParadexRestApi;
 import com.sumzerotrading.paradex.common.api.ParadexWebSocketClient;
 import com.sumzerotrading.time.TimeUpdatedListener;
 
@@ -69,7 +69,7 @@ public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
     protected static int contractRequestId = 1;
     protected static int executionRequestId = 1;
 
-    protected ParadexRestApi restApi;
+    protected IParadexRestApi restApi;
     protected String jwtToken;
     protected int jwtRefreshInSeconds = 60;
     protected boolean connected = false;
@@ -127,7 +127,7 @@ public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
      * 
      * @param restApi custom ParadexRestApi instance
      */
-    public ParadexBroker(ParadexRestApi restApi) {
+    public ParadexBroker(IParadexRestApi restApi) {
         this.restApi = restApi;
         this.jwtRefreshInSeconds = 60; // default
     }
