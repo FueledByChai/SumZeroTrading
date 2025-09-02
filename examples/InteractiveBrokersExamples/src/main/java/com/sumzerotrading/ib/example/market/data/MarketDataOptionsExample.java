@@ -19,12 +19,13 @@
  */
 package com.sumzerotrading.ib.example.market.data;
 
+import java.math.BigDecimal;
+
 import com.sumzerotrading.data.Exchange;
-import com.sumzerotrading.data.OptionTicker;
+import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClient;
 import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClientInterface;
 import com.sumzerotrading.marketdata.ILevel1Quote;
-import java.math.BigDecimal;
 
 public class MarketDataOptionsExample {
 
@@ -32,14 +33,14 @@ public class MarketDataOptionsExample {
         InteractiveBrokersClientInterface ibClient = InteractiveBrokersClient.getInstance("localhost", 7999, 1);
         ibClient.connect();
 
-        OptionTicker optionTicker = new OptionTicker("QQQ");
+        Ticker optionTicker = new Ticker("QQQ");
         optionTicker.setExchange(Exchange.INTERACTIVE_BROKERS_SMART);
         optionTicker.setExpiryDay(15);
         optionTicker.setExpiryMonth(9);
         optionTicker.setExpiryYear(2017);
         optionTicker.setStrike(new BigDecimal(140.0));
-        optionTicker.setRight(OptionTicker.Right.Put);
-        
+        optionTicker.setRight(Ticker.Right.PUT);
+
         ibClient.subscribeLevel1(optionTicker, (ILevel1Quote quote) -> {
             System.out.println("Received Quote: " + quote);
         });

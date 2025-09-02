@@ -18,25 +18,28 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.ib;
 
-import com.ib.client.Contract;
-import com.sumzerotrading.data.Exchange;
-import com.sumzerotrading.data.StockTicker;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import com.ib.client.Contract;
+import com.sumzerotrading.data.Exchange;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
 
 /**
  *
  * @author Rob Terpilowski
  */
 public class StockContractBuilderTest {
-    
+
     public StockContractBuilderTest() {
     }
 
@@ -47,49 +50,44 @@ public class StockContractBuilderTest {
     @AfterClass
     public static void tearDownClass() throws Exception {
     }
-    
+
     @Before
     public void setUp() {
     }
-    
+
     @After
     public void tearDown() {
     }
 
-    
-    
     @Test
     public void testBuildContract() {
-        StockTicker ticker = getTicker();
+        Ticker ticker = getTicker();
         StockContractBuilder builder = new StockContractBuilder();
         Contract contract = builder.buildContract(ticker);
 
-        assertEquals( ticker.getCurrency(), contract.currency() );
-        assertEquals( ticker.getExchange().getExchangeName(), contract.exchange() );
-        assertEquals( ticker.getSymbol(), contract.symbol() );
-        assertNull( contract.primaryExch() );
+        assertEquals(ticker.getCurrency(), contract.currency());
+        assertEquals(ticker.getExchange().getExchangeName(), contract.exchange());
+        assertEquals(ticker.getSymbol(), contract.symbol());
+        assertNull(contract.primaryExch());
     }
-    
+
     @Test
     public void testBuildContract_primaryExchange() {
-        StockTicker ticker = getTicker();
+        Ticker ticker = getTicker();
         ticker.setPrimaryExchange(Exchange.NASDAQ);
         StockContractBuilder builder = new StockContractBuilder();
         Contract contract = builder.buildContract(ticker);
 
-        assertEquals( ticker.getCurrency(), contract.currency() );
-        assertEquals( ticker.getExchange().getExchangeName(), contract.exchange() );
-        assertEquals( ticker.getSymbol(), contract.symbol() );
-        assertEquals( ticker.getPrimaryExchange().getExchangeName(), contract.primaryExch() );
+        assertEquals(ticker.getCurrency(), contract.currency());
+        assertEquals(ticker.getExchange().getExchangeName(), contract.exchange());
+        assertEquals(ticker.getSymbol(), contract.symbol());
+        assertEquals(ticker.getPrimaryExchange().getExchangeName(), contract.primaryExch());
     }
-    
-    
-    
-  
-    protected StockTicker getTicker() {
-        StockTicker ticker = new StockTicker("SBUX");
+
+    protected Ticker getTicker() {
+        Ticker ticker = new Ticker("SBUX").setInstrumentType(InstrumentType.STOCK);
         ticker.setCurrency("USD");
         ticker.setExchange(Exchange.INTERACTIVE_BROKERS_SMART);
         return ticker;
-    }    
+    }
 }

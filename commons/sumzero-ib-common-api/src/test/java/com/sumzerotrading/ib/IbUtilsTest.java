@@ -19,24 +19,29 @@
  */
 package com.sumzerotrading.ib;
 
-import com.ib.client.TagValue;
-import com.sumzerotrading.broker.order.OrderStatus;
-import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
-import com.sumzerotrading.data.FuturesTicker;
-import com.sumzerotrading.data.InstrumentType;
-import com.sumzerotrading.data.OptionTicker;
-import com.sumzerotrading.marketdata.QuoteType;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import com.ib.client.TagValue;
+import com.sumzerotrading.broker.order.OrderStatus;
+import com.sumzerotrading.broker.order.TradeDirection;
+import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.marketdata.QuoteType;
 
 /**
  *
@@ -150,7 +155,7 @@ public class IbUtilsTest {
 
         assertEquals("STK", IbUtils.getSecurityType(InstrumentType.STOCK));
         assertEquals("OPT", IbUtils.getSecurityType(InstrumentType.OPTION));
-        assertEquals("CASH", IbUtils.getSecurityType(InstrumentType.FOREX));
+        assertEquals("CASH", IbUtils.getSecurityType(InstrumentType.CURRENCY));
         assertEquals("FUT", IbUtils.getSecurityType(InstrumentType.FUTURES));
         assertEquals("IND", IbUtils.getSecurityType(InstrumentType.INDEX));
         assertEquals("BAG", IbUtils.getSecurityType(InstrumentType.COMBO));
@@ -215,8 +220,8 @@ public class IbUtilsTest {
 
     @Test
     public void testGetOptionRight() {
-        assertEquals("C", IbUtils.getOptionRight(OptionTicker.Right.Call));
-        assertEquals("P", IbUtils.getOptionRight(OptionTicker.Right.Put));
+        assertEquals("C", IbUtils.getOptionRight(Ticker.Right.CALL));
+        assertEquals("P", IbUtils.getOptionRight(Ticker.Right.PUT));
     }
 
     @Test
@@ -233,7 +238,7 @@ public class IbUtilsTest {
 
     @Test
     public void testGetContractMultiplier() {
-        FuturesTicker ticker = new FuturesTicker();
+        Ticker ticker = new Ticker().setInstrumentType(InstrumentType.FUTURES);
         ticker.setSymbol("ZC");
         ticker.setContractMultiplier(new BigDecimal(50.0));
 
@@ -251,10 +256,10 @@ public class IbUtilsTest {
 
     @Test
     public void testGetContractMultiplier_NullMultiplier() {
-        FuturesTicker ticker = new FuturesTicker();
+        Ticker ticker = new Ticker().setInstrumentType(InstrumentType.FUTURES);
         ticker.setSymbol("HG");
 
-        assertNull(IbUtils.getIbMultiplier(ticker));
+        assertEquals(BigDecimal.ONE, IbUtils.getIbMultiplier(ticker));
     }
 
     @Test

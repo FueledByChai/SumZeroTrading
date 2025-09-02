@@ -5,27 +5,30 @@
  */
 package com.sumzerotrading.intraday.trading.strategy;
 
-import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
-import com.sumzerotrading.data.StockTicker;
-import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClientInterface;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+
 import java.io.File;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+
 import org.junit.After;
 import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
+
+import com.sumzerotrading.broker.order.TradeDirection;
+import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClientInterface;
 
 /**
  *
@@ -51,7 +54,7 @@ public class IntradayTradingStrategyTest {
     @Before
     public void setUp() {
         strategy = spy(IntradayTradingStrategy.class);
-        ticker = new StockTicker("XYZ");
+        ticker = new Ticker("XYZ").setInstrumentType(InstrumentType.STOCK);
         mockIbClient = mock(InteractiveBrokersClientInterface.class);
         strategy.ibClient = mockIbClient;
     }
@@ -78,7 +81,7 @@ public class IntradayTradingStrategyTest {
         assertEquals(LocalTime.of(5, 42, 0), strategy.shortStopTime);
         assertEquals(LocalTime.of(5, 43, 0), strategy.shortCloseTime);
         assertEquals("/my/dir", strategy.strategyDirectory);
-        assertEquals(new StockTicker("XYZ"), strategy.mainTicker);
+        assertEquals(new Ticker("XYZ").setInstrumentType(InstrumentType.STOCK), strategy.mainTicker);
 
     }
 

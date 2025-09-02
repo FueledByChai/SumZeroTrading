@@ -5,6 +5,7 @@
  */
 package com.sumzerotrading.intraday.trading.strategy;
 
+import com.ib.controller.Instrument;
 import com.sumzerotrading.broker.BrokerError;
 import com.sumzerotrading.broker.BrokerErrorListener;
 import com.sumzerotrading.broker.order.OrderEvent;
@@ -12,7 +13,7 @@ import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.broker.order.TradeDirection;
 import com.sumzerotrading.broker.order.TradeOrder;
 import com.sumzerotrading.data.BarData;
-import com.sumzerotrading.data.StockTicker;
+import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.historicaldata.IHistoricalDataProvider;
 import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClient;
@@ -197,7 +198,7 @@ public class IntradayTradingStrategy implements OrderEventListener, BrokerErrorL
             shortStopTime = props.getShortStopTime();
             shortCloseTime = props.getShortExitTime();
             strategyDirectory = props.getStrategyDirectory();
-            mainTicker = new StockTicker(props.getTicker());
+            mainTicker = new Ticker(props.getTicker()).setInstrumentType(InstrumentType.STOCK);
 
             logger.info("Loaded properties: " + props);
 

@@ -1,7 +1,8 @@
 package com.sumzerotrading.marketdata.hyperliquid;
 
-import com.sumzerotrading.data.CryptoTicker;
 import com.sumzerotrading.data.Exchange;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.marketdata.ILevel1Quote;
 import com.sumzerotrading.marketdata.Level1QuoteListener;
 import com.sumzerotrading.marketdata.QuoteEngine;
@@ -10,10 +11,14 @@ public class TestApp implements Level1QuoteListener {
 
     public void startApp() {
         QuoteEngine quoteEngine = new HyperliquidQuoteEngine();
-        CryptoTicker ticker = new CryptoTicker("BTC", Exchange.HYPERLIQUID);
-        CryptoTicker eth = new CryptoTicker("ETH", Exchange.HYPERLIQUID);
-        CryptoTicker xrp = new CryptoTicker("XRP", Exchange.HYPERLIQUID);
-        CryptoTicker sol = new CryptoTicker("SOL", Exchange.HYPERLIQUID);
+        Ticker ticker = new Ticker("BTC").setInstrumentType(InstrumentType.PERPETUAL_FUTURES)
+                .setExchange(Exchange.HYPERLIQUID);
+        Ticker eth = new Ticker("ETH").setInstrumentType(InstrumentType.PERPETUAL_FUTURES)
+                .setExchange(Exchange.HYPERLIQUID);
+        Ticker xrp = new Ticker("XRP").setInstrumentType(InstrumentType.PERPETUAL_FUTURES)
+                .setExchange(Exchange.HYPERLIQUID);
+        Ticker sol = new Ticker("SOL").setInstrumentType(InstrumentType.PERPETUAL_FUTURES)
+                .setExchange(Exchange.HYPERLIQUID);
 
         quoteEngine.startEngine();
         quoteEngine.subscribeLevel1(ticker, this);

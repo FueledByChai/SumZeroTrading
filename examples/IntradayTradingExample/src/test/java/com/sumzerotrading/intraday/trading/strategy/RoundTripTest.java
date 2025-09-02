@@ -5,23 +5,29 @@
  */
 package com.sumzerotrading.intraday.trading.strategy;
 
-import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
-import com.sumzerotrading.data.StockTicker;
 import static com.sumzerotrading.intraday.trading.strategy.TradeReferenceLine.Direction.LONG;
 import static com.sumzerotrading.intraday.trading.strategy.TradeReferenceLine.Direction.SHORT;
 import static com.sumzerotrading.intraday.trading.strategy.TradeReferenceLine.Side.ENTRY;
 import static com.sumzerotrading.intraday.trading.strategy.TradeReferenceLine.Side.EXIT;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import com.sumzerotrading.broker.order.TradeDirection;
+import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
 
 /**
  *
@@ -32,7 +38,7 @@ public class RoundTripTest {
     protected RoundTrip roundTrip;
     protected TradeOrder order;
     protected TradeReferenceLine referenceLine;
-    protected StockTicker ticker;
+    protected Ticker ticker;
 
     public RoundTripTest() {
     }
@@ -48,7 +54,7 @@ public class RoundTripTest {
     @Before
     public void setUp() {
         roundTrip = new RoundTrip();
-        ticker = new StockTicker("QQQ");
+        ticker = new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK);
         order = new TradeOrder("123", ticker, BigDecimal.valueOf(100), TradeDirection.BUY);
         referenceLine = new TradeReferenceLine();
         referenceLine.correlationId = "999";

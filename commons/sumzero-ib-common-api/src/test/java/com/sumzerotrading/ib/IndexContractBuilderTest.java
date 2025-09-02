@@ -18,40 +18,42 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.ib;
 
-import com.ib.client.Contract;
-import com.sumzerotrading.data.Exchange;
-import com.sumzerotrading.data.IndexTicker;
+import static org.junit.Assert.assertEquals;
+
 import org.junit.After;
 import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import com.ib.client.Contract;
+import com.sumzerotrading.data.Exchange;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
 
 /**
  *
  * @author Rob Terpilowski
  */
 public class IndexContractBuilderTest {
-    
+
     public IndexContractBuilderTest() {
     }
-    
+
     @BeforeClass
     public static void setUpClass() {
     }
-    
+
     @AfterClass
     public static void tearDownClass() {
     }
-    
+
     @Before
     public void setUp() {
     }
-    
+
     @After
     public void tearDown() {
     }
@@ -59,18 +61,17 @@ public class IndexContractBuilderTest {
     @Test
     public void testBuildContract() {
         IndexContractBuilder builder = new IndexContractBuilder();
-        IndexTicker ticker = new IndexTicker();
+        Ticker ticker = new Ticker().setInstrumentType(InstrumentType.INDEX);
         ticker.setSymbol("SPX");
         ticker.setExchange(Exchange.CBOE);
-        
+
         Contract expected = new Contract();
-        expected.currency("USD") ;
-        expected.exchange("CBOE") ;
+        expected.currency("USD");
+        expected.exchange("CBOE");
         expected.secType("IND");
         expected.symbol("SPX");
-        
-        
-        assertEquals( expected, builder.buildContract(ticker));
+
+        assertEquals(expected, builder.buildContract(ticker));
     }
-    
+
 }

@@ -23,7 +23,8 @@ package com.sumzerotrading.ib.example.market.data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sumzerotrading.data.StockTicker;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClient;
 import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClientInterface;
 import com.sumzerotrading.marketdata.ILevel1Quote;
@@ -36,7 +37,7 @@ public class MarketDataStocksExample {
         InteractiveBrokersClientInterface ibClient = InteractiveBrokersClient.getInstance("localhost", 7779, 1);
         ibClient.connect();
 
-        StockTicker stockTicker = new StockTicker("QQQ");
+        Ticker stockTicker = new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK);
 
         ibClient.subscribeLevel1(stockTicker, (ILevel1Quote quote) -> {
             logger.info("Received Quote: {}", quote);

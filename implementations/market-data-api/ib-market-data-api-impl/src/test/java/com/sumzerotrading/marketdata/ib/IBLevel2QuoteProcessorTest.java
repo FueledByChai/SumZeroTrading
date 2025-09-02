@@ -18,22 +18,34 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.marketdata.ib;
 
-import com.sumzerotrading.data.CurrencyTicker;
-import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.marketdata.*;
-import com.sumzerotrading.util.QuoteUtil;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.ZonedDateTime;
-import java.util.Date;
 import java.util.concurrent.BlockingQueue;
+
 import org.jmock.Expectations;
 import org.jmock.Mockery;
-import org.junit.*;
-import static org.junit.Assert.*;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.marketdata.IMarketDepthBook;
+import com.sumzerotrading.marketdata.IQuoteEngine;
+import com.sumzerotrading.marketdata.Level2Quote;
+import com.sumzerotrading.marketdata.MarketDepthBook;
+import com.sumzerotrading.marketdata.MarketDepthLevel;
+import com.sumzerotrading.marketdata.QuoteType;
+import com.sumzerotrading.util.QuoteUtil;
 
 /**
  *
@@ -57,8 +69,8 @@ public class IBLevel2QuoteProcessorTest {
     @Before
     public void setUp() {
         mockery = new Mockery();
-        //Seems that other unit tests are leaving a mock MarketDepthBook in memory,
-        //even though the unit tests are set to always fork for each new test class.
+        // Seems that other unit tests are leaving a mock MarketDepthBook in memory,
+        // even though the unit tests are set to always fork for each new test class.
         MarketDepthBook.setTestInstance(null);
     }
 
@@ -71,7 +83,8 @@ public class IBLevel2QuoteProcessorTest {
         MockIBLevel2QuoteProcessor processor = buildQuoteProcessor();
         Ticker ticker = getCurrencyTicker();
         BigDecimal price = new BigDecimal(1.3553).setScale(4, RoundingMode.HALF_UP);
-        Level2QuoteData data = new Level2QuoteData(ticker, 0, processor.OP_INSERT, processor.SIDE_BID, price.doubleValue(), 100);
+        Level2QuoteData data = new Level2QuoteData(ticker, 0, processor.OP_INSERT, processor.SIDE_BID,
+                price.doubleValue(), 100);
 
         processor.processData(data);
 
@@ -99,7 +112,8 @@ public class IBLevel2QuoteProcessorTest {
         processor.bidBookMap.put(ticker, book);
 
         BigDecimal price = new BigDecimal(1.3553).setScale(4, RoundingMode.HALF_UP);
-        Level2QuoteData data = new Level2QuoteData(ticker, 0, processor.OP_INSERT, processor.SIDE_BID, price.doubleValue(), 100);
+        Level2QuoteData data = new Level2QuoteData(ticker, 0, processor.OP_INSERT, processor.SIDE_BID,
+                price.doubleValue(), 100);
 
         processor.processData(data);
 
@@ -116,7 +130,6 @@ public class IBLevel2QuoteProcessorTest {
         assertEquals(100, level.getSize().intValue());
         assertEquals(price, level.getPrice());
 
-
     }
 
     @Test
@@ -125,7 +138,8 @@ public class IBLevel2QuoteProcessorTest {
         MockIBLevel2QuoteProcessor processor = buildQuoteProcessor();
         Ticker ticker = getCurrencyTicker();
         BigDecimal price = new BigDecimal(1.3553).setScale(4, RoundingMode.HALF_UP);
-        Level2QuoteData data = new Level2QuoteData(ticker, 0, processor.OP_INSERT, processor.SIDE_ASK, price.doubleValue(), 100);
+        Level2QuoteData data = new Level2QuoteData(ticker, 0, processor.OP_INSERT, processor.SIDE_ASK,
+                price.doubleValue(), 100);
 
         processor.processData(data);
 
@@ -152,7 +166,8 @@ public class IBLevel2QuoteProcessorTest {
         processor.askBookMap.put(ticker, book);
 
         BigDecimal price = new BigDecimal(1.3553).setScale(4, RoundingMode.HALF_UP);
-        Level2QuoteData data = new Level2QuoteData(ticker, 0, processor.OP_INSERT, processor.SIDE_ASK, price.doubleValue(), 100);
+        Level2QuoteData data = new Level2QuoteData(ticker, 0, processor.OP_INSERT, processor.SIDE_ASK,
+                price.doubleValue(), 100);
 
         processor.processData(data);
 
@@ -181,7 +196,8 @@ public class IBLevel2QuoteProcessorTest {
         processor.askBookMap.put(ticker, mockBook);
         double price = 1.3551;
         BigDecimal bdPrice = QuoteUtil.getBigDecimalValue(ticker, price);
-        Level2QuoteData data = new Level2QuoteData(ticker, 0, processor.OP_UPDATE, processor.SIDE_BID, bdPrice.doubleValue(), 500);
+        Level2QuoteData data = new Level2QuoteData(ticker, 0, processor.OP_UPDATE, processor.SIDE_BID,
+                bdPrice.doubleValue(), 500);
         final MarketDepthLevel level = new MarketDepthLevel(MarketDepthBook.Side.BID, bdPrice, 500);
 
         mockery.checking(new Expectations() {
@@ -192,11 +208,8 @@ public class IBLevel2QuoteProcessorTest {
             }
         });
 
-
-
         processor.processData(data);
         mockery.assertIsSatisfied();
-
 
     }
 
@@ -211,7 +224,8 @@ public class IBLevel2QuoteProcessorTest {
         processor.askBookMap.put(ticker, mockBook);
         double price = 1.3551;
         BigDecimal bdPrice = QuoteUtil.getBigDecimalValue(ticker, price);
-        Level2QuoteData data = new Level2QuoteData(ticker, 0, processor.OP_DELETE, processor.SIDE_BID, bdPrice.doubleValue(), 500);
+        Level2QuoteData data = new Level2QuoteData(ticker, 0, processor.OP_DELETE, processor.SIDE_BID,
+                bdPrice.doubleValue(), 500);
 
         mockery.checking(new Expectations() {
 
@@ -220,8 +234,6 @@ public class IBLevel2QuoteProcessorTest {
                 one(mockBook).deleteLevel(index);
             }
         });
-
-
 
         processor.processData(data);
         mockery.assertIsSatisfied();
@@ -248,12 +260,11 @@ public class IBLevel2QuoteProcessorTest {
             }
         });
 
-
         try {
             processor.processData(data);
             fail();
         } catch (IllegalStateException ex) {
-            //this should happen
+            // this should happen
         }
         mockery.assertIsSatisfied();
     }
@@ -276,7 +287,6 @@ public class IBLevel2QuoteProcessorTest {
         assertTrue(processor.bidBookMap.isEmpty());
         assertTrue(processor.askBookMap.isEmpty());
 
-
     }
 
     @Test
@@ -285,14 +295,11 @@ public class IBLevel2QuoteProcessorTest {
         final IMarketDepthBook mockBook = mockery.mock(IMarketDepthBook.class);
         QuoteType type;
 
-
         MockIBLevel2QuoteProcessor processor = buildQuoteProcessor(false);
         processor.quoteEngine = mockQuoteEngine;
-        CurrencyTicker ticker = getCurrencyTicker();
+        Ticker ticker = getCurrencyTicker();
 
         final Level2Quote quote = new Level2Quote(ticker, QuoteType.MARKET_DEPTH_BID, processor.date, mockBook);
-
-
 
         mockery.checking(new Expectations() {
 
@@ -307,7 +314,6 @@ public class IBLevel2QuoteProcessorTest {
         processor.buildAndFireEvent(ticker, mockBook);
         mockery.assertIsSatisfied();
 
-
     }
 
     @Test
@@ -316,14 +322,11 @@ public class IBLevel2QuoteProcessorTest {
         final IMarketDepthBook mockBook = mockery.mock(IMarketDepthBook.class);
         QuoteType type;
 
-
         MockIBLevel2QuoteProcessor processor = buildQuoteProcessor(false);
         processor.quoteEngine = mockQuoteEngine;
-        CurrencyTicker ticker = getCurrencyTicker();
+        Ticker ticker = getCurrencyTicker();
 
         final Level2Quote quote = new Level2Quote(ticker, QuoteType.MARKET_DEPTH_ASK, processor.date, mockBook);
-
-
 
         mockery.checking(new Expectations() {
 
@@ -338,11 +341,10 @@ public class IBLevel2QuoteProcessorTest {
         processor.buildAndFireEvent(ticker, mockBook);
         mockery.assertIsSatisfied();
 
-
     }
 
-    protected CurrencyTicker getCurrencyTicker() {
-        CurrencyTicker ticker = new CurrencyTicker();
+    protected Ticker getCurrencyTicker() {
+        Ticker ticker = new Ticker().setInstrumentType(InstrumentType.CURRENCY);
         ticker.setCurrency("EUR");
         ticker.setMinimumTickSize(new BigDecimal("0.0001"));
         return ticker;
@@ -371,7 +373,8 @@ public class IBLevel2QuoteProcessorTest {
             this(queue, quoteEngine, true);
         }
 
-        public MockIBLevel2QuoteProcessor(BlockingQueue<Level2QuoteData> queue, IQuoteEngine quoteEngine, boolean override) {
+        public MockIBLevel2QuoteProcessor(BlockingQueue<Level2QuoteData> queue, IQuoteEngine quoteEngine,
+                boolean override) {
             super(queue, quoteEngine);
             overrideBuildAndFireEvent = override;
         }

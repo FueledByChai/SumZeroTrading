@@ -20,19 +20,19 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 package com.sumzerotrading.marketdata.ib;
 
-import com.sumzerotrading.data.StockTicker;
+import java.math.BigDecimal;
+import java.time.ZonedDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+
+import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.ib.IbUtils;
 import com.sumzerotrading.marketdata.IQuoteEngine;
 import com.sumzerotrading.marketdata.Level1Quote;
 import com.sumzerotrading.marketdata.QuoteType;
 import com.sumzerotrading.util.QuoteUtil;
-import java.math.BigDecimal;
-import java.time.ZonedDateTime;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.BlockingQueue;
 
 /**
  *
@@ -77,7 +77,7 @@ public class IBLevel1QuoteProcessor extends IBQuoteProcessor<Level1QuoteData> {
             return;
         }
 
-        if (ticker instanceof StockTicker) {
+        if (ticker.getInstrumentType() == InstrumentType.STOCK) {
             size = size * 100;
         }
         BigDecimal formattedValue = QuoteUtil.getBigDecimalValue(size);

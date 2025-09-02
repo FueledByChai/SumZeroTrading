@@ -1,7 +1,10 @@
 package com.sumzerotrading.broker.paradex;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
@@ -15,8 +18,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.sumzerotrading.broker.order.OrderStatus;
 import com.sumzerotrading.broker.order.OrderStatus.Status;
-import com.sumzerotrading.data.CryptoTicker;
 import com.sumzerotrading.data.SumZeroException;
+import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.paradex.common.IParadexTickerRegistry;
 import com.sumzerotrading.paradex.common.ParadexTickerRegistry;
 
 /**
@@ -30,9 +34,9 @@ public class ParadexBrokerUtilTest {
     private ParadexTickerRegistry mockTickerRegistry;
 
     @Mock
-    private CryptoTicker mockTicker;
+    private Ticker mockTicker;
 
-    private ParadexTickerRegistry originalTickerRegistry;
+    private IParadexTickerRegistry originalTickerRegistry;
 
     @BeforeEach
     public void setUp() {

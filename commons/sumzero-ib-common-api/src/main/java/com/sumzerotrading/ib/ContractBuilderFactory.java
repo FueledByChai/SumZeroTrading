@@ -18,36 +18,35 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.ib;
 
-import com.sumzerotrading.data.*;
+import com.sumzerotrading.data.ComboTicker;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
 
 /**
  *
  * @author Rob Terpilowski
  */
 public class ContractBuilderFactory {
-    
-    
-    
-    public static IContractBuilder getContractBuilder( Ticker ticker ) {
-        if( ticker instanceof StockTicker ) {
+
+    public static IContractBuilder getContractBuilder(Ticker ticker) {
+        if (ticker.getInstrumentType() == InstrumentType.STOCK) {
             return new StockContractBuilder();
-        } else if( ticker instanceof CurrencyTicker ) {
+        } else if (ticker.getInstrumentType() == InstrumentType.CURRENCY) {
             return new CurrencyContractBuilder();
-        } else if( ticker instanceof FuturesTicker ) {
+        } else if (ticker.getInstrumentType() == InstrumentType.FUTURES) {
             return new FuturesContractBuilder();
-        } else if( ticker instanceof ComboTicker ) {
+        } else if (ticker.getInstrumentType() == InstrumentType.COMBO) {
             return new ComboContractBuilder();
-        } else if( ticker instanceof IndexTicker ) {
+        } else if (ticker.getInstrumentType() == InstrumentType.INDEX) {
             return new IndexContractBuilder();
-        } else if( ticker instanceof CFDTicker ) {
+        } else if (ticker.getInstrumentType() == InstrumentType.CFD) {
             return new CFDContractBuilder();
-        } else if( ticker instanceof OptionTicker ) {
+        } else if (ticker.getInstrumentType() == InstrumentType.OPTION) {
             return new OptionContractBuilder();
         } else {
-            throw new IllegalStateException( "Unsupported ticker type: " + ticker.getClass() );
+            throw new IllegalStateException("Unsupported ticker type: " + ticker.getClass());
         }
     }
 }

@@ -20,70 +20,74 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 package com.sumzerotrading.ib;
 
-import com.ib.client.Contract;
-import com.sumzerotrading.data.Exchange;
-import com.sumzerotrading.data.FuturesTicker;
+import static org.junit.Assert.assertEquals;
+
 import java.math.BigDecimal;
+
 import org.junit.After;
 import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import com.ib.client.Contract;
+import com.sumzerotrading.data.Exchange;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
 
 /**
  *
  * @author RobTerpilowski
  */
 public class FuturesContractBuilderTest {
-    
+
     protected FuturesContractBuilder builder;
-    
+
     public FuturesContractBuilderTest() {
     }
-    
+
     @BeforeClass
     public static void setUpClass() {
     }
-    
+
     @AfterClass
     public static void tearDownClass() {
     }
-    
+
     @Before
     public void setUp() {
         builder = new FuturesContractBuilder();
     }
-    
+
     @After
     public void tearDown() {
     }
 
-    
-        @Test
+    @Test
     public void testBuildContract_NoMultiplier() {
-        FuturesTicker ticker = new FuturesTicker();
+        Ticker ticker = new Ticker().setInstrumentType(InstrumentType.FUTURES);
         ticker.setCurrency("USD");
         ticker.setExchange(Exchange.GLOBEX);
         ticker.setSymbol("HG");
         ticker.setExpiryMonth(6);
         ticker.setExpiryYear(2015);
+        ticker.setContractMultiplier(new BigDecimal("25000"));
 
         Contract expected = new Contract();
         expected.currency("USD");
         expected.exchange(Exchange.GLOBEX.getExchangeName());
         expected.secType("FUT");
-        expected.symbol( "HG");
-        expected.lastTradeDateOrContractMonth("201506"); 
-        expected.localSymbol( "HGM5");
-        
-        assertEquals(expected, builder.buildContract(ticker) );
+        expected.symbol("HG");
+        expected.lastTradeDateOrContractMonth("201506");
+        expected.localSymbol("HGM5");
+        expected.multiplier("25000");
+
+        assertEquals(expected, builder.buildContract(ticker));
     }
-    
-    
+
     @Test
     public void testBuildContract_NoMultiplier_Grains() {
-        FuturesTicker ticker = new FuturesTicker();
+        Ticker ticker = new Ticker().setInstrumentType(InstrumentType.FUTURES);
         ticker.setCurrency("USD");
         ticker.setExchange(Exchange.ECBOT);
         ticker.setSymbol("ZW");
@@ -94,18 +98,17 @@ public class FuturesContractBuilderTest {
         expected.currency("USD");
         expected.exchange(Exchange.ECBOT.getExchangeName());
         expected.secType("FUT");
-        expected.symbol( "ZW");
+        expected.symbol("ZW");
         expected.lastTradeDateOrContractMonth("201506");
         expected.multiplier("5000");
         expected.localSymbol("ZW   JUN 15");
-        
-        assertEquals(expected, builder.buildContract(ticker) );
+
+        assertEquals(expected, builder.buildContract(ticker));
     }
 
-    
     @Test
     public void testBuildContract_WithMultiplier() {
-        FuturesTicker ticker = new FuturesTicker();
+        Ticker ticker = new Ticker().setInstrumentType(InstrumentType.FUTURES);
         ticker.setCurrency("USD");
         ticker.setExchange(Exchange.ECBOT);
         ticker.setSymbol("ZW");
@@ -117,14 +120,12 @@ public class FuturesContractBuilderTest {
         expected.currency("USD");
         expected.exchange(Exchange.ECBOT.getExchangeName());
         expected.secType("FUT");
-        expected.symbol( "ZW");
+        expected.symbol("ZW");
         expected.lastTradeDateOrContractMonth("201506");
         expected.multiplier("5000");
         expected.localSymbol("ZW   JUN 15");
 
-
-                
-        assertEquals(expected, builder.buildContract(ticker) );
+        assertEquals(expected, builder.buildContract(ticker));
     }
-    
+
 }

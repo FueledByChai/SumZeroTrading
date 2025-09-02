@@ -5,22 +5,21 @@
  */
 package com.sumzerotrading.broker.ib;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.broker.order.TradeDirection;
 import com.sumzerotrading.broker.order.TradeOrder;
-import com.sumzerotrading.data.StockTicker;
+import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.ib.IBConnectionUtil;
 import com.sumzerotrading.ib.IBSocket;
 import com.sumzerotrading.marketdata.ILevel1Quote;
 import com.sumzerotrading.marketdata.Level1QuoteListener;
 import com.sumzerotrading.marketdata.ib.IBQuoteEngine;
-import static java.lang.Thread.sleep;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
@@ -39,7 +38,7 @@ public class MainClass implements OrderEventListener, Level1QuoteListener {
         IBSocket socket;
         InteractiveBrokersBroker broker;
         List<OrderEvent> eventList = new ArrayList<>();
-        Ticker qqqTicker = new StockTicker("QQQ");
+        Ticker qqqTicker = new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK);
         socket = util.getIBSocket();
         broker = new InteractiveBrokersBroker(socket);
         broker.addOrderEventListener(this);

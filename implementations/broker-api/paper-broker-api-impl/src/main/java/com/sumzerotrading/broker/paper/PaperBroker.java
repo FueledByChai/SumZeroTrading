@@ -44,11 +44,9 @@ import com.sumzerotrading.broker.order.TradeOrder;
 import com.sumzerotrading.broker.order.TradeOrder.Modifier;
 import com.sumzerotrading.broker.order.TradeOrder.Type;
 import com.sumzerotrading.data.ComboTicker;
-import com.sumzerotrading.data.CryptoTicker;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.marketdata.ILevel1Quote;
 import com.sumzerotrading.marketdata.Level1QuoteListener;
-import com.sumzerotrading.marketdata.MarketDepthBook.Side;
 import com.sumzerotrading.marketdata.OrderBook;
 import com.sumzerotrading.marketdata.QuoteEngine;
 import com.sumzerotrading.time.TimeUpdatedListener;
@@ -273,7 +271,7 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
 
     }
 
-    public List<TradeOrder> getOpenOrders(CryptoTicker ticker) {
+    public List<TradeOrder> getOpenOrders(Ticker ticker) {
         delay(); // Simulate network delay
         List<TradeOrder> openOrders = new ArrayList<>(); // List to hold open orders
         // Add all open bids to the list

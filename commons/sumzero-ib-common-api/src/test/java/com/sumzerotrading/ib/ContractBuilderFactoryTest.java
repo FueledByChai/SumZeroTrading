@@ -20,28 +20,24 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 package com.sumzerotrading.ib;
 
-import com.sumzerotrading.data.CFDTicker;
-import com.sumzerotrading.data.ComboTicker;
-import com.sumzerotrading.data.CurrencyTicker;
-import com.sumzerotrading.data.FuturesTicker;
-import com.sumzerotrading.data.IndexTicker;
-import com.sumzerotrading.data.OptionTicker;
-import com.sumzerotrading.data.StockTicker;
-import com.sumzerotrading.data.Ticker;
+import static org.junit.Assert.assertTrue;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import com.sumzerotrading.data.ComboTicker;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
 
 /**
  *
  * @author Rob Terpilowski
  */
 public class ContractBuilderFactoryTest {
-    
+
     public ContractBuilderFactoryTest() {
     }
 
@@ -52,34 +48,33 @@ public class ContractBuilderFactoryTest {
     @AfterClass
     public static void tearDownClass() throws Exception {
     }
-    
+
     @Before
     public void setUp() {
     }
-    
+
     @After
     public void tearDown() {
     }
 
     @Test
     public void testGetContractBuilder() {
-        Ticker stockTicker = new StockTicker("ABC");
-        Ticker currencyTicker = new CurrencyTicker();
-        Ticker futurTicker = new FuturesTicker();
-        Ticker optionsTicker = new OptionTicker("QQQ");
-        Ticker combTicker = new ComboTicker(futurTicker, stockTicker);
-        Ticker indexTicker = new IndexTicker();
-        Ticker cfdTicker = new CFDTicker("XYZ");
-        
-        assertTrue( ContractBuilderFactory.getContractBuilder(stockTicker) instanceof StockContractBuilder );
-        assertTrue( ContractBuilderFactory.getContractBuilder(currencyTicker) instanceof CurrencyContractBuilder );
-        assertTrue( ContractBuilderFactory.getContractBuilder(futurTicker) instanceof FuturesContractBuilder );
-        assertTrue( ContractBuilderFactory.getContractBuilder(combTicker) instanceof ComboContractBuilder );
-        assertTrue( ContractBuilderFactory.getContractBuilder(indexTicker) instanceof IndexContractBuilder );
-        assertTrue( ContractBuilderFactory.getContractBuilder(cfdTicker) instanceof CFDContractBuilder );
-        assertTrue( ContractBuilderFactory.getContractBuilder(optionsTicker) instanceof OptionContractBuilder );
-        
+        Ticker stockTicker = new Ticker("ABC").setInstrumentType(InstrumentType.STOCK);
+        Ticker currencyTicker = new Ticker().setInstrumentType(InstrumentType.CURRENCY);
+        Ticker futurTicker = new Ticker().setInstrumentType(InstrumentType.FUTURES);
+        Ticker optionsTicker = new Ticker("QQQ").setInstrumentType(InstrumentType.OPTION);
+        Ticker combTicker = new ComboTicker(futurTicker, stockTicker).setInstrumentType(InstrumentType.COMBO);
+        Ticker indexTicker = new Ticker().setInstrumentType(InstrumentType.INDEX);
+        Ticker cfdTicker = new Ticker("XYZ").setInstrumentType(InstrumentType.CFD);
+
+        assertTrue(ContractBuilderFactory.getContractBuilder(stockTicker) instanceof StockContractBuilder);
+        assertTrue(ContractBuilderFactory.getContractBuilder(currencyTicker) instanceof CurrencyContractBuilder);
+        assertTrue(ContractBuilderFactory.getContractBuilder(futurTicker) instanceof FuturesContractBuilder);
+        assertTrue(ContractBuilderFactory.getContractBuilder(combTicker) instanceof ComboContractBuilder);
+        assertTrue(ContractBuilderFactory.getContractBuilder(indexTicker) instanceof IndexContractBuilder);
+        assertTrue(ContractBuilderFactory.getContractBuilder(cfdTicker) instanceof CFDContractBuilder);
+        assertTrue(ContractBuilderFactory.getContractBuilder(optionsTicker) instanceof OptionContractBuilder);
+
     }
-    
 
 }

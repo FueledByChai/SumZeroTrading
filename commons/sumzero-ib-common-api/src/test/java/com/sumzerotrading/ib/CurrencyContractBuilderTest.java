@@ -20,24 +20,27 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 package com.sumzerotrading.ib;
 
-import com.ib.client.Contract;
-import com.sumzerotrading.data.CurrencyTicker;
-import com.sumzerotrading.data.Exchange;
+import static org.junit.Assert.assertEquals;
+
 import java.math.BigDecimal;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import com.ib.client.Contract;
+import com.sumzerotrading.data.Exchange;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
 
 /**
  *
  * @author Rob Terpilowski
  */
 public class CurrencyContractBuilderTest {
-    
+
     public CurrencyContractBuilderTest() {
     }
 
@@ -48,34 +51,33 @@ public class CurrencyContractBuilderTest {
     @AfterClass
     public static void tearDownClass() throws Exception {
     }
-    
+
     @Before
     public void setUp() {
     }
-    
+
     @After
     public void tearDown() {
     }
 
-    
     @Test
     public void testCurrencyContractBuilder() {
         CurrencyContractBuilder builder = new CurrencyContractBuilder();
-        CurrencyTicker currencyTicker = new CurrencyTicker();
-        
-        currencyTicker.setContractMultiplier( BigDecimal.ONE );
+        Ticker currencyTicker = new Ticker().setInstrumentType(InstrumentType.CURRENCY);
+
+        currencyTicker.setContractMultiplier(BigDecimal.ONE);
         currencyTicker.setCurrency("USD");
         currencyTicker.setExchange(Exchange.IDEALPRO);
-        currencyTicker.setMinimumTickSize( new BigDecimal( "0.0001" ) );
+        currencyTicker.setMinimumTickSize(new BigDecimal("0.0001"));
         currencyTicker.setSymbol("EUR");
-        
+
         Contract contract = builder.buildContract(currencyTicker);
-        
-        assertEquals( "USD", contract.currency() );
-        assertEquals( "IDEALPRO", contract.exchange() );
-       // assertEquals( "CASH", contract.secType() );
-       //TODO: FIX UNIT TEST
-        assertEquals( "EUR", contract.symbol() );
-        
+
+        assertEquals("USD", contract.currency());
+        assertEquals("IDEALPRO", contract.exchange());
+        // assertEquals( "CASH", contract.secType() );
+        // TODO: FIX UNIT TEST
+        assertEquals("EUR", contract.symbol());
+
     }
 }

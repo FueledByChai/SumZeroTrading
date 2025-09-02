@@ -20,11 +20,10 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.sumzerotrading.data.CryptoTicker;
 import com.sumzerotrading.data.Exchange;
 import com.sumzerotrading.data.InstrumentDescriptor;
 import com.sumzerotrading.data.InstrumentType;
-import com.sumzerotrading.data.StockTicker;
+import com.sumzerotrading.data.Ticker;
 
 @ExtendWith(MockitoExtension.class)
 class ParadexInstrumentLookupTest {
@@ -150,7 +149,8 @@ class ParadexInstrumentLookupTest {
     @Test
     void testLookupByTicker_CryptoTicker() {
         // Given
-        CryptoTicker ticker = new CryptoTicker("BTC-USD-PERP", Exchange.PARADEX);
+        Ticker ticker = new Ticker("BTC-USD-PERP").setExchange(Exchange.PARADEX)
+                .setInstrumentType(InstrumentType.PERPETUAL_FUTURES);
         InstrumentDescriptor expectedDescriptor = createBitcoinDescriptor();
 
         when(mockApi.getInstrumentDescriptor("BTC-USD-PERP")).thenReturn(expectedDescriptor);
@@ -167,7 +167,8 @@ class ParadexInstrumentLookupTest {
     @Test
     void testLookupByTicker_StockTicker() {
         // Given
-        StockTicker ticker = new StockTicker("AAPL");
+        Ticker ticker = new Ticker("AAPL").setExchange(Exchange.INTERACTIVE_BROKERS_SMART)
+                .setInstrumentType(InstrumentType.STOCK);
         InstrumentDescriptor expectedDescriptor = mock(InstrumentDescriptor.class);
 
         when(mockApi.getInstrumentDescriptor("AAPL")).thenReturn(expectedDescriptor);
@@ -184,7 +185,8 @@ class ParadexInstrumentLookupTest {
     @Test
     void testLookupByTicker_TickerNotFound() {
         // Given
-        CryptoTicker ticker = new CryptoTicker("UNKNOWN-USD-PERP", Exchange.PARADEX);
+        Ticker ticker = new Ticker("UNKNOWN-USD-PERP").setExchange(Exchange.PARADEX)
+                .setInstrumentType(InstrumentType.PERPETUAL_FUTURES);
 
         when(mockApi.getInstrumentDescriptor("UNKNOWN-USD-PERP")).thenReturn(null);
 
@@ -214,7 +216,8 @@ class ParadexInstrumentLookupTest {
         // Given
         String commonSymbol = "BTC";
         String exchangeSymbol = "ETH-USD-PERP";
-        CryptoTicker ticker = new CryptoTicker("DOGE-USD-PERP", Exchange.PARADEX);
+        Ticker ticker = new Ticker("DOGE-USD-PERP").setExchange(Exchange.PARADEX)
+                .setInstrumentType(InstrumentType.PERPETUAL_FUTURES);
 
         InstrumentDescriptor btcDescriptor = createBitcoinDescriptor();
         InstrumentDescriptor ethDescriptor = createEthereumDescriptor();
@@ -285,17 +288,17 @@ class ParadexInstrumentLookupTest {
     // Helper methods to create test data
     private InstrumentDescriptor createBitcoinDescriptor() {
         return new InstrumentDescriptor(InstrumentType.PERPETUAL_FUTURES, Exchange.PARADEX, "BTC", "BTC-USD-PERP",
-                "BTC", "USD", new BigDecimal("0.00001"), new BigDecimal("0.1"), 100, 8);
+                "BTC", "USD", new BigDecimal("0.00001"), new BigDecimal("0.1"), 100, BigDecimal.ONE, 8, BigDecimal.ONE);
     }
 
     private InstrumentDescriptor createEthereumDescriptor() {
         return new InstrumentDescriptor(InstrumentType.PERPETUAL_FUTURES, Exchange.PARADEX, "ETH", "ETH-USD-PERP",
-                "ETH", "USD", new BigDecimal("0.0001"), new BigDecimal("0.01"), 50, 8);
+                "ETH", "USD", new BigDecimal("0.0001"), new BigDecimal("0.01"), 50, BigDecimal.ONE, 8, BigDecimal.ONE);
     }
 
     private InstrumentDescriptor createDogeDescriptor() {
         return new InstrumentDescriptor(InstrumentType.PERPETUAL_FUTURES, Exchange.PARADEX, "DOGE", "DOGE-USD-PERP",
-                "DOGE", "USD", new BigDecimal("1.0"), new BigDecimal("0.00001"), 10, 4);
+                "DOGE", "USD", new BigDecimal("1.0"), new BigDecimal("0.00001"), 10, BigDecimal.ONE, 4, BigDecimal.ONE);
     }
 
     /**

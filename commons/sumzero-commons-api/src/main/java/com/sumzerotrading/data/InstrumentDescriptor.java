@@ -12,12 +12,15 @@ public class InstrumentDescriptor {
     protected BigDecimal orderSizeIncrement = BigDecimal.ONE;
     protected BigDecimal priceTickSize;
     protected int minNotionalOrderSize = 1;
+    protected BigDecimal minOrderSize = BigDecimal.ONE;
     protected int fundingPeriodHours = 8;
     protected InstrumentType instrumentType;
+    protected BigDecimal contractMultiplier = BigDecimal.ONE;
 
     public InstrumentDescriptor(InstrumentType instrumentType, Exchange exchange, String commonSymbol,
             String exchangeSymbol, String baseCurrency, String quoteCurrency, BigDecimal orderSizeIncrement,
-            BigDecimal priceTickSize, int minNotionalOrderSize, int fundingPeriodHours) {
+            BigDecimal priceTickSize, int minNotionalOrderSize, BigDecimal minOrderSize, int fundingPeriodHours,
+            BigDecimal contractMultiplier) {
         this.instrumentType = instrumentType;
         this.exchange = exchange;
         this.commonSymbol = commonSymbol;
@@ -27,7 +30,9 @@ public class InstrumentDescriptor {
         this.orderSizeIncrement = orderSizeIncrement;
         this.priceTickSize = priceTickSize;
         this.minNotionalOrderSize = minNotionalOrderSize;
+        this.minOrderSize = minOrderSize;
         this.fundingPeriodHours = fundingPeriodHours;
+        this.contractMultiplier = contractMultiplier;
     }
 
     public Exchange getExchange() {
@@ -70,6 +75,14 @@ public class InstrumentDescriptor {
         return instrumentType;
     }
 
+    public BigDecimal getContractMultiplier() {
+        return contractMultiplier;
+    }
+
+    public BigDecimal getMinOrderSize() {
+        return minOrderSize;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -84,6 +97,8 @@ public class InstrumentDescriptor {
         result = prime * result + ((priceTickSize == null) ? 0 : priceTickSize.hashCode());
         result = prime * result + minNotionalOrderSize;
         result = prime * result + fundingPeriodHours;
+        result = prime * result + ((contractMultiplier == null) ? 0 : contractMultiplier.hashCode());
+        result = prime * result + ((minOrderSize == null) ? 0 : minOrderSize.hashCode());
         return result;
     }
 
@@ -137,6 +152,16 @@ public class InstrumentDescriptor {
             return false;
         if (fundingPeriodHours != other.fundingPeriodHours)
             return false;
+        if (contractMultiplier == null) {
+            if (other.contractMultiplier != null)
+                return false;
+        } else if (!contractMultiplier.equals(other.contractMultiplier))
+            return false;
+        if (minOrderSize == null) {
+            if (other.minOrderSize != null)
+                return false;
+        } else if (!minOrderSize.equals(other.minOrderSize))
+            return false;
         return true;
     }
 
@@ -146,7 +171,8 @@ public class InstrumentDescriptor {
                 + commonSymbol + ", exchangeSymbol=" + exchangeSymbol + ", baseCurrency=" + baseCurrency
                 + ", quoteCurrency=" + quoteCurrency + ", orderSizeIncrement=" + orderSizeIncrement + ", priceTickSize="
                 + priceTickSize + ", minNotionalOrderSize=" + minNotionalOrderSize + ", fundingPeriodHours="
-                + fundingPeriodHours + "]";
+                + fundingPeriodHours + ", contractMultiplier=" + contractMultiplier + ", minOrderSize=" + minOrderSize
+                + "]";
     }
 
 }

@@ -5,28 +5,34 @@
  */
 package com.sumzerotrading.broker.ib;
 
-import com.sumzerotrading.broker.order.OrderEvent;
-import com.sumzerotrading.broker.order.OrderEventListener;
-import com.sumzerotrading.broker.order.OrderStatus;
-import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
-import com.sumzerotrading.data.StockTicker;
-import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.ib.IBConnectionUtil;
-import com.sumzerotrading.ib.IBSocket;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import net.jcip.annotations.NotThreadSafe;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import com.sumzerotrading.broker.order.OrderEvent;
+import com.sumzerotrading.broker.order.OrderEventListener;
+import com.sumzerotrading.broker.order.OrderStatus;
+import com.sumzerotrading.broker.order.TradeDirection;
+import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.ib.IBConnectionUtil;
+import com.sumzerotrading.ib.IBSocket;
+
+import net.jcip.annotations.NotThreadSafe;
 
 /**
  *
@@ -40,7 +46,7 @@ public class InteractiveBrokersBrokerIT implements OrderEventListener {
     IBSocket socket;
     InteractiveBrokersBroker broker;
     List<OrderEvent> eventList = new ArrayList<>();
-    Ticker qqqTicker = new StockTicker("QQQ");
+    Ticker qqqTicker = new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK);
 
     public InteractiveBrokersBrokerIT() {
     }

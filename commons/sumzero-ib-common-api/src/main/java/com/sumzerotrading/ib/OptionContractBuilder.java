@@ -18,33 +18,32 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.ib;
 
 import com.ib.client.Contract;
-import com.sumzerotrading.data.OptionTicker;
+import com.sumzerotrading.data.Ticker;
 
 /**
  *
  * @author Rob Terpilowski
  */
-public class OptionContractBuilder implements IContractBuilder<OptionTicker> {
+public class OptionContractBuilder implements IContractBuilder<Ticker> {
 
-    public Contract buildContract(OptionTicker ticker) {
+    public Contract buildContract(Ticker ticker) {
         Contract contract = new Contract();
-        contract.currency( ticker.getCurrency());
+        contract.currency(ticker.getCurrency());
         contract.exchange(ticker.getExchange().getExchangeName());
         contract.secType(IbUtils.getSecurityType(ticker.getInstrumentType()));
         contract.symbol(ticker.getSymbol());
-        
-        contract.lastTradeDateOrContractMonth( IbUtils.getExpiryString(ticker.getExpiryDay(), ticker.getExpiryMonth(), ticker.getExpiryYear()));
+
+        contract.lastTradeDateOrContractMonth(
+                IbUtils.getExpiryString(ticker.getExpiryDay(), ticker.getExpiryMonth(), ticker.getExpiryYear()));
         contract.multiplier(ticker.getContractMultiplier().toString());
-        contract.right( IbUtils.getOptionRight(ticker.getRight()));
+        contract.right(IbUtils.getOptionRight(ticker.getRight()));
         contract.strike(ticker.getStrike().doubleValue());
 
         return contract;
 
     }
-    
 
 }

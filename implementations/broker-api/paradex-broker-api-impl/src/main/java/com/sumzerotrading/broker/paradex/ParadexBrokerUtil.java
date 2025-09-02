@@ -8,11 +8,12 @@ import com.sumzerotrading.broker.order.OrderStatus;
 import com.sumzerotrading.broker.order.OrderStatus.Status;
 import com.sumzerotrading.data.SumZeroException;
 import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.paradex.common.IParadexTickerRegistry;
 import com.sumzerotrading.paradex.common.ParadexTickerRegistry;
 
 public class ParadexBrokerUtil {
 
-    protected static ParadexTickerRegistry tickerRegistry = new ParadexTickerRegistry();
+    protected static IParadexTickerRegistry tickerRegistry = ParadexTickerRegistry.getInstance();
 
     public static OrderStatus translateOrderStatus(IParadexOrderStatusUpdate paradexStatus) {
 

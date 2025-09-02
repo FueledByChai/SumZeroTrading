@@ -19,19 +19,18 @@
  */
 package com.sumzerotrading.ib.example.trading;
 
-import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
-import com.sumzerotrading.data.CurrencyTicker;
-import com.sumzerotrading.data.Exchange;
-import com.sumzerotrading.data.FuturesTicker;
-import com.sumzerotrading.data.StockTicker;
-import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClient;
-import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClientInterface;
-
 import java.math.BigDecimal;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.sumzerotrading.broker.order.TradeDirection;
+import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.data.Exchange;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClient;
+import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClientInterface;
 
 public class TradingExample {
 
@@ -49,7 +48,8 @@ public class TradingExample {
     public void placeFuturesOrder() {
 
         // Create a crude oil futures ticker
-        FuturesTicker futuresTicker = new FuturesTicker();
+        Ticker futuresTicker = new Ticker();
+        futuresTicker.setInstrumentType(InstrumentType.FUTURES);
         futuresTicker.setSymbol("CL");
         futuresTicker.setExpiryMonth(4);
         futuresTicker.setExpiryYear(2016);
@@ -67,7 +67,7 @@ public class TradingExample {
 
     public void placeEquityOrder() {
 
-        StockTicker amazonTicker = new StockTicker("QQQ");
+        Ticker amazonTicker = new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK);
         String orderId = ibClient.getNextOrderId();
         int shares = 500;
 
@@ -79,7 +79,7 @@ public class TradingExample {
 
     public void placeCurrencyOrder() throws Exception {
         logger.info("Placing currency order...");
-        CurrencyTicker eurTicker = new CurrencyTicker();
+        Ticker eurTicker = new Ticker().setInstrumentType(InstrumentType.CURRENCY);
         eurTicker.setSymbol("EUR");
         eurTicker.setCurrency("USD");
         eurTicker.setExchange(Exchange.IDEALPRO);

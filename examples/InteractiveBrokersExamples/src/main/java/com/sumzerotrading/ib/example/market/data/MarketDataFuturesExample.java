@@ -18,54 +18,46 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.ib.example.market.data;
 
 import com.sumzerotrading.data.Commodity;
 import com.sumzerotrading.data.Exchange;
-import com.sumzerotrading.data.FuturesTicker;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClient;
 import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClientInterface;
-import com.sumzerotrading.marketdata.ILevel1Quote;
-
-
 
 public class MarketDataFuturesExample {
-    
-    
+
     public void start() {
-         InteractiveBrokersClientInterface ibClient = InteractiveBrokersClient.getInstance("localhost", 7999, 1);
+        InteractiveBrokersClientInterface ibClient = InteractiveBrokersClient.getInstance("localhost", 7999, 1);
         ibClient.connect();
-        
-        
-        FuturesTicker esTicker=  new FuturesTicker();
+
+        Ticker esTicker = new Ticker().setInstrumentType(InstrumentType.FUTURES);
         esTicker.setSymbol("ES");
         esTicker.setExpiryMonth(3);
         esTicker.setExpiryYear(2017);
         esTicker.setExchange(Exchange.GLOBEX);
 
-        
         Commodity vix = Commodity.VIX_FUTURES_CFE;
         Commodity es = Commodity.SP500_INDEX_MINI_GLOBEX;
-        
-        
-        FuturesTicker hsi = new FuturesTicker();
+
+        Ticker hsi = new Ticker().setInstrumentType(InstrumentType.FUTURES);
         hsi.setSymbol("HSI");
         hsi.setExpiryMonth(2);
         hsi.setExpiryYear(2017);
         hsi.setExchange(Exchange.HKFE);
         hsi.setCurrency("HKD");
-        
-        
-        FuturesTicker vixTicker = FuturesTicker.getInstance(vix, 3, 2017);
-        FuturesTicker zw = FuturesTicker.getInstance(Commodity.WHEAT_ECBOT, 3, 2017);
-        
-        ibClient.subscribeLevel1(vixTicker, (ILevel1Quote quote) -> {
-            System.out.println("Received Quote: " + quote );
-        });
-        
+
+        // FuturesTicker vixTicker = FuturesTicker.getInstance(vix, 3, 2017);
+        // FuturesTicker zw = FuturesTicker.getInstance(Commodity.WHEAT_ECBOT, 3, 2017);
+
+        // ibClient.subscribeLevel1(vixTicker, (ILevel1Quote quote) -> {
+        // System.out.println("Received Quote: " + quote);
+        // });
+
     }
-    
+
     public static void main(String[] args) {
         new MarketDataFuturesExample().start();
     }

@@ -25,7 +25,7 @@ import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.broker.order.TradeDirection;
 import com.sumzerotrading.broker.order.TradeOrder;
-import com.sumzerotrading.data.StockTicker;
+import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClient;
 import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClientInterface;
@@ -198,7 +198,8 @@ public class EODTradingStrategy implements Level1QuoteListener, OrderEventListen
             Map<String, String> tickers = props.getLongShortTickerMap();
             strategyDirectory = props.getStrategyDirectory();
             tickers.keySet().stream().forEach((ticker) -> {
-                longShortPairMap.put(new StockTicker(ticker), new StockTicker(tickers.get(ticker)));
+                longShortPairMap.put(new Ticker(ticker).setInstrumentType(InstrumentType.STOCK),
+                        new Ticker(tickers.get(ticker)).setInstrumentType(InstrumentType.STOCK));
             });
             entryOrderType = props.getEntryOrderType();
             exitOrderType = props.getExitOrderType();

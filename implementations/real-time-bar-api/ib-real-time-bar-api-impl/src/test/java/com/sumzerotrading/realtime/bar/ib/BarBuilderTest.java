@@ -20,26 +20,13 @@
  */
 package com.sumzerotrading.realtime.bar.ib;
 
-import com.sumzerotrading.data.BarData;
-import com.sumzerotrading.data.BarData.LengthUnit;
-import com.sumzerotrading.data.GenericTicker;
-import com.sumzerotrading.data.StockTicker;
-import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.historicaldata.IHistoricalDataProvider;
-import com.sumzerotrading.marketdata.ILevel1Quote;
-import com.sumzerotrading.marketdata.Level1Quote;
-import com.sumzerotrading.marketdata.QuoteType;
-import com.sumzerotrading.realtime.bar.RealtimeBarListener;
-import com.sumzerotrading.realtime.bar.RealtimeBarRequest;
-import com.sumzerotrading.realtime.bar.ib.util.RealtimeBarUtil;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import junit.framework.TestCase;
+
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.junit.After;
@@ -56,6 +43,20 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SchedulerFactory;
 import org.quartz.Trigger;
+
+import com.sumzerotrading.data.BarData;
+import com.sumzerotrading.data.BarData.LengthUnit;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.historicaldata.IHistoricalDataProvider;
+import com.sumzerotrading.marketdata.ILevel1Quote;
+import com.sumzerotrading.marketdata.Level1Quote;
+import com.sumzerotrading.marketdata.QuoteType;
+import com.sumzerotrading.realtime.bar.RealtimeBarListener;
+import com.sumzerotrading.realtime.bar.RealtimeBarRequest;
+import com.sumzerotrading.realtime.bar.ib.util.RealtimeBarUtil;
+
+import junit.framework.TestCase;
 
 /**
  *
@@ -96,7 +97,7 @@ public class BarBuilderTest extends TestCase {
         final SchedulerFactory mockFactory = mockery.mock(SchedulerFactory.class);
         final Scheduler mockScheduler = mockery.mock(Scheduler.class);
         final IHistoricalDataProvider mockHistoricalDataProvider = mockery.mock(IHistoricalDataProvider.class);
-        Ticker ticker = new StockTicker("qqq");
+        Ticker ticker = new Ticker("qqq").setInstrumentType(InstrumentType.STOCK);
         final RealtimeBarRequest request = new RealtimeBarRequest(1, ticker, 1, LengthUnit.MINUTE);
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
@@ -143,7 +144,7 @@ public class BarBuilderTest extends TestCase {
         final SchedulerFactory mockFactory = mockery.mock(SchedulerFactory.class);
         final Scheduler mockScheduler = mockery.mock(Scheduler.class);
         final IHistoricalDataProvider mockHistoricalDataProvider = mockery.mock(IHistoricalDataProvider.class);
-        Ticker ticker = new StockTicker("qqq");
+        Ticker ticker = new Ticker("qqq").setInstrumentType(InstrumentType.STOCK);
         final RealtimeBarRequest request = new RealtimeBarRequest(1, ticker, 1, LengthUnit.MINUTE);
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
@@ -180,7 +181,7 @@ public class BarBuilderTest extends TestCase {
         final SchedulerFactory mockFactory = mockery.mock(SchedulerFactory.class);
         final Scheduler mockScheduler = mockery.mock(Scheduler.class);
         final IHistoricalDataProvider mockHistoricalDataProvider = mockery.mock(IHistoricalDataProvider.class);
-        Ticker ticker = new StockTicker("qqq");
+        Ticker ticker = new Ticker("qqq").setInstrumentType(InstrumentType.STOCK);
         final RealtimeBarRequest request = new RealtimeBarRequest(1, ticker, 1, LengthUnit.MINUTE);
         final List<BarData> barList = new ArrayList<BarData>();
         barList.add(new BarData(ZonedDateTime.now(), new BigDecimal(2), new BigDecimal(3), new BigDecimal(2),
@@ -213,7 +214,7 @@ public class BarBuilderTest extends TestCase {
         final Scheduler mockScheduler = mockery.mock(Scheduler.class);
         final ILevel1Quote mockQuote = mockery.mock(ILevel1Quote.class);
         final IHistoricalDataProvider mockHistoricalDataProvider = mockery.mock(IHistoricalDataProvider.class);
-        Ticker ticker = new StockTicker("qqq");
+        Ticker ticker = new Ticker("qqq").setInstrumentType(InstrumentType.STOCK);
         final RealtimeBarRequest request = new RealtimeBarRequest(1, ticker, 1, LengthUnit.MINUTE);
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
@@ -263,7 +264,7 @@ public class BarBuilderTest extends TestCase {
         final Scheduler mockScheduler = mockery.mock(Scheduler.class);
         final ILevel1Quote mockQuote = mockery.mock(ILevel1Quote.class);
         final IHistoricalDataProvider mockHistoricalDataProvider = mockery.mock(IHistoricalDataProvider.class);
-        Ticker ticker = new StockTicker("qqq");
+        Ticker ticker = new Ticker("qqq").setInstrumentType(InstrumentType.STOCK);
         final RealtimeBarRequest request = new RealtimeBarRequest(1, ticker, 1, LengthUnit.MINUTE);
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
@@ -310,7 +311,7 @@ public class BarBuilderTest extends TestCase {
         final Scheduler mockScheduler = mockery.mock(Scheduler.class);
         final RealtimeBarListener mockBarListener = mockery.mock(RealtimeBarListener.class);
         final IHistoricalDataProvider mockHistoricalDataProvider = mockery.mock(IHistoricalDataProvider.class);
-        Ticker ticker = new StockTicker("qqq");
+        Ticker ticker = new Ticker("qqq").setInstrumentType(InstrumentType.STOCK);
         final RealtimeBarRequest request = new RealtimeBarRequest(1, ticker, 1, LengthUnit.MINUTE);
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
@@ -353,7 +354,7 @@ public class BarBuilderTest extends TestCase {
         final SchedulerFactory mockFactory = mockery.mock(SchedulerFactory.class);
         final Scheduler mockScheduler = mockery.mock(Scheduler.class);
         final IHistoricalDataProvider mockHistoricalDataProvider = mockery.mock(IHistoricalDataProvider.class);
-        Ticker ticker = new StockTicker("qqq");
+        Ticker ticker = new Ticker("qqq").setInstrumentType(InstrumentType.STOCK);
         final RealtimeBarRequest request = new RealtimeBarRequest(1, ticker, 1, LengthUnit.MINUTE);
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
@@ -399,7 +400,7 @@ public class BarBuilderTest extends TestCase {
         final SchedulerFactory mockFactory = mockery.mock(SchedulerFactory.class);
         final Scheduler mockScheduler = mockery.mock(Scheduler.class);
         final IHistoricalDataProvider mockHistoricalDataProvider = mockery.mock(IHistoricalDataProvider.class);
-        Ticker ticker = new StockTicker("qqq");
+        Ticker ticker = new Ticker("qqq").setInstrumentType(InstrumentType.STOCK);
         final RealtimeBarRequest request = new RealtimeBarRequest(1, ticker, 1, LengthUnit.MINUTE);
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
@@ -445,7 +446,7 @@ public class BarBuilderTest extends TestCase {
         final SchedulerFactory mockFactory = mockery.mock(SchedulerFactory.class);
         final Scheduler mockScheduler = mockery.mock(Scheduler.class);
         final IHistoricalDataProvider mockHistoricalDataProvider = mockery.mock(IHistoricalDataProvider.class);
-        Ticker ticker = new StockTicker("qqq");
+        Ticker ticker = new Ticker("qqq").setInstrumentType(InstrumentType.STOCK);
         final RealtimeBarRequest request = new RealtimeBarRequest(1, ticker, 1, LengthUnit.MINUTE);
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
@@ -490,7 +491,7 @@ public class BarBuilderTest extends TestCase {
         final SchedulerFactory mockFactory = mockery.mock(SchedulerFactory.class);
         final Scheduler mockScheduler = mockery.mock(Scheduler.class);
         final IHistoricalDataProvider mockHistoricalDataProvider = mockery.mock(IHistoricalDataProvider.class);
-        Ticker ticker = new StockTicker("qqq");
+        Ticker ticker = new Ticker("qqq").setInstrumentType(InstrumentType.STOCK);
         final RealtimeBarRequest request = new RealtimeBarRequest(1, ticker, 1, LengthUnit.MINUTE);
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
@@ -533,7 +534,7 @@ public class BarBuilderTest extends TestCase {
         final SchedulerFactory mockFactory = mockery.mock(SchedulerFactory.class);
         final Scheduler mockScheduler = mockery.mock(Scheduler.class);
         final IHistoricalDataProvider mockHistoricalDataProvider = mockery.mock(IHistoricalDataProvider.class);
-        Ticker ticker = new StockTicker("qqq");
+        Ticker ticker = new Ticker("qqq").setInstrumentType(InstrumentType.STOCK);
         final RealtimeBarRequest request = new RealtimeBarRequest(1, ticker, 1, LengthUnit.MINUTE);
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
@@ -576,7 +577,7 @@ public class BarBuilderTest extends TestCase {
         final SchedulerFactory mockFactory = mockery.mock(SchedulerFactory.class);
         final Scheduler mockScheduler = mockery.mock(Scheduler.class);
         final IHistoricalDataProvider mockHistoricalDataProvider = mockery.mock(IHistoricalDataProvider.class);
-        Ticker ticker = new StockTicker("qqq");
+        Ticker ticker = new Ticker("qqq").setInstrumentType(InstrumentType.STOCK);
         final RealtimeBarRequest request = new RealtimeBarRequest(1, ticker, 1, LengthUnit.MINUTE);
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
@@ -648,7 +649,7 @@ public class BarBuilderTest extends TestCase {
         final SchedulerFactory mockFactory = mockery.mock(SchedulerFactory.class);
         final Scheduler mockScheduler = mockery.mock(Scheduler.class);
         final IHistoricalDataProvider mockHistoricalDataProvider = mockery.mock(IHistoricalDataProvider.class);
-        Ticker ticker = new StockTicker("qqq");
+        Ticker ticker = new Ticker("qqq").setInstrumentType(InstrumentType.STOCK);
         final RealtimeBarRequest request = new RealtimeBarRequest(1, ticker, 1, LengthUnit.MINUTE);
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
@@ -703,7 +704,7 @@ public class BarBuilderTest extends TestCase {
         final SchedulerFactory mockFactory = mockery.mock(SchedulerFactory.class);
         final Scheduler mockScheduler = mockery.mock(Scheduler.class);
         final IHistoricalDataProvider mockHistoricalDataProvider = mockery.mock(IHistoricalDataProvider.class);
-        Ticker ticker = new StockTicker("qqq");
+        Ticker ticker = new Ticker("qqq").setInstrumentType(InstrumentType.STOCK);
         final RealtimeBarRequest request = new RealtimeBarRequest(1, ticker, 1, LengthUnit.MINUTE);
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
@@ -742,7 +743,7 @@ public class BarBuilderTest extends TestCase {
         final SchedulerFactory mockFactory = mockery.mock(SchedulerFactory.class);
         final Scheduler mockScheduler = mockery.mock(Scheduler.class);
         final IHistoricalDataProvider mockHistoricalDataProvider = mockery.mock(IHistoricalDataProvider.class);
-        Ticker ticker = new StockTicker("qqq");
+        Ticker ticker = new Ticker("qqq").setInstrumentType(InstrumentType.STOCK);
         final RealtimeBarRequest request = new RealtimeBarRequest(1, ticker, 1, LengthUnit.MINUTE);
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
@@ -783,7 +784,7 @@ public class BarBuilderTest extends TestCase {
         final SchedulerFactory mockFactory = mockery.mock(SchedulerFactory.class);
         final Scheduler mockScheduler = mockery.mock(Scheduler.class);
         final IHistoricalDataProvider mockHistoricalDataProvider = mockery.mock(IHistoricalDataProvider.class);
-        Ticker ticker = new StockTicker("qqq");
+        Ticker ticker = new Ticker("qqq").setInstrumentType(InstrumentType.STOCK);
         final RealtimeBarRequest request = new RealtimeBarRequest(1, ticker, 1, LengthUnit.MINUTE);
         String jobName = RealtimeBarUtil.getJobName(request);
         final Trigger trigger = RealtimeBarUtil.getTrigger(jobName, request.getTimeInterval(), request.getTimeUnit());
@@ -828,7 +829,7 @@ public class BarBuilderTest extends TestCase {
     @Test
     public void testGetValue_Currency() {
         testBarBuilder.isCurrency = true;
-        Ticker ticker = new GenericTicker("XYZ");
+        Ticker ticker = new Ticker("XYZ").setInstrumentType(InstrumentType.CURRENCY);
         ZonedDateTime now = ZonedDateTime.now();
         Map<QuoteType, BigDecimal> quoteValues = new HashMap<>();
 
@@ -858,7 +859,7 @@ public class BarBuilderTest extends TestCase {
     public void testGetValue_NotCurrency_Midpoint() {
         testBarBuilder.isCurrency = false;
         testBarBuilder.showProperty = IHistoricalDataProvider.ShowProperty.MIDPOINT;
-        Ticker ticker = new GenericTicker("XYZ");
+        Ticker ticker = new Ticker("XYZ").setInstrumentType(InstrumentType.STOCK);
         ZonedDateTime now = ZonedDateTime.now();
         Map<QuoteType, BigDecimal> quoteValues = new HashMap<>();
 
@@ -874,7 +875,7 @@ public class BarBuilderTest extends TestCase {
     public void testGetValue_NotCurrency_NotMidpoint() {
         testBarBuilder.isCurrency = false;
         testBarBuilder.showProperty = IHistoricalDataProvider.ShowProperty.TRADES;
-        Ticker ticker = new GenericTicker("XYZ");
+        Ticker ticker = new Ticker("XYZ").setInstrumentType(InstrumentType.STOCK);
         ZonedDateTime now = ZonedDateTime.now();
         Map<QuoteType, BigDecimal> quoteValues = new HashMap<>();
         quoteValues.put(QuoteType.LAST, BigDecimal.ONE);

@@ -20,37 +20,22 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 package com.sumzerotrading.broker.ib;
 
-import java.util.List;
-import java.util.Date;
-import com.ib.client.Contract;
-import com.ib.client.EClientSocket;
-import com.ib.client.Order;
-import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
-import com.sumzerotrading.data.CurrencyTicker;
-import com.sumzerotrading.data.Exchange;
-import com.sumzerotrading.data.StockTicker;
-import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.ib.IBConnectionInterface;
-import com.sumzerotrading.ib.IBDataQueue;
-import com.sumzerotrading.ib.IBSocket;
-
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
-import org.jmock.Expectations;
+
 import org.jmock.Mockery;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Test;
-import static org.junit.Assert.*;
 import org.junit.Ignore;
+import org.junit.Test;
 import org.mockito.Mockito;
-import static org.mockito.Mockito.verify;
+
+import com.ib.client.EClientSocket;
+import com.sumzerotrading.broker.order.TradeDirection;
+import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.ib.IBConnectionInterface;
+import com.sumzerotrading.ib.IBSocket;
 
 /**
  *

@@ -6,7 +6,7 @@
 package com.sumzerotrading.ib;
 
 import com.ib.client.Contract;
-import com.sumzerotrading.data.CFDTicker;
+import com.sumzerotrading.data.Ticker;
 
 /**
  *
@@ -20,10 +20,10 @@ import com.sumzerotrading.data.CFDTicker;
  *
  * @author RobTerpilowski
  */
-public class CFDContractBuilder implements IContractBuilder<CFDTicker> {
+public class CFDContractBuilder implements IContractBuilder<Ticker> {
 
     @Override
-    public Contract buildContract(CFDTicker ticker) {
+    public Contract buildContract(Ticker ticker) {
         Contract contract = new Contract();
         contract.currency(ticker.getCurrency());
         contract.exchange(ticker.getExchange().getExchangeName());
@@ -31,7 +31,7 @@ public class CFDContractBuilder implements IContractBuilder<CFDTicker> {
         contract.symbol(ticker.getSymbol());
         if (ticker.getPrimaryExchange() != null) {
             contract.primaryExch(ticker.getPrimaryExchange().getExchangeName());
-       }
+        }
         return contract;
     }
 

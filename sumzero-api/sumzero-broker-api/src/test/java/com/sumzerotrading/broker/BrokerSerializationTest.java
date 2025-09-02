@@ -18,24 +18,26 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.broker;
 
-import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.data.StockTicker;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.math.BigDecimal;
 import java.time.ZonedDateTime;
+
 import org.junit.After;
 import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import com.sumzerotrading.broker.order.TradeDirection;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
 
 /**
  *
@@ -61,31 +63,27 @@ public class BrokerSerializationTest {
     @After
     public void tearDown() {
     }
-    
-    
-    
+
     @Test
     public void testBrokerError() throws Exception {
         BrokerError error = new BrokerError("123");
-        
-        test( error );
-    }
-    
 
-    
+        test(error);
+    }
+
     @Test
     public void testTransaction() throws Exception {
         Transaction t = new Transaction();
         t.setCommission(1.0);
         t.setPositionId("123");
-        t.setTicker(new StockTicker("123"));
+        t.setTicker(new Ticker("123").setInstrumentType(InstrumentType.STOCK));
         t.setTradeDirection(TradeDirection.BUY);
         t.setTransactionDate(ZonedDateTime.now());
         t.setTransactionPrice(100.0);
         t.setTransactionSize(100);
-        
+
         test(t);
-        
+
     }
 
     public void test(Object object) throws Exception {
@@ -111,6 +109,5 @@ public class BrokerSerializationTest {
         ObjectInputStream objectIn = new ObjectInputStream(input);
         return (T) objectIn.readObject();
     }
-
 
 }

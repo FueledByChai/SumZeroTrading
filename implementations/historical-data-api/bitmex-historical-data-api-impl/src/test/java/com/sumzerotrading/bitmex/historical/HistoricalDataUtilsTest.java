@@ -35,7 +35,7 @@ import org.junit.Test;
 import com.sumzerotrading.bitmex.client.BitmexRestClient;
 import com.sumzerotrading.bitmex.entity.BitmexChartData;
 import com.sumzerotrading.data.BarData;
-import com.sumzerotrading.data.GenericTicker;
+
 import com.sumzerotrading.data.Ticker;
 
 /**
@@ -109,7 +109,7 @@ public class HistoricalDataUtilsTest {
     public void testBuildBarData() {
         int barLength = 1;
         BarData.LengthUnit lengthUnit = BarData.LengthUnit.MINUTE;
-        Ticker ticker = new GenericTicker("ABC");
+        Ticker ticker = new Ticker("ABC");
         BigDecimal open = new BigDecimal(123.23);
         BigDecimal high = new BigDecimal(234.45);
         BigDecimal low = new BigDecimal(100.23);

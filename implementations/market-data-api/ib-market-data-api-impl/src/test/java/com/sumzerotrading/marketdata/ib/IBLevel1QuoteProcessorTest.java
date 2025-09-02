@@ -36,8 +36,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ib.client.Decimal;
-import com.sumzerotrading.data.CurrencyTicker;
-import com.sumzerotrading.data.StockTicker;
+import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.marketdata.ILevel1Quote;
 import com.sumzerotrading.marketdata.IQuoteEngine;
@@ -108,7 +107,8 @@ public class IBLevel1QuoteProcessorTest {
     public void testProcessTickSize_StockTicker() {
         MockIBLevel1QuoteProcessor processor = buildMockQuoteProcessor(false, false);
         int size = 10;
-        Level1QuoteData data = new Level1QuoteData(new StockTicker("QQQ"), 0, 0, false, Decimal.get(size));
+        Level1QuoteData data = new Level1QuoteData(new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK), 0, 0,
+                false, Decimal.get(size));
 
         processor.processTickSize(data);
 
@@ -121,7 +121,8 @@ public class IBLevel1QuoteProcessorTest {
     public void testProcessTickSize_NonStockTicker() {
         MockIBLevel1QuoteProcessor processor = buildMockQuoteProcessor(false, false);
         int size = 10;
-        Level1QuoteData data = new Level1QuoteData(new CurrencyTicker(), 0, 0, false, Decimal.get(size));
+        Level1QuoteData data = new Level1QuoteData(new Ticker().setInstrumentType(InstrumentType.CURRENCY), 0, 0, false,
+                Decimal.get(size));
 
         processor.processTickSize(data);
 

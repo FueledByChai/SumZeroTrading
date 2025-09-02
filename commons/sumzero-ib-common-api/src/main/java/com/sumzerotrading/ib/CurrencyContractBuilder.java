@@ -18,28 +18,26 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.ib;
 
 import com.ib.client.Contract;
-import com.sumzerotrading.data.CurrencyTicker;
+import com.sumzerotrading.data.Ticker;
 
 /**
  *
  * @author Rob Terpilowski
  */
-public class CurrencyContractBuilder implements IContractBuilder<CurrencyTicker> {
+public class CurrencyContractBuilder implements IContractBuilder<Ticker> {
 
-    public Contract buildContract(CurrencyTicker ticker) {
-        
+    public Contract buildContract(Ticker ticker) {
+
         Contract contract = new Contract();
         contract.currency(ticker.getCurrency());
         contract.exchange(ticker.getExchange().getExchangeName());
-        contract.secType(IbUtils.getSecurityType( ticker.getInstrumentType() ));
+        contract.secType(IbUtils.getSecurityType(ticker.getInstrumentType()));
         contract.symbol(ticker.getSymbol());
 
         return contract;
     }
-    
-    
+
 }

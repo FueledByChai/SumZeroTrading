@@ -62,13 +62,15 @@ public class SerializationTest {
 
     @Test
     public void testStockTicker() throws Exception {
-        Ticker ticker = new StockTicker("SEA");
+        Ticker ticker = new Ticker("SEA");
+        ticker.setInstrumentType(InstrumentType.STOCK);
         test(ticker);
     }
 
     @Test
     public void testSerializeFuturesTicker() throws Exception {
-        FuturesTicker ticker = new FuturesTicker();
+        Ticker ticker = new Ticker();
+        ticker.setInstrumentType(InstrumentType.FUTURES);
         ticker.setSymbol("ES");
         ticker.setContractMultiplier(BigDecimal.ONE);
         ticker.setCurrency("USD");
@@ -89,8 +91,10 @@ public class SerializationTest {
 
     @Test
     public void testSerializeComboTicker() throws Exception {
-        Ticker firstTicker = new StockTicker("ABC");
-        Ticker secondTicker = new StockTicker("DEF");
+        Ticker firstTicker = new Ticker("ABC");
+        firstTicker.setInstrumentType(InstrumentType.STOCK);
+        Ticker secondTicker = new Ticker("DEF");
+        secondTicker.setInstrumentType(InstrumentType.STOCK);
         ComboTicker ticker = new ComboTicker(firstTicker, secondTicker, 1, 2);
 
         test(ticker);
@@ -98,12 +102,12 @@ public class SerializationTest {
 
     @Test
     public void testSerializeCurrencyTicker() throws Exception {
-        CurrencyTicker ticker = new CurrencyTicker();
+        Ticker ticker = new Ticker();
+        ticker.setInstrumentType(InstrumentType.CURRENCY);
         ticker.setContractMultiplier(BigDecimal.ZERO);
         ticker.setCurrency("USD");
         ticker.setExchange(Exchange.ARCA);
         ticker.setMinimumTickSize(BigDecimal.TEN);
-        ticker.setSupporthalfTick(true);
         ticker.setSymbol("EUR");
 
         test(ticker);
@@ -117,7 +121,8 @@ public class SerializationTest {
 
     @Test
     public void testIndexTicker() throws Exception {
-        IndexTicker ticker = new IndexTicker();
+        Ticker ticker = new Ticker();
+        ticker.setInstrumentType(InstrumentType.INDEX);
         ticker.setContractMultiplier(BigDecimal.ZERO);
         ticker.setCurrency("USD");
         ticker.setExchange(Exchange.ARCA);
@@ -129,7 +134,8 @@ public class SerializationTest {
 
     @Test
     public void testOptionTicker() throws Exception {
-        OptionTicker ticker = new OptionTicker("ES");
+        Ticker ticker = new Ticker("ES");
+        ticker.setInstrumentType(InstrumentType.OPTION);
         ticker.setContractMultiplier(BigDecimal.ZERO);
         ticker.setCurrency("USD");
         ticker.setExchange(Exchange.ARCA);
@@ -165,9 +171,4 @@ public class SerializationTest {
         return (T) objectIn.readObject();
     }
 
-    // TODO add test methods here.
-    // The methods must be annotated with annotation @Test. For example:
-    //
-    // @Test
-    // public void hello() {}
 }

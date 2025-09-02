@@ -21,18 +21,13 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 package com.sumzerotrading.realtime.bar.ib.util;
 
-import com.sumzerotrading.data.BarData.LengthUnit;
-import com.sumzerotrading.data.StockTicker;
-import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.realtime.bar.RealtimeBarRequest;
-import com.sumzerotrading.realtime.bar.ib.BarBuilderJob;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import junit.framework.TestCase;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -42,6 +37,14 @@ import org.junit.Test;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
+
+import com.sumzerotrading.data.BarData.LengthUnit;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.realtime.bar.RealtimeBarRequest;
+import com.sumzerotrading.realtime.bar.ib.BarBuilderJob;
+
+import junit.framework.TestCase;
 
 /**
  *
@@ -115,7 +118,7 @@ public class RealtimeBarUtilTest extends TestCase {
     @Test
     public void testGetBarName() {
         int requestId = 1;
-        Ticker ticker = new StockTicker("qqq");
+        Ticker ticker = new Ticker("qqq").setInstrumentType(InstrumentType.STOCK);
         int timeInterval = 1;
         RealtimeBarRequest realtimeBarRequest = new RealtimeBarRequest(requestId, ticker, timeInterval,
                 LengthUnit.MINUTE);

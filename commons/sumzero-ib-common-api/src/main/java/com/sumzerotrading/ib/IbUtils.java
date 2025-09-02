@@ -20,23 +20,24 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 package com.sumzerotrading.ib;
 
-import com.ib.client.TagValue;
-import com.sumzerotrading.broker.order.OrderStatus;
-import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
-import com.sumzerotrading.data.FuturesTicker;
-import com.sumzerotrading.data.InstrumentType;
-import com.sumzerotrading.data.OptionTicker;
-import com.sumzerotrading.data.SumZeroException;
-import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.marketdata.QuoteType;
 import java.awt.Image;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+
 import javax.imageio.ImageIO;
+
+import com.ib.client.TagValue;
+import com.sumzerotrading.broker.order.OrderStatus;
+import com.sumzerotrading.broker.order.TradeDirection;
+import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.SumZeroException;
+import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.data.Ticker.Right;
+import com.sumzerotrading.marketdata.QuoteType;
 
 /**
  *
@@ -116,7 +117,7 @@ public class IbUtils {
             switch (instrumentType) {
             case STOCK:
                 return "STK";
-            case FOREX:
+            case CURRENCY:
                 return "CASH";
             case FUTURES:
                 return "FUT";
@@ -232,11 +233,11 @@ public class IbUtils {
         return getExpiryString(expiryMonth, expiryYear) + dayString;
     }
 
-    public static String getOptionRight(OptionTicker.Right right) {
+    public static String getOptionRight(Ticker.Right right) {
         switch (right) {
-        case Call:
+        case CALL:
             return "C";
-        case Put:
+        case PUT:
             return "P";
         default:
             throw new SumZeroException("Unknown option right: " + right);
@@ -252,9 +253,8 @@ public class IbUtils {
     }
 
     public static BigDecimal getIbMultiplier(Ticker ticker) {
-        if (ticker instanceof FuturesTicker) {
-            FuturesTicker futuresTicker = (FuturesTicker) ticker;
-            switch (futuresTicker.getSymbol()) {
+        if (ticker.getInstrumentType() == InstrumentType.FUTURES) {
+            switch (ticker.getSymbol()) {
             case "ZC":
             case "ZS":
             case "ZW":

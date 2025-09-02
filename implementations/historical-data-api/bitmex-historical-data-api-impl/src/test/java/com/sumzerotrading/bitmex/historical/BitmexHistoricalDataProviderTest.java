@@ -5,38 +5,39 @@
  */
 package com.sumzerotrading.bitmex.historical;
 
-import com.sumzerotrading.bitmex.client.BitmexRestClient;
-import com.sumzerotrading.bitmex.client.IBitmexClient;
-import com.sumzerotrading.bitmex.entity.BitmexChartData;
-import com.sumzerotrading.data.BarData;
-import com.sumzerotrading.data.GenericTicker;
-import com.sumzerotrading.data.SumZeroException;
-import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.historicaldata.IHistoricalDataProvider;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
+
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+
 import org.junit.After;
 import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.when;
 import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
+
+import com.sumzerotrading.bitmex.client.BitmexRestClient;
+import com.sumzerotrading.bitmex.client.IBitmexClient;
+import com.sumzerotrading.bitmex.entity.BitmexChartData;
+import com.sumzerotrading.data.BarData;
+import com.sumzerotrading.data.SumZeroException;
+import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.historicaldata.IHistoricalDataProvider;
 
 /**
  *
@@ -98,7 +99,7 @@ public class BitmexHistoricalDataProviderTest {
     @Test
     public void testRequestHistoricalData_NotTrades() {
         try {
-            testProvider.requestHistoricalData(new GenericTicker("ABC"), 1, BarData.LengthUnit.DAY, 1,
+            testProvider.requestHistoricalData(new Ticker("ABC"), 1, BarData.LengthUnit.DAY, 1,
                     BarData.LengthUnit.MINUTE, IHistoricalDataProvider.ShowProperty.ASK, true);
             fail();
         } catch (SumZeroException ex) {
@@ -109,7 +110,7 @@ public class BitmexHistoricalDataProviderTest {
 
     @Test
     public void testRequestHistoricalData() {
-        Ticker ticker = new GenericTicker("ABC");
+        Ticker ticker = new Ticker("ABC");
         int duration = 100;
         int barSize = 1;
         BarData.LengthUnit lengthUnit = BarData.LengthUnit.MINUTE;
@@ -136,7 +137,7 @@ public class BitmexHistoricalDataProviderTest {
     @Test
     public void testRequestHistoricalData_OverloadedMethod() {
         try {
-            testProvider.requestHistoricalData(new GenericTicker("ABC"), new Date(), 2, BarData.LengthUnit.MONTH, 10,
+            testProvider.requestHistoricalData(new Ticker("ABC"), new Date(), 2, BarData.LengthUnit.MONTH, 10,
                     BarData.LengthUnit.MINUTE, IHistoricalDataProvider.ShowProperty.TRADES, true);
             fail();
         } catch (SumZeroException ex) {
@@ -148,7 +149,7 @@ public class BitmexHistoricalDataProviderTest {
     public void testConvertToBarData() {
         int barLength = 1;
         BarData.LengthUnit lengthUnit = BarData.LengthUnit.MINUTE;
-        Ticker ticker = new GenericTicker("ABC");
+        Ticker ticker = new Ticker("ABC");
         BigDecimal open = new BigDecimal(123.23);
         BigDecimal high = new BigDecimal(234.45);
         BigDecimal low = new BigDecimal(100.23);

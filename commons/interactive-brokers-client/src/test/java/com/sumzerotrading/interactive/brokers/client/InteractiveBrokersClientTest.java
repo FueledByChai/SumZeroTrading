@@ -29,7 +29,7 @@ import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.broker.order.TradeDirection;
 import com.sumzerotrading.broker.order.TradeOrder;
 import com.sumzerotrading.data.BarData;
-import com.sumzerotrading.data.StockTicker;
+import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.historicaldata.IHistoricalDataProvider;
 import com.sumzerotrading.ib.IBConnectionUtil;
@@ -137,7 +137,7 @@ public class InteractiveBrokersClientTest {
 
     @Test
     public void testSubscribeUnsubscribeLevel1() {
-        Ticker ticker = new StockTicker("ABC");
+        Ticker ticker = new Ticker("ABC").setInstrumentType(InstrumentType.STOCK);
         Level1QuoteListener listener = (ILevel1Quote quote) -> {
         };
         client.subscribeLevel1(ticker, listener);
@@ -148,7 +148,7 @@ public class InteractiveBrokersClientTest {
 
     @Test
     public void testSubscribeMarketDepth() {
-        Ticker ticker = new StockTicker("ABC");
+        Ticker ticker = new Ticker("ABC").setInstrumentType(InstrumentType.STOCK);
         Level2QuoteListener listener = (ILevel2Quote quote) -> {
         };
         client.subscribeMarketDepth(ticker, listener);
@@ -160,7 +160,8 @@ public class InteractiveBrokersClientTest {
 
     @Test
     public void testPlaceOrder() {
-        TradeOrder order = new TradeOrder("123", new StockTicker("ABC"), BigDecimal.valueOf(10), TradeDirection.SELL);
+        TradeOrder order = new TradeOrder("123", new Ticker("ABC").setInstrumentType(InstrumentType.STOCK),
+                BigDecimal.valueOf(10), TradeDirection.SELL);
         client.placeOrder(order);
         verify(mockBroker).placeOrder(order);
     }
@@ -181,7 +182,8 @@ public class InteractiveBrokersClientTest {
     @Test
     public void testGetOpenOrders() {
         List<TradeOrder> list = new ArrayList<>();
-        list.add(new TradeOrder("123", new StockTicker("ABC"), BigDecimal.valueOf(123), TradeDirection.SELL));
+        list.add(new TradeOrder("123", new Ticker("ABC").setInstrumentType(InstrumentType.STOCK),
+                BigDecimal.valueOf(123), TradeDirection.SELL));
         when(mockBroker.getOpenOrders()).thenReturn(list);
         assertEquals(list, mockBroker.getOpenOrders());
     }
@@ -190,7 +192,7 @@ public class InteractiveBrokersClientTest {
     public void testRequestGetHistoricalData() {
         List<BarData> barData = new ArrayList<>();
         barData.add(new BarData());
-        Ticker ticker = new StockTicker("ABC");
+        Ticker ticker = new Ticker("ABC").setInstrumentType(InstrumentType.STOCK);
         int duration = 1;
         BarData.LengthUnit unit = BarData.LengthUnit.DAY;
         int barSize = 1;
@@ -206,7 +208,7 @@ public class InteractiveBrokersClientTest {
     public void testRequestGetHistoricalData_OverloadedMethod() throws IOException {
         List<BarData> barData = new ArrayList<>();
         barData.add(new BarData());
-        Ticker ticker = new StockTicker("ABC");
+        Ticker ticker = new Ticker("ABC").setInstrumentType(InstrumentType.STOCK);
         int duration = 1;
         BarData.LengthUnit unit = BarData.LengthUnit.DAY;
         int barSize = 1;
@@ -222,8 +224,8 @@ public class InteractiveBrokersClientTest {
 
     @Test
     public void testSubscribeRealtimeBar() {
-        RealtimeBarRequest request = new RealtimeBarRequest(1, new StockTicker("ABC"), clientId,
-                BarData.LengthUnit.MINUTE);
+        RealtimeBarRequest request = new RealtimeBarRequest(1,
+                new Ticker("ABC").setInstrumentType(InstrumentType.STOCK), clientId, BarData.LengthUnit.MINUTE);
         RealtimeBarListener listener = (int requestId, Ticker ticker, BarData bar) -> {
         };
 

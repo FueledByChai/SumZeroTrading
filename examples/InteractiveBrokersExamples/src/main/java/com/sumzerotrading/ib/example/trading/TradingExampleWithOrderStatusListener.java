@@ -29,10 +29,9 @@ import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.broker.order.TradeDirection;
 import com.sumzerotrading.broker.order.TradeOrder;
-import com.sumzerotrading.data.CurrencyTicker;
 import com.sumzerotrading.data.Exchange;
-import com.sumzerotrading.data.FuturesTicker;
-import com.sumzerotrading.data.StockTicker;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClient;
 import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClientInterface;
 
@@ -55,7 +54,8 @@ public class TradingExampleWithOrderStatusListener implements OrderEventListener
         ibClient.connect();
 
         // Create a crude oil futures ticker
-        FuturesTicker futuresTicker = new FuturesTicker();
+        Ticker futuresTicker = new Ticker();
+        futuresTicker.setInstrumentType(InstrumentType.FUTURES);
         futuresTicker.setSymbol("CL");
         futuresTicker.setExpiryMonth(5);
         futuresTicker.setExpiryYear(2016);
@@ -77,7 +77,7 @@ public class TradingExampleWithOrderStatusListener implements OrderEventListener
         ibClient.addOrderStatusListener(this);
         ibClient.connect();
 
-        StockTicker amazonTicker = new StockTicker("123");
+        Ticker amazonTicker = new Ticker("123").setInstrumentType(InstrumentType.STOCK);
         String orderId = ibClient.getNextOrderId();
         int shares = 500;
 
@@ -88,7 +88,7 @@ public class TradingExampleWithOrderStatusListener implements OrderEventListener
 
     public void placeCurrencyOrder() throws Exception {
 
-        CurrencyTicker eurTicker = new CurrencyTicker();
+        Ticker eurTicker = new Ticker().setInstrumentType(InstrumentType.CURRENCY);
         eurTicker.setSymbol("EUR");
         eurTicker.setCurrency("USD");
         eurTicker.setExchange(Exchange.IDEALPRO);

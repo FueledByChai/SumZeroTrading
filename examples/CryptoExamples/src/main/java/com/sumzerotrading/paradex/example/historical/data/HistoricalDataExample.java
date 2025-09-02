@@ -13,8 +13,9 @@ import org.slf4j.LoggerFactory;
 
 import com.sumzerotrading.data.BarData;
 import com.sumzerotrading.data.BarData.LengthUnit;
-import com.sumzerotrading.data.CryptoTicker;
 import com.sumzerotrading.data.Exchange;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.historicaldata.IHistoricalDataProvider.ShowProperty;
 import com.sumzerotrading.paradex.historical.ParadexHistoricalDataProvider;
 
@@ -36,7 +37,8 @@ public class HistoricalDataExample {
         provider.init(props);
         provider.connect();
 
-        CryptoTicker ticker = new CryptoTicker("BTC-USD-PERP", Exchange.PARADEX);
+        Ticker ticker = new Ticker("BTC-USD-PERP").setInstrumentType(InstrumentType.PERPETUAL_FUTURES)
+                .setExchange(Exchange.PARADEX);
 
         List<BarData> historicalData = provider.requestHistoricalData(ticker, 60, LengthUnit.MINUTE, 1,
                 LengthUnit.MINUTE, ShowProperty.MARK_PRICE, false);

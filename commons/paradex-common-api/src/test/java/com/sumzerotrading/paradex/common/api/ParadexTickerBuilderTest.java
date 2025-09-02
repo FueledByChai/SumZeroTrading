@@ -18,8 +18,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.sumzerotrading.data.CryptoTicker;
 import com.sumzerotrading.data.Exchange;
+import com.sumzerotrading.data.Ticker;
 
 @ExtendWith(MockitoExtension.class)
 class ParadexTickerBuilderTest {
@@ -27,7 +27,7 @@ class ParadexTickerBuilderTest {
     @Mock
     private ISystemConfig mockSystemConfig;
 
-    private Map<String, CryptoTicker> originalCryptoTickers;
+    private Map<String, Ticker> originalCryptoTickers;
     private ISystemConfig originalSystemConfig;
 
     @BeforeEach
@@ -61,7 +61,7 @@ class ParadexTickerBuilderTest {
         when(mockSystemConfig.getOrderSizeIncrement()).thenReturn(orderSizeIncrement);
 
         // When
-        CryptoTicker result = ParadexTickerBuilder.getTicker(localSymbol);
+        Ticker result = ParadexTickerBuilder.getTicker(localSymbol);
 
         // Then
         assertNotNull(result);
@@ -88,8 +88,8 @@ class ParadexTickerBuilderTest {
         when(mockSystemConfig.getOrderSizeIncrement()).thenReturn(orderSizeIncrement);
 
         // When
-        CryptoTicker firstCall = ParadexTickerBuilder.getTicker(localSymbol);
-        CryptoTicker secondCall = ParadexTickerBuilder.getTicker(localSymbol);
+        Ticker firstCall = ParadexTickerBuilder.getTicker(localSymbol);
+        Ticker secondCall = ParadexTickerBuilder.getTicker(localSymbol);
 
         // Then
         assertSame(firstCall, secondCall);
@@ -114,8 +114,8 @@ class ParadexTickerBuilderTest {
         when(mockSystemConfig.getOrderSizeIncrement()).thenReturn(orderSizeIncrement);
 
         // When
-        CryptoTicker ticker1 = ParadexTickerBuilder.getTicker(localSymbol1);
-        CryptoTicker ticker2 = ParadexTickerBuilder.getTicker(localSymbol2);
+        Ticker ticker1 = ParadexTickerBuilder.getTicker(localSymbol1);
+        Ticker ticker2 = ParadexTickerBuilder.getTicker(localSymbol2);
 
         // Then
         assertNotNull(ticker1);
@@ -145,8 +145,8 @@ class ParadexTickerBuilderTest {
         when(mockSystemConfig.getOrderSizeIncrement()).thenReturn(orderSizeIncrement);
 
         // When
-        CryptoTicker firstCall = ParadexTickerBuilder.getTicker(localSymbol);
-        CryptoTicker secondCall = ParadexTickerBuilder.getTicker(localSymbol);
+        Ticker firstCall = ParadexTickerBuilder.getTicker(localSymbol);
+        Ticker secondCall = ParadexTickerBuilder.getTicker(localSymbol);
 
         // Then
         assertNotNull(firstCall);
@@ -172,7 +172,7 @@ class ParadexTickerBuilderTest {
         when(mockSystemConfig.getOrderSizeIncrement()).thenReturn(orderSizeIncrement);
 
         // When
-        CryptoTicker result = ParadexTickerBuilder.getTicker(localSymbol);
+        Ticker result = ParadexTickerBuilder.getTicker(localSymbol);
 
         // Then
         assertNotNull(result);
@@ -195,7 +195,7 @@ class ParadexTickerBuilderTest {
         when(mockSystemConfig.getOrderSizeIncrement()).thenReturn(orderSizeIncrement);
 
         // When
-        CryptoTicker result = ParadexTickerBuilder.getTicker(localSymbol);
+        Ticker result = ParadexTickerBuilder.getTicker(localSymbol);
 
         // Then
         assertNotNull(result);
@@ -220,10 +220,10 @@ class ParadexTickerBuilderTest {
         when(mockSystemConfig.getOrderSizeIncrement()).thenReturn(orderSizeIncrement);
 
         // When - Complex sequence of calls
-        CryptoTicker ticker1_first = ParadexTickerBuilder.getTicker(localSymbol1);
-        CryptoTicker ticker2_first = ParadexTickerBuilder.getTicker(localSymbol2);
-        CryptoTicker ticker1_second = ParadexTickerBuilder.getTicker(localSymbol1);
-        CryptoTicker ticker2_second = ParadexTickerBuilder.getTicker(localSymbol2);
+        Ticker ticker1_first = ParadexTickerBuilder.getTicker(localSymbol1);
+        Ticker ticker2_first = ParadexTickerBuilder.getTicker(localSymbol2);
+        Ticker ticker1_second = ParadexTickerBuilder.getTicker(localSymbol1);
+        Ticker ticker2_second = ParadexTickerBuilder.getTicker(localSymbol2);
 
         // Then
         assertSame(ticker1_first, ticker1_second); // Same symbol returns cached instance

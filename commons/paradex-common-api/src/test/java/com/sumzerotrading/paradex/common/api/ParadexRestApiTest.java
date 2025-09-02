@@ -509,7 +509,7 @@ class ParadexRestApiTest {
     void testIsValidAssetKindForInstrumentType_UnknownInstrumentType() {
         // Test that unknown instrument types return true (allowing processing)
         assertTrue(paradexRestApi.isValidAssetKindForInstrumentType("UNKNOWN", InstrumentType.STOCK));
-        assertTrue(paradexRestApi.isValidAssetKindForInstrumentType("PERP", InstrumentType.FOREX));
+        assertTrue(paradexRestApi.isValidAssetKindForInstrumentType("PERP", InstrumentType.CURRENCY));
         assertTrue(paradexRestApi.isValidAssetKindForInstrumentType("ANYTHING", InstrumentType.INDEX));
     }
 

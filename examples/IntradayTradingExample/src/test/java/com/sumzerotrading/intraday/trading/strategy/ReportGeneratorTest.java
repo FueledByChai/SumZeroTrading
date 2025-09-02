@@ -5,18 +5,21 @@
  */
 package com.sumzerotrading.intraday.trading.strategy;
 
-import com.sumzerotrading.broker.order.OrderEvent;
-import com.sumzerotrading.broker.order.OrderStatus;
-import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
-import com.sumzerotrading.data.StockTicker;
-import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.intraday.trading.strategy.TradeReferenceLine.Direction;
 import static com.sumzerotrading.intraday.trading.strategy.TradeReferenceLine.Direction.LONG;
 import static com.sumzerotrading.intraday.trading.strategy.TradeReferenceLine.Direction.SHORT;
-import com.sumzerotrading.intraday.trading.strategy.TradeReferenceLine.Side;
 import static com.sumzerotrading.intraday.trading.strategy.TradeReferenceLine.Side.ENTRY;
 import static com.sumzerotrading.intraday.trading.strategy.TradeReferenceLine.Side.EXIT;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -26,23 +29,23 @@ import java.nio.file.Paths;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
+
+import com.sumzerotrading.broker.order.OrderEvent;
+import com.sumzerotrading.broker.order.OrderStatus;
+import com.sumzerotrading.broker.order.TradeDirection;
+import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.intraday.trading.strategy.TradeReferenceLine.Direction;
+import com.sumzerotrading.intraday.trading.strategy.TradeReferenceLine.Side;
 
 /**
  *
@@ -72,7 +75,8 @@ public class ReportGeneratorTest {
     public void setUp() throws Exception {
         orderFilledTime = ZonedDateTime.of(2015, 3, 15, 12, 30, 33, 0, ZoneId.systemDefault());
         reportGenerator = spy(ReportGenerator.class);
-        order = new TradeOrder("123", new StockTicker("QQQ"), BigDecimal.valueOf(100), TradeDirection.BUY);
+        order = new TradeOrder("123", new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK),
+                BigDecimal.valueOf(100), TradeDirection.BUY);
         order.setOrderFilledTime(orderFilledTime);
         String systemTmpDir = System.getProperty("java.io.tmpdir");
         if (!systemTmpDir.endsWith("/")) {
@@ -113,8 +117,8 @@ public class ReportGeneratorTest {
         roundTrip.addTradeReference(order, tradeReferenceLine);
 
         order.setCurrentStatus(OrderStatus.Status.FILLED);
-        OrderEvent orderEvent = new OrderEvent(order,
-                new OrderStatus(OrderStatus.Status.NEW, "", "", new StockTicker("QQQ"), ZonedDateTime.now()));
+        OrderEvent orderEvent = new OrderEvent(order, new OrderStatus(OrderStatus.Status.NEW, "", "",
+                new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK), ZonedDateTime.now()));
 
         TradeReferenceLine longExitLine = buildReferenceLine("123", LONG, EXIT);
         TradeReferenceLine shortEntryLine = buildReferenceLine("123", SHORT, ENTRY);
@@ -147,8 +151,8 @@ public class ReportGeneratorTest {
     @Test
     public void testOrderEvent_NotFilled() {
         order.setCurrentStatus(OrderStatus.Status.NEW);
-        OrderEvent orderEvent = new OrderEvent(order,
-                new OrderStatus(OrderStatus.Status.NEW, "", "", new StockTicker("QQQ"), ZonedDateTime.now()));
+        OrderEvent orderEvent = new OrderEvent(order, new OrderStatus(OrderStatus.Status.NEW, "", "",
+                new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK), ZonedDateTime.now()));
         reportGenerator.orderEvent(orderEvent);
 
         verify(reportGenerator, never()).writeRoundTripToFile(any(RoundTrip.class));
@@ -159,8 +163,8 @@ public class ReportGeneratorTest {
         TradeReferenceLine tradeReferenceLine = new TradeReferenceLine();
         tradeReferenceLine.correlationId = "123";
         order.setCurrentStatus(OrderStatus.Status.FILLED);
-        OrderEvent orderEvent = new OrderEvent(order,
-                new OrderStatus(OrderStatus.Status.NEW, "", "", new StockTicker("QQQ"), ZonedDateTime.now()));
+        OrderEvent orderEvent = new OrderEvent(order, new OrderStatus(OrderStatus.Status.NEW, "", "",
+                new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK), ZonedDateTime.now()));
 
         doReturn(tradeReferenceLine).when(reportGenerator).getTradeReferenceLine(any(String.class));
         doNothing().when(reportGenerator).savePartial(any(String.class), any(RoundTrip.class));
@@ -184,9 +188,8 @@ public class ReportGeneratorTest {
         roundTrip.addTradeReference(order, tradeReferenceLine);
 
         order.setCurrentStatus(OrderStatus.Status.FILLED);
-        OrderEvent orderEvent = new OrderEvent(order,
-                new OrderStatus(OrderStatus.Status.NEW, "", "", new StockTicker("QQQ"), ZonedDateTime.now()));
-
+        OrderEvent orderEvent = new OrderEvent(order, new OrderStatus(OrderStatus.Status.NEW, "", "",
+                new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK), ZonedDateTime.now()));
         reportGenerator.roundTripMap.put("123", roundTrip);
 
         doReturn(tradeReferenceLine).when(reportGenerator).getTradeReferenceLine(order.getReference());
@@ -211,8 +214,8 @@ public class ReportGeneratorTest {
         roundTrip.addTradeReference(order, tradeReferenceLine);
 
         order.setCurrentStatus(OrderStatus.Status.FILLED);
-        OrderEvent orderEvent = new OrderEvent(order,
-                new OrderStatus(OrderStatus.Status.NEW, "", "", new StockTicker("QQQ"), ZonedDateTime.now()));
+        OrderEvent orderEvent = new OrderEvent(order, new OrderStatus(OrderStatus.Status.NEW, "", "",
+                new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK), ZonedDateTime.now()));
 
         TradeReferenceLine longExitLine = buildReferenceLine("123", LONG, EXIT);
         TradeReferenceLine shortEntryLine = buildReferenceLine("123", SHORT, ENTRY);
@@ -242,8 +245,8 @@ public class ReportGeneratorTest {
         reportGenerator.outputFile = path.toString();
         String expected = "2016-03-19T07:01:10,LONG,ABC,100,100.23,0,2016-03-20T06:01:10,101.23,0";
 
-        Ticker longTicker = new StockTicker("ABC");
-        Ticker shortTicker = new StockTicker("XYZ");
+        Ticker longTicker = new Ticker("ABC").setInstrumentType(InstrumentType.STOCK);
+        Ticker shortTicker = new Ticker("XYZ").setInstrumentType(InstrumentType.STOCK);
         BigDecimal longSize = BigDecimal.valueOf(100);
         BigDecimal shortSize = BigDecimal.valueOf(50);
         BigDecimal longEntryFillPrice = BigDecimal.valueOf(100.23);
@@ -285,8 +288,8 @@ public class ReportGeneratorTest {
 
     @Test
     public void testReportGeneratorEndToEnd() throws Exception {
-        StockTicker longTicker = new StockTicker("ABC");
-        StockTicker shortTicker = new StockTicker("XYZ");
+        Ticker longTicker = new Ticker("ABC").setInstrumentType(InstrumentType.STOCK);
+        Ticker shortTicker = new Ticker("XYZ").setInstrumentType(InstrumentType.STOCK);
 
         ZonedDateTime entryOrderTime = ZonedDateTime.of(2016, 3, 25, 6, 18, 35, 0, ZoneId.systemDefault());
         ZonedDateTime exitOrderTime = ZonedDateTime.of(2016, 3, 25, 6, 19, 35, 0, ZoneId.systemDefault());

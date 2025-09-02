@@ -5,15 +5,19 @@
  */
 package com.sumzerotrading.eod.trading.strategy;
 
-import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
-import com.sumzerotrading.data.StockTicker;
-import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClient;
-import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClientInterface;
-import com.sumzerotrading.marketdata.ILevel1Quote;
-import com.sumzerotrading.marketdata.Level1QuoteListener;
-import com.sumzerotrading.marketdata.QuoteType;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import java.math.BigDecimal;
 import java.nio.file.Paths;
 import java.time.LocalTime;
@@ -24,23 +28,22 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.when;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
+
+import com.sumzerotrading.broker.order.TradeDirection;
+import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClient;
+import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClientInterface;
+import com.sumzerotrading.marketdata.ILevel1Quote;
+import com.sumzerotrading.marketdata.Level1QuoteListener;
+import com.sumzerotrading.marketdata.QuoteType;
 
 /**
  *
@@ -52,8 +55,8 @@ public class EODTradingStrategyTest {
     protected String ibHost = "localhost";
     protected int ibPort = 7999;
     protected int ibClientId = 1;
-    protected Ticker longTicker = new StockTicker("LONG");
-    protected Ticker shortTicker = new StockTicker("SHORT");
+    protected Ticker longTicker = new Ticker("LONG").setInstrumentType(InstrumentType.STOCK);
+    protected Ticker shortTicker = new Ticker("SHORT").setInstrumentType(InstrumentType.STOCK);
     protected EODTradingStrategy strategy;
     protected String propFile;
     protected IReportGenerator mockReportGenerator;
@@ -102,10 +105,14 @@ public class EODTradingStrategyTest {
         strategy.start(propFile);
 
         verify(mockIbClient).addOrderStatusListener(mockReportGenerator);
-        verify(mockIbClient).subscribeLevel1(eq(new StockTicker("QQQ")), any(Level1QuoteListener.class));
-        verify(mockIbClient).subscribeLevel1(eq(new StockTicker("SPY")), any(Level1QuoteListener.class));
-        verify(mockIbClient).subscribeLevel1(eq(new StockTicker("DIA")), any(Level1QuoteListener.class));
-        verify(mockIbClient).subscribeLevel1(eq(new StockTicker("IWM")), any(Level1QuoteListener.class));
+        verify(mockIbClient).subscribeLevel1(eq(new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK)),
+                any(Level1QuoteListener.class));
+        verify(mockIbClient).subscribeLevel1(eq(new Ticker("SPY").setInstrumentType(InstrumentType.STOCK)),
+                any(Level1QuoteListener.class));
+        verify(mockIbClient).subscribeLevel1(eq(new Ticker("DIA").setInstrumentType(InstrumentType.STOCK)),
+                any(Level1QuoteListener.class));
+        verify(mockIbClient).subscribeLevel1(eq(new Ticker("IWM").setInstrumentType(InstrumentType.STOCK)),
+                any(Level1QuoteListener.class));
 
     }
 
@@ -166,7 +173,7 @@ public class EODTradingStrategyTest {
     public void testQuoteReceived_NotAllPricesInitialized_OrdersNotPlaced() {
         ZonedDateTime zdt = ZonedDateTime.of(2015, 6, 15, 15, 30, 0, 0, ZoneId.of("Z"));
         ILevel1Quote mockQuote = mock(ILevel1Quote.class);
-        Ticker ticker = new StockTicker("ABC");
+        Ticker ticker = new Ticker("ABC").setInstrumentType(InstrumentType.STOCK);
         when(mockQuote.containsType(QuoteType.LAST)).thenReturn(true);
         when(mockQuote.getTicker()).thenReturn(ticker);
         when(mockQuote.getValue(QuoteType.LAST)).thenReturn(BigDecimal.ONE);
@@ -193,7 +200,7 @@ public class EODTradingStrategyTest {
         zdt = zdt.withHour(hour);
 
         ILevel1Quote mockQuote = mock(ILevel1Quote.class);
-        Ticker ticker = new StockTicker("ABC");
+        Ticker ticker = new Ticker("ABC").setInstrumentType(InstrumentType.STOCK);
         when(mockQuote.containsType(QuoteType.LAST)).thenReturn(true);
         when(mockQuote.getTicker()).thenReturn(ticker);
         when(mockQuote.getValue(QuoteType.LAST)).thenReturn(BigDecimal.ONE);
@@ -217,7 +224,7 @@ public class EODTradingStrategyTest {
         System.out.println("Offset hour: " + hour);
         zdt = zdt.withHour(hour);
         ILevel1Quote mockQuote = mock(ILevel1Quote.class);
-        Ticker ticker = new StockTicker("ABC");
+        Ticker ticker = new Ticker("ABC").setInstrumentType(InstrumentType.STOCK);
         when(mockQuote.containsType(QuoteType.LAST)).thenReturn(true);
         when(mockQuote.getTicker()).thenReturn(ticker);
         when(mockQuote.getValue(QuoteType.LAST)).thenReturn(BigDecimal.ONE);
@@ -333,8 +340,10 @@ public class EODTradingStrategyTest {
         assertEquals(LocalTime.of(13, 0), strategy.marketCloseTime);
         assertEquals(LocalTime.of(6, 30, 2), strategy.exitTime);
         assertEquals(2, strategy.longShortPairMap.size());
-        assertEquals(new StockTicker("SPY"), strategy.longShortPairMap.get(new StockTicker("QQQ")));
-        assertEquals(new StockTicker("IWM"), strategy.longShortPairMap.get(new StockTicker("DIA")));
+        assertEquals(new Ticker("SPY").setInstrumentType(InstrumentType.STOCK),
+                strategy.longShortPairMap.get(new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK)));
+        assertEquals(new Ticker("IWM").setInstrumentType(InstrumentType.STOCK),
+                strategy.longShortPairMap.get(new Ticker("DIA").setInstrumentType(InstrumentType.STOCK)));
         assertEquals("/some/test/dir/", strategy.strategyDirectory);
         assertEquals(TradeOrder.Type.MARKET_ON_CLOSE, strategy.entryOrderType);
         assertEquals(TradeOrder.Type.MARKET, strategy.exitOrderType);
@@ -405,7 +414,8 @@ public class EODTradingStrategyTest {
     @Test
     public void testCheckOpenOrders_NoMocOrders() {
         List<TradeOrder> orders = new ArrayList<>();
-        orders.add(new TradeOrder("123", new StockTicker("ABC"), BigDecimal.valueOf(10), TradeDirection.SELL));
+        orders.add(new TradeOrder("123", new Ticker("ABC").setInstrumentType(InstrumentType.STOCK),
+                BigDecimal.valueOf(10), TradeDirection.SELL));
 
         assertFalse(strategy.checkOpenOrders(orders, new HashMap<>()));
     }
@@ -413,11 +423,13 @@ public class EODTradingStrategyTest {
     @Test
     public void testCheckOpenOrders_MocOrdersDontMatchTickers() {
         List<TradeOrder> orders = new ArrayList<>();
-        TradeOrder order = new TradeOrder("123", new StockTicker("ABC"), BigDecimal.valueOf(10), TradeDirection.SELL);
+        TradeOrder order = new TradeOrder("123", new Ticker("ABC").setInstrumentType(InstrumentType.STOCK),
+                BigDecimal.valueOf(10), TradeDirection.SELL);
         order.setType(TradeOrder.Type.MARKET_ON_CLOSE);
         orders.add(order);
         Map<Ticker, Ticker> tickerMap = new HashMap<>();
-        tickerMap.put(new StockTicker("AAA"), new StockTicker("XYZ"));
+        tickerMap.put(new Ticker("AAA").setInstrumentType(InstrumentType.STOCK),
+                new Ticker("XYZ").setInstrumentType(InstrumentType.STOCK));
 
         assertFalse(strategy.checkOpenOrders(orders, tickerMap));
     }
@@ -425,11 +437,13 @@ public class EODTradingStrategyTest {
     @Test
     public void testCheckOpenOrders_HappyPath() {
         List<TradeOrder> orders = new ArrayList<>();
-        TradeOrder order = new TradeOrder("123", new StockTicker("ABC"), BigDecimal.valueOf(10), TradeDirection.SELL);
+        TradeOrder order = new TradeOrder("123", new Ticker("ABC").setInstrumentType(InstrumentType.STOCK),
+                BigDecimal.valueOf(10), TradeDirection.SELL);
         order.setType(TradeOrder.Type.MARKET_ON_CLOSE);
         orders.add(order);
         Map<Ticker, Ticker> tickerMap = new HashMap<>();
-        tickerMap.put(new StockTicker("ABC"), new StockTicker("XYZ"));
+        tickerMap.put(new Ticker("ABC").setInstrumentType(InstrumentType.STOCK),
+                new Ticker("XYZ").setInstrumentType(InstrumentType.STOCK));
 
         assertTrue(strategy.checkOpenOrders(orders, tickerMap));
     }

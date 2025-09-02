@@ -734,7 +734,7 @@ public class ParadexRestApi implements IParadexRestApi {
             // Create and return the InstrumentDescriptor
             return new InstrumentDescriptor(InstrumentType.PERPETUAL_FUTURES, Exchange.PARADEX, commonSymbol,
                     exchangeSymbol, baseCurrency, quoteCurrency, orderSizeIncrement, priceTickSize,
-                    minNotionalOrderSize, fundingPeriodHours);
+                    minNotionalOrderSize, BigDecimal.ZERO, fundingPeriodHours, BigDecimal.ONE);
 
         } catch (Exception e) {
             logger.error("Error parsing instrument descriptor: " + e.getMessage(), e);
@@ -795,7 +795,7 @@ public class ParadexRestApi implements IParadexRestApi {
                 // Create the InstrumentDescriptor with the provided instrument type
                 InstrumentDescriptor descriptor = new InstrumentDescriptor(instrumentType, Exchange.PARADEX,
                         commonSymbol, exchangeSymbol, baseCurrency, quoteCurrency, orderSizeIncrement, priceTickSize,
-                        minNotionalOrderSize, fundingPeriodHours);
+                        minNotionalOrderSize, BigDecimal.ZERO, fundingPeriodHours, BigDecimal.ONE);
 
                 descriptors.add(descriptor);
             }

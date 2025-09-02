@@ -20,21 +20,25 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 package com.sumzerotrading.broker.order;
 
-import com.sumzerotrading.data.StockTicker;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
+
 import org.junit.After;
 import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
 
 /**
  *
@@ -64,21 +68,25 @@ public class OrderSerializationTest {
     @Test
     public void testOrderStatus() throws Exception {
         OrderStatus status = new OrderStatus(OrderStatus.Status.NEW, "123", BigDecimal.valueOf(10),
-                BigDecimal.valueOf(10), BigDecimal.ZERO, new StockTicker("ABC"), ZonedDateTime.now());
+                BigDecimal.valueOf(10), BigDecimal.ZERO, new Ticker("ABC").setInstrumentType(InstrumentType.STOCK),
+                ZonedDateTime.now());
         test(status);
     }
 
     @Test
     public void testTradeOrder() throws Exception {
-        TradeOrder order = new TradeOrder("123", new StockTicker("123"), BigDecimal.valueOf(100), TradeDirection.BUY);
+        TradeOrder order = new TradeOrder("123", new Ticker("123").setInstrumentType(InstrumentType.STOCK),
+                BigDecimal.valueOf(100), TradeDirection.BUY);
         test(order);
     }
 
     @Test
     public void testOrderEvent() throws Exception {
-        TradeOrder order = new TradeOrder("123", new StockTicker("123"), BigDecimal.valueOf(100), TradeDirection.BUY);
+        TradeOrder order = new TradeOrder("123", new Ticker("123").setInstrumentType(InstrumentType.STOCK),
+                BigDecimal.valueOf(100), TradeDirection.BUY);
         OrderStatus status = new OrderStatus(OrderStatus.Status.NEW, "123", BigDecimal.valueOf(10),
-                BigDecimal.valueOf(10), BigDecimal.ZERO, new StockTicker("ABC"), ZonedDateTime.now());
+                BigDecimal.valueOf(10), BigDecimal.ZERO, new Ticker("ABC").setInstrumentType(InstrumentType.STOCK),
+                ZonedDateTime.now());
         OrderEvent event = new OrderEvent(order, status);
         test(event);
     }

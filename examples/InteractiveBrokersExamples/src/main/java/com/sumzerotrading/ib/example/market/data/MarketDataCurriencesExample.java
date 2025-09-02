@@ -23,7 +23,8 @@ package com.sumzerotrading.ib.example.market.data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sumzerotrading.data.CurrencyTicker;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClient;
 import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClientInterface;
 import com.sumzerotrading.marketdata.ILevel1Quote;
@@ -46,7 +47,7 @@ public class MarketDataCurriencesExample {
         // e.printStackTrace();
         // }
 
-        CurrencyTicker currencyTicker = new CurrencyTicker();
+        Ticker currencyTicker = new Ticker().setInstrumentType(InstrumentType.CURRENCY);
         currencyTicker.setSymbol("AUD");
         currencyTicker.setCurrency("CAD");
 

@@ -35,7 +35,7 @@ import com.ib.client.EClientSocket;
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.TradeDirection;
 import com.sumzerotrading.broker.order.TradeOrder;
-import com.sumzerotrading.data.StockTicker;
+import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.SumZeroException;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.ib.IBConnectionInterface;
@@ -148,7 +148,7 @@ public class InteractiveBrokersBrokerTest {
         int clientId = 0;
         String whyHeld = "";
 
-        Ticker ticker = new StockTicker("ABC");
+        Ticker ticker = new Ticker("ABC").setInstrumentType(InstrumentType.STOCK);
         TradeOrder order = new TradeOrder(orderIdString, ticker, BigDecimal.valueOf(size), TradeDirection.BUY);
         b.orderMap.put(orderIdString, order);
         doNothing().when(b).saveOrderMaps();

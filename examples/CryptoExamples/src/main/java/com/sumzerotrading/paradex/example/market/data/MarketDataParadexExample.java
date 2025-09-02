@@ -21,8 +21,9 @@ package com.sumzerotrading.paradex.example.market.data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sumzerotrading.data.CryptoTicker;
 import com.sumzerotrading.data.Exchange;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.marketdata.ILevel1Quote;
 import com.sumzerotrading.marketdata.paradex.ParadexQuoteEngine;
 
@@ -32,7 +33,8 @@ public class MarketDataParadexExample {
 
     public void start() {
 
-        CryptoTicker cryptoTicker = new CryptoTicker("BTC-USD-PERP", Exchange.PARADEX);
+        Ticker cryptoTicker = new Ticker("BTC-USD-PERP").setInstrumentType(InstrumentType.PERPETUAL_FUTURES)
+                .setExchange(Exchange.PARADEX);
 
         ParadexQuoteEngine quoteEngine = new ParadexQuoteEngine();
 

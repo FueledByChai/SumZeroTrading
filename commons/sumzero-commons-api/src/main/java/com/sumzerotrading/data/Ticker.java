@@ -19,29 +19,38 @@
  */
 package com.sumzerotrading.data;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.text.*;
+import java.text.DecimalFormat;
 
 /**
  * @author Rob Terpilowski
  *
- *         TODO To change the template for this generated type comment go to
- *         Window - Preferences - Java - Code Style - Code Templates
+ * 
  */
-public abstract class Ticker implements Serializable {
+public class Ticker implements Serializable {
 
     public static final long serialVersionUID = 1L;
+
+    public enum Right {
+        CALL, PUT, NONE
+    }
+
+    protected InstrumentType instrumentType;
     protected String symbol;
     protected Exchange exchange;
     protected Exchange primaryExchange;
     protected String currency = "USD";
     protected transient DecimalFormat decimalFormat = new DecimalFormat("00");
-    protected BigDecimal minimumTickSize = new BigDecimal("0.01");
-    protected BigDecimal contractMultiplier;
+    protected BigDecimal minimumTickSize = BigDecimal.valueOf(0.01);
+    protected BigDecimal contractMultiplier = BigDecimal.ONE;
     protected BigDecimal orderSizeIncrement = new BigDecimal("1");
+    protected BigDecimal minimumOrderSize = null;
+    protected int expiryMonth = 0;
+    protected int expiryYear = 0;
+    protected int expiryDay = 0;
+    protected BigDecimal strike = null;
+    protected Right right = Right.NONE;
 
     public Ticker() {
     }
@@ -67,8 +76,6 @@ public abstract class Ticker implements Serializable {
         this.exchange = exchange;
         return this;
     }
-
-    public abstract InstrumentType getInstrumentType();
 
     public String getSymbol() {
         return symbol;
@@ -136,72 +143,156 @@ public abstract class Ticker implements Serializable {
         return this;
     }
 
+    public Right getRight() {
+        return right;
+    }
+
+    public Ticker setRight(Right right) {
+        this.right = right;
+        return this;
+    }
+
+    public InstrumentType getInstrumentType() {
+        return instrumentType;
+    }
+
+    public Ticker setInstrumentType(InstrumentType instrumentType) {
+        this.instrumentType = instrumentType;
+        return this;
+    }
+
+    public int getExpiryMonth() {
+        return expiryMonth;
+    }
+
+    public Ticker setExpiryMonth(int expiryMonth) {
+        this.expiryMonth = expiryMonth;
+        return this;
+    }
+
+    public int getExpiryYear() {
+        return expiryYear;
+    }
+
+    public Ticker setExpiryYear(int expiryYear) {
+        this.expiryYear = expiryYear;
+        return this;
+    }
+
+    public int getExpiryDay() {
+        return expiryDay;
+    }
+
+    public Ticker setExpiryDay(int expiryDay) {
+        this.expiryDay = expiryDay;
+        return this;
+    }
+
+    public BigDecimal getStrike() {
+        return strike;
+    }
+
+    public Ticker setStrike(BigDecimal strike) {
+        this.strike = strike;
+        return this;
+    }
+
     @Override
     public int hashCode() {
-        int hash = 5;
-        hash = 29 * hash + (this.symbol != null ? this.symbol.hashCode() : 0);
-        hash = 29 * hash + (this.exchange != null ? this.exchange.hashCode() : 0);
-        hash = 29 * hash + (this.primaryExchange != null ? this.primaryExchange.hashCode() : 0);
-        hash = 29 * hash + (this.currency != null ? this.currency.hashCode() : 0);
-        hash = 29 * hash + (this.minimumTickSize != null ? this.minimumTickSize.hashCode() : 0);
-        hash = 29 * hash + (this.contractMultiplier != null ? this.contractMultiplier.hashCode() : 0);
-        hash = 29 * hash + (this.orderSizeIncrement != null ? this.orderSizeIncrement.hashCode() : 0);
-        return hash;
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((instrumentType == null) ? 0 : instrumentType.hashCode());
+        result = prime * result + ((symbol == null) ? 0 : symbol.hashCode());
+        result = prime * result + ((exchange == null) ? 0 : exchange.hashCode());
+        result = prime * result + ((primaryExchange == null) ? 0 : primaryExchange.hashCode());
+        result = prime * result + ((currency == null) ? 0 : currency.hashCode());
+        result = prime * result + ((minimumTickSize == null) ? 0 : minimumTickSize.hashCode());
+        result = prime * result + ((contractMultiplier == null) ? 0 : contractMultiplier.hashCode());
+        result = prime * result + ((orderSizeIncrement == null) ? 0 : orderSizeIncrement.hashCode());
+        result = prime * result + ((minimumOrderSize == null) ? 0 : minimumOrderSize.hashCode());
+        result = prime * result + expiryMonth;
+        result = prime * result + expiryYear;
+        result = prime * result + expiryDay;
+        result = prime * result + ((strike == null) ? 0 : strike.hashCode());
+        result = prime * result + ((right == null) ? 0 : right.hashCode());
+        return result;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) {
+        if (this == obj)
+            return true;
+        if (obj == null)
             return false;
-        }
-        if (getClass() != obj.getClass()) {
+        if (getClass() != obj.getClass())
             return false;
-        }
-        final Ticker other = (Ticker) obj;
-        if ((this.symbol == null) ? (other.symbol != null) : !this.symbol.equals(other.symbol)) {
+        Ticker other = (Ticker) obj;
+        if (instrumentType != other.instrumentType)
             return false;
-        }
-        if (this.exchange != other.exchange && (this.exchange == null || !this.exchange.equals(other.exchange))) {
+        if (symbol == null) {
+            if (other.symbol != null)
+                return false;
+        } else if (!symbol.equals(other.symbol))
             return false;
-        }
-        if (this.primaryExchange != other.primaryExchange
-                && (this.primaryExchange == null || !this.primaryExchange.equals(other.primaryExchange))) {
+        if (exchange == null) {
+            if (other.exchange != null)
+                return false;
+        } else if (!exchange.equals(other.exchange))
             return false;
-        }
-        if ((this.currency == null) ? (other.currency != null) : !this.currency.equals(other.currency)) {
+        if (primaryExchange == null) {
+            if (other.primaryExchange != null)
+                return false;
+        } else if (!primaryExchange.equals(other.primaryExchange))
             return false;
-        }
-        if (this.minimumTickSize != other.minimumTickSize
-                && (this.minimumTickSize == null || !this.minimumTickSize.equals(other.minimumTickSize))) {
+        if (currency == null) {
+            if (other.currency != null)
+                return false;
+        } else if (!currency.equals(other.currency))
             return false;
-        }
-        if (this.contractMultiplier != other.contractMultiplier
-                && (this.contractMultiplier == null || !this.contractMultiplier.equals(other.contractMultiplier))) {
+        if (minimumTickSize == null) {
+            if (other.minimumTickSize != null)
+                return false;
+        } else if (!minimumTickSize.equals(other.minimumTickSize))
             return false;
-        }
-        if (this.orderSizeIncrement != other.orderSizeIncrement
-                && (this.orderSizeIncrement == null || !this.orderSizeIncrement.equals(other.orderSizeIncrement))) {
+        if (contractMultiplier == null) {
+            if (other.contractMultiplier != null)
+                return false;
+        } else if (!contractMultiplier.equals(other.contractMultiplier))
             return false;
-        }
+        if (orderSizeIncrement == null) {
+            if (other.orderSizeIncrement != null)
+                return false;
+        } else if (!orderSizeIncrement.equals(other.orderSizeIncrement))
+            return false;
+        if (minimumOrderSize == null) {
+            if (other.minimumOrderSize != null)
+                return false;
+        } else if (!minimumOrderSize.equals(other.minimumOrderSize))
+            return false;
+        if (expiryMonth != other.expiryMonth)
+            return false;
+        if (expiryYear != other.expiryYear)
+            return false;
+        if (right != other.right)
+            return false;
+        if (expiryDay != other.expiryDay)
+            return false;
+        if (strike == null) {
+            if (other.strike != null)
+                return false;
+        } else if (!strike.equals(other.strike))
+            return false;
         return true;
-    }
-
-    /**
-     * Custom deserialization method to reinitialize transient fields.
-     */
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        // Reinitialize transient decimalFormat field
-        decimalFormat = new DecimalFormat("00");
     }
 
     @Override
     public String toString() {
-        String decimalFormatInfo = (decimalFormat != null) ? String.valueOf(decimalFormat.getGroupingSize()) : "null";
-        return "Ticker{" + "symbol=" + symbol + ", exchange=" + exchange + ", primaryExchange=" + primaryExchange
-                + ", currency=" + currency + ", decimalFormat=" + decimalFormatInfo + ", minimumTickSize="
+        return "Ticker [instrumentType=" + instrumentType + ", symbol=" + symbol + ", exchange=" + exchange
+                + ", primaryExchange=" + primaryExchange + ", currency=" + currency + ", minimumTickSize="
                 + minimumTickSize + ", contractMultiplier=" + contractMultiplier + ", orderSizeIncrement="
-                + orderSizeIncrement + '}';
+                + orderSizeIncrement + ", minimumOrderSize=" + minimumOrderSize + ", expiryMonth=" + expiryMonth
+                + ", expiryYear=" + expiryYear + ", expiryDay=" + expiryDay + ", strike=" + strike + ", right=" + right
+                + "]";
     }
 
 }

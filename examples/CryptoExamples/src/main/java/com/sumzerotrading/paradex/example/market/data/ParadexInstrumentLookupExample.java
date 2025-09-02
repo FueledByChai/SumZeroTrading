@@ -22,6 +22,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sumzerotrading.data.InstrumentDescriptor;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.paradex.common.IParadexTickerRegistry;
+import com.sumzerotrading.paradex.common.ParadexTickerRegistry;
 import com.sumzerotrading.paradex.common.api.ParadexInstrumentLookup;
 
 public class ParadexInstrumentLookupExample {
@@ -36,6 +39,14 @@ public class ParadexInstrumentLookupExample {
         descriptor = lookup.lookupByCommonSymbol("BTC");
 
         logger.info(descriptor.toString());
+
+        java.util.Arrays.stream(lookup.getAllInstrumentsForType(InstrumentType.PERPETUAL_FUTURES)).forEach((d) -> {
+            logger.info(d.toString());
+        });
+
+        IParadexTickerRegistry registry = ParadexTickerRegistry.getInstance();
+        logger.info(registry.lookupByCommonSymbol("BTC").toString());
+        logger.info(registry.lookupByBrokerSymbol("BTC-USD-PERP").toString());
 
     }
 

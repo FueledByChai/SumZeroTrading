@@ -4,23 +4,25 @@
  */
 package com.sumzerotrading.realtime.bar.ib;
 
-import com.sumzerotrading.data.BarData;
-import com.sumzerotrading.data.CurrencyTicker;
-import com.sumzerotrading.historicaldata.IHistoricalDataProvider;
-import com.sumzerotrading.marketdata.ILevel1Quote;
-import com.sumzerotrading.marketdata.QuoteType;
-import com.sumzerotrading.realtime.bar.RealtimeBarListener;
-import com.sumzerotrading.realtime.bar.RealtimeBarRequest;
-import com.sumzerotrading.realtime.bar.ib.util.RealtimeBarUtil;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.log4j.Logger;
 //import org.apache.log4j.Logger;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SchedulerFactory;
+
+import com.sumzerotrading.data.BarData;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.historicaldata.IHistoricalDataProvider;
+import com.sumzerotrading.marketdata.ILevel1Quote;
+import com.sumzerotrading.marketdata.QuoteType;
+import com.sumzerotrading.realtime.bar.RealtimeBarListener;
+import com.sumzerotrading.realtime.bar.RealtimeBarRequest;
+import com.sumzerotrading.realtime.bar.ib.util.RealtimeBarUtil;
 
 /**
  *
@@ -47,23 +49,23 @@ public class BarBuilder implements IBarBuilder {
     protected int timeInterval = 0;
     protected IHistoricalDataProvider.ShowProperty showProperty;
 
-    
-    //For unit tests
-    protected BarBuilder() {}
-    
-    public BarBuilder(SchedulerFactory schedulerFactory, RealtimeBarRequest request, IHistoricalDataProvider historicalDataProvider) {
+    // For unit tests
+    protected BarBuilder() {
+    }
+
+    public BarBuilder(SchedulerFactory schedulerFactory, RealtimeBarRequest request,
+            IHistoricalDataProvider historicalDataProvider) {
         try {
             timeInterval = request.getTimeInterval();
             BarData.LengthUnit lengthUnit = request.getTimeUnit();
-            
-            if( lengthUnit == lengthUnit.HOUR ) {
+
+            if (lengthUnit == lengthUnit.HOUR) {
                 lengthUnit = BarData.LengthUnit.MINUTE;
                 timeInterval = timeInterval * 60;
             }
-            
-            
+
             IHistoricalDataProvider.ShowProperty showProperty = IHistoricalDataProvider.ShowProperty.TRADES;
-            if( request.getTicker() instanceof CurrencyTicker ) {
+            if (request.getTicker().getInstrumentType() == InstrumentType.CURRENCY) {
                 showProperty = IHistoricalDataProvider.ShowProperty.MIDPOINT;
                 isCurrency = true;
             }
@@ -72,73 +74,72 @@ public class BarBuilder implements IBarBuilder {
             scheduler = schedulerFactory.getScheduler();
             job = RealtimeBarUtil.buildJob(jobName, this);
             showProperty = request.getShowProperty();
-            List<BarData> bars = historicalDataProvider.requestHistoricalData(request.getTicker(), 1, BarData.LengthUnit.DAY, request.getTimeInterval(), request.getTimeUnit(), showProperty, false);
-            BarData firstBar = bars.get( bars.size()-1);
+            List<BarData> bars = historicalDataProvider.requestHistoricalData(request.getTicker(), 1,
+                    BarData.LengthUnit.DAY, request.getTimeInterval(), request.getTimeUnit(), showProperty, false);
+            BarData firstBar = bars.get(bars.size() - 1);
             setOpen(firstBar.getOpen());
             setHigh(firstBar.getHigh());
             setLow(firstBar.getLow());
-            setClose( firstBar.getClose() );
-            setVolume( firstBar.getVolume() );
+            setClose(firstBar.getClose());
+            setVolume(firstBar.getVolume());
             scheduler.scheduleJob(job, RealtimeBarUtil.getTrigger(jobName, timeInterval, lengthUnit));
-            if( ! scheduler.isStarted() ) {
+            if (!scheduler.isStarted()) {
                 scheduler.start();
             }
         } catch (SchedulerException ex) {
-            //logger.error(ex, ex);
+            // logger.error(ex, ex);
             ex.printStackTrace();
             throw new IllegalStateException(ex);
         }
     }
 
     public void quoteRecieved(ILevel1Quote quote) {
-        if( quote.containsType(QuoteType.VOLUME) ) {
+        if (quote.containsType(QuoteType.VOLUME)) {
             setVolume(quote.getValue(QuoteType.VOLUME));
-        } else if( quote.containsType(QuoteType.LAST_SIZE ) ) {
+        } else if (quote.containsType(QuoteType.LAST_SIZE)) {
             setVolume(quote.getValue(QuoteType.LAST_SIZE));
         }
 
-        if( validQuote( quote ) ) {
-            BigDecimal value = getValue( quote );
+        if (validQuote(quote)) {
+            BigDecimal value = getValue(quote);
             setHigh(value);
             setLow(value);
             setClose(value);
             setOpen(value);
         }
     }
-    
-    
-    protected BigDecimal getValue( ILevel1Quote quote ) {
-        if( isCurrency ) {
-            if( quote.containsType(QuoteType.BID) ) {
+
+    protected BigDecimal getValue(ILevel1Quote quote) {
+        if (isCurrency) {
+            if (quote.containsType(QuoteType.BID)) {
                 lastBid = quote.getValue(QuoteType.BID);
             }
-            if( quote.containsType(QuoteType.ASK ) ) {
+            if (quote.containsType(QuoteType.ASK)) {
                 lastAsk = quote.getValue(QuoteType.ASK);
             }
-            if( lastBid.doubleValue() > 0 && lastAsk.doubleValue() > 0 ) {
-                return new BigDecimal(lastAsk.doubleValue() - ((lastAsk.doubleValue()-lastBid.doubleValue())/2.0));
+            if (lastBid.doubleValue() > 0 && lastAsk.doubleValue() > 0) {
+                return new BigDecimal(lastAsk.doubleValue() - ((lastAsk.doubleValue() - lastBid.doubleValue()) / 2.0));
             } else {
                 return BigDecimal.ZERO;
             }
         } else {
-            if( showProperty == IHistoricalDataProvider.ShowProperty.MIDPOINT ) {
-                if( quote.containsType(QuoteType.MIDPOINT)  ) {
-                    return quote.getValue(QuoteType.MIDPOINT );
+            if (showProperty == IHistoricalDataProvider.ShowProperty.MIDPOINT) {
+                if (quote.containsType(QuoteType.MIDPOINT)) {
+                    return quote.getValue(QuoteType.MIDPOINT);
                 } else {
                     return BigDecimal.ZERO;
                 }
-            } else { 
-                return quote.getValue(QuoteType.LAST);   
+            } else {
+                return quote.getValue(QuoteType.LAST);
             }
-            
+
         }
     }
-    
-    protected boolean validQuote( ILevel1Quote quote ) {
-        if( isCurrency ) {
-            return quote.containsType(QuoteType.BID) ||
-                    quote.containsType(QuoteType.ASK);
-        } else if( showProperty == IHistoricalDataProvider.ShowProperty.MIDPOINT ) {
+
+    protected boolean validQuote(ILevel1Quote quote) {
+        if (isCurrency) {
+            return quote.containsType(QuoteType.BID) || quote.containsType(QuoteType.ASK);
+        } else if (showProperty == IHistoricalDataProvider.ShowProperty.MIDPOINT) {
             return quote.containsType(QuoteType.MIDPOINT);
         } else {
             return quote.containsType(QuoteType.LAST);
@@ -160,10 +161,10 @@ public class BarBuilder implements IBarBuilder {
     }
 
     protected final void setHigh(BigDecimal price) {
-        if( price.equals(BigDecimal.ZERO) ){
+        if (price.equals(BigDecimal.ZERO)) {
             return;
         }
-        if (! highInitialized ) {
+        if (!highInitialized) {
             high = price;
             highInitialized = true;
         } else if (price.doubleValue() > high.doubleValue()) {
@@ -172,10 +173,10 @@ public class BarBuilder implements IBarBuilder {
     }
 
     protected final void setLow(BigDecimal price) {
-        if( price.equals(BigDecimal.ZERO) ) {
+        if (price.equals(BigDecimal.ZERO)) {
             return;
         }
-        if (! lowInitialized ) {
+        if (!lowInitialized) {
             low = price;
             lowInitialized = true;
         } else if (price.doubleValue() < low.doubleValue()) {
@@ -184,17 +185,17 @@ public class BarBuilder implements IBarBuilder {
     }
 
     protected final void setOpen(BigDecimal price) {
-        if( price.equals(BigDecimal.ZERO) ) {
+        if (price.equals(BigDecimal.ZERO)) {
             return;
         }
-        if (! openInitialized ) {
+        if (!openInitialized) {
             this.open = price;
             openInitialized = true;
         }
     }
 
     protected final void setClose(BigDecimal price) {
-        if( price.equals(BigDecimal.ZERO ) ) {
+        if (price.equals(BigDecimal.ZERO)) {
             return;
         }
         close = price;
@@ -203,7 +204,6 @@ public class BarBuilder implements IBarBuilder {
     protected final void setVolume(BigDecimal volume) {
         this.volume = this.volume.add(volume);
     }
-    
 
     public void buildBarAndFireEvents() {
 
@@ -221,7 +221,7 @@ public class BarBuilder implements IBarBuilder {
         openInitialized = false;
         highInitialized = false;
         lowInitialized = false;
-        
+
         fireEvent(bar);
     }
 
@@ -229,14 +229,14 @@ public class BarBuilder implements IBarBuilder {
         synchronized (listenerList) {
             for (RealtimeBarListener listener : listenerList) {
                 try {
-                    listener.realtimeBarReceived(realtimeBarRequest.getRequestId(), realtimeBarRequest.getTicker(), bar);
-                } catch( Exception ex ) {
+                    listener.realtimeBarReceived(realtimeBarRequest.getRequestId(), realtimeBarRequest.getTicker(),
+                            bar);
+                } catch (Exception ex) {
                     logger.error(ex.getMessage(), ex);
                 }
             }
         }
     }
-
 
     public int getListenerCount() {
         return listenerList.size();
@@ -244,11 +244,10 @@ public class BarBuilder implements IBarBuilder {
 
     public void stop() {
         try {
-            scheduler.deleteJob( job.getKey() );
+            scheduler.deleteJob(job.getKey());
         } catch (SchedulerException ex) {
-            throw new IllegalStateException( ex );
+            throw new IllegalStateException(ex);
         }
     }
-    
-    
+
 }
