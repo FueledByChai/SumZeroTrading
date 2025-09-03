@@ -49,6 +49,7 @@ import com.sumzerotrading.marketdata.ILevel1Quote;
 import com.sumzerotrading.marketdata.Level1QuoteListener;
 import com.sumzerotrading.marketdata.OrderBook;
 import com.sumzerotrading.marketdata.QuoteEngine;
+import com.sumzerotrading.marketdata.QuoteType;
 import com.sumzerotrading.time.TimeUpdatedListener;
 
 public class PaperBroker implements IBroker, Level1QuoteListener {
@@ -191,18 +192,20 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
         this.brokerStatus = brokerStatus;
     }
 
-    public void markPriceUpdated(String symbol, BigDecimal markPrice, long timestamp) {
+    public void markPriceUpdated(String symbol, BigDecimal markPrice, ZonedDateTime timestamp) {
         logger.info("Mark Price Updated: {} - {} at {}", symbol, markPrice, timestamp);
         this.markPrice = markPrice.doubleValue();
     }
 
-    public void fundingRateUpdated(String symbol, BigDecimal rate, long currentTimestamp) {
-        logger.info("Funding Rate Updated: {} - {} at {}", symbol, fundingRate, currentTimestamp);
-        this.fundingRate = rate.doubleValue();
+    public void fundingRateUpdated(String symbol, BigDecimal rate, ZonedDateTime timestamp) {
+        logger.info("Funding Rate Updated: {} - {} at {}", symbol, fundingRate, timestamp);
+        double annualizedFundingRate = rate.doubleValue();
+        this.fundingRate = annualizedFundingRate / (365 * 24 * 100); // Convert APR to hourly rate
+        long currentTimestamp = timestamp.toInstant().toEpochMilli();
         if (lastFundingTimestamp > 0 && currentTimestamp > lastFundingTimestamp) {
             double hours = (currentTimestamp - lastFundingTimestamp) / 3600000.0;
             // Funding is paid/collected continuously: funding = size * fundingRate * hours
-            double fundingThisPeriod = (markPrice * currentPosition.doubleValue()) * (-fundingRate / 8.0) * (hours);
+            double fundingThisPeriod = (markPrice * currentPosition.doubleValue()) * (-fundingRate) * (hours);
             this.fundingAccruedOrPaid += fundingThisPeriod;
             logger.info("Funding accrued/paid this period: {} total funding: {}", fundingThisPeriod,
                     fundingAccruedOrPaid);
@@ -844,7 +847,26 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
 
     @Override
     public void quoteRecieved(ILevel1Quote quote) {
-        throw new UnsupportedOperationException("quoteRecieved not supported in PaperBroker");
+        BigDecimal markPrice = quote.getValue(QuoteType.MARK_PRICE);
+        BigDecimal fundingApr = quote.getValue(QuoteType.FUNDING_RATE_APR);
+        BigDecimal bid = quote.getValue(QuoteType.BID);
+        BigDecimal ask = quote.getValue(QuoteType.ASK);
+
+        if (markPrice != null) {
+            markPriceUpdated(ticker.getSymbol(), markPrice, quote.getTimeStamp());
+        }
+
+        if (fundingApr != null) {
+            fundingRateUpdated(ticker.getSymbol(), fundingApr, quote.getTimeStamp());
+        }
+
+        if (bid != null) {
+            bidUpdated(bid);
+        }
+
+        if (ask != null) {
+            askUpdated(ask);
+        }
     }
 
 }
