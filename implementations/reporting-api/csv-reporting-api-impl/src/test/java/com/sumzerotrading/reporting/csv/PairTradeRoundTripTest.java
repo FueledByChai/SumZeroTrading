@@ -5,22 +5,30 @@
  */
 package com.sumzerotrading.reporting.csv;
 
-import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
-import com.sumzerotrading.data.StockTicker;
-import com.sumzerotrading.reporting.TradeReferenceLine;
 import static com.sumzerotrading.reporting.TradeReferenceLine.Direction.LONG;
 import static com.sumzerotrading.reporting.TradeReferenceLine.Direction.SHORT;
 import static com.sumzerotrading.reporting.TradeReferenceLine.Side.ENTRY;
 import static com.sumzerotrading.reporting.TradeReferenceLine.Side.EXIT;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import com.sumzerotrading.broker.order.TradeDirection;
+import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.reporting.TradeReferenceLine;
 
 /**
  *
@@ -31,7 +39,7 @@ public class PairTradeRoundTripTest {
     protected PairTradeRoundTrip roundTrip;
     protected TradeOrder order;
     protected TradeReferenceLine referenceLine;
-    protected StockTicker ticker;
+    protected Ticker ticker;
 
     public PairTradeRoundTripTest() {
     }
@@ -47,8 +55,8 @@ public class PairTradeRoundTripTest {
     @Before
     public void setUp() {
         roundTrip = new PairTradeRoundTrip();
-        ticker = new StockTicker("QQQ");
-        order = new TradeOrder("123", ticker, 100, TradeDirection.BUY);
+        ticker = new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK);
+        order = new TradeOrder("123", ticker, BigDecimal.valueOf(100), TradeDirection.BUY);
         referenceLine = new TradeReferenceLine();
         referenceLine.setCorrelationId("999");
     }
@@ -59,8 +67,7 @@ public class PairTradeRoundTripTest {
 
     @Test
     public void testAddTradeReferenceLine_LongEntry() {
-        referenceLine.setDirection(LONG)
-                .setSide(ENTRY);
+        referenceLine.setDirection(LONG).setSide(ENTRY);
         roundTrip.addTradeReference(order, referenceLine);
 
         assertEquals("999", roundTrip.getCorrelationId());
@@ -73,8 +80,7 @@ public class PairTradeRoundTripTest {
 
     @Test
     public void testAddTradeReferenceLine_LongExit() {
-        referenceLine.setDirection(LONG)
-                .setSide(EXIT);
+        referenceLine.setDirection(LONG).setSide(EXIT);
         roundTrip.addTradeReference(order, referenceLine);
 
         assertEquals("999", roundTrip.getCorrelationId());
@@ -110,71 +116,69 @@ public class PairTradeRoundTripTest {
         assertNull(roundTrip.shortEntry);
 
     }
-    
-    
-    // Long-entry-date, longTicker, LongShares, Long Entry price, Long Entry Commission, 
-        //LongExitDate, Long Exit Price, shortTicker, shortShares, shortEntryPrice, shortEntryCommissions,
-        //shortExitPrice, shortExitCommissions
+
+    // Long-entry-date, longTicker, LongShares, Long Entry price, Long Entry
+    // Commission,
+    // LongExitDate, Long Exit Price, shortTicker, shortShares, shortEntryPrice,
+    // shortEntryCommissions,
+    // shortExitPrice, shortExitCommissions
     @Test
     public void testGetResults() {
-        StockTicker shortTicker = new StockTicker("SPY");
+        Ticker shortTicker = new Ticker("SPY").setInstrumentType(InstrumentType.STOCK);
         String expected = "2016-03-03T05:30:45,Long,QQQ,100,50.43,0,2016-03-04T12:45:00,51.46,0,Short,SPY,50,1.23,0,2.34,0";
         ZonedDateTime entryDate = ZonedDateTime.of(2016, 3, 3, 5, 30, 45, 0, ZoneId.systemDefault());
-        ZonedDateTime exitDate =ZonedDateTime.of(2016, 3, 4, 12, 45, 00, 0, ZoneId.systemDefault());
-        
-        
-        TradeOrder longEntryOrder = new TradeOrder("123", ticker, 100,TradeDirection.BUY);
-        longEntryOrder.setFilledPrice(50.43);
+        ZonedDateTime exitDate = ZonedDateTime.of(2016, 3, 4, 12, 45, 00, 0, ZoneId.systemDefault());
+
+        TradeOrder longEntryOrder = new TradeOrder("123", ticker, BigDecimal.valueOf(100), TradeDirection.BUY);
+        longEntryOrder.setFilledPrice(BigDecimal.valueOf(50.43));
         longEntryOrder.setOrderFilledTime(entryDate);
-        
-        TradeOrder longExitOrder = new TradeOrder("234", ticker, 100, TradeDirection.SELL);
-        longExitOrder.setFilledPrice(51.46);
+
+        TradeOrder longExitOrder = new TradeOrder("234", ticker, BigDecimal.valueOf(100), TradeDirection.SELL);
+        longExitOrder.setFilledPrice(BigDecimal.valueOf(51.46));
         longExitOrder.setOrderFilledTime(exitDate);
-        
-        TradeOrder shortEntryOrder = new TradeOrder( "345", shortTicker, 50, TradeDirection.SELL);
-        shortEntryOrder.setFilledPrice(1.23);
-        
-        TradeOrder shortExitOrder = new TradeOrder( "456", shortTicker, 50, TradeDirection.BUY);
-        shortExitOrder.setFilledPrice(2.34);
-        
+
+        TradeOrder shortEntryOrder = new TradeOrder("345", shortTicker, BigDecimal.valueOf(50), TradeDirection.SELL);
+        shortEntryOrder.setFilledPrice(BigDecimal.valueOf(1.23));
+
+        TradeOrder shortExitOrder = new TradeOrder("456", shortTicker, BigDecimal.valueOf(50), TradeDirection.BUY);
+        shortExitOrder.setFilledPrice(BigDecimal.valueOf(2.34));
+
         roundTrip.longEntry = longEntryOrder;
         roundTrip.shortEntry = shortEntryOrder;
         roundTrip.longExit = longExitOrder;
         roundTrip.shortExit = shortExitOrder;
-        
-        
+
         assertEquals(expected, roundTrip.getResults());
-        
+
     }
 
-    
     @Test
     public void testIsComplete() {
-        
+
         assertFalse(roundTrip.isComplete());
-        
+
         roundTrip.longEntry = order;
         roundTrip.shortEntry = order;
         roundTrip.longExit = order;
         roundTrip.shortExit = order;
-        
+
         assertTrue(roundTrip.isComplete());
         roundTrip.longEntry = null;
-        
+
         assertFalse(roundTrip.isComplete());
-        
+
         roundTrip.longEntry = order;
         roundTrip.shortEntry = null;
         assertFalse(roundTrip.isComplete());
-        
+
         roundTrip.shortEntry = order;
         roundTrip.longExit = null;
         assertFalse(roundTrip.isComplete());
-        
+
         roundTrip.longExit = order;
         roundTrip.shortExit = null;
         assertFalse(roundTrip.isComplete());
-        
+
         roundTrip.shortExit = order;
         assertTrue(roundTrip.isComplete());
     }

@@ -25,26 +25,40 @@ import com.sumzerotrading.data.Exchange;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.marketdata.ILevel1Quote;
+import com.sumzerotrading.marketdata.OrderFlow;
 import com.sumzerotrading.marketdata.paradex.ParadexQuoteEngine;
+import com.sumzerotrading.paradex.common.ParadexTickerRegistry;
 
-public class MarketDataParadexExample {
+public class ParadexMarketDataExample {
 
-    protected static final Logger logger = LoggerFactory.getLogger(MarketDataParadexExample.class);
+    protected static final Logger logger = LoggerFactory.getLogger(ParadexMarketDataExample.class);
 
-    public void start() {
+    public void getLevel1Quotes() {
 
-        Ticker cryptoTicker = new Ticker("BTC-USD-PERP").setInstrumentType(InstrumentType.PERPETUAL_FUTURES)
+        Ticker ticker = new Ticker("BTC-USD-PERP").setInstrumentType(InstrumentType.PERPETUAL_FUTURES)
                 .setExchange(Exchange.PARADEX);
 
         ParadexQuoteEngine quoteEngine = new ParadexQuoteEngine();
 
-        quoteEngine.subscribeLevel1(cryptoTicker, (ILevel1Quote quote) -> {
+        quoteEngine.subscribeLevel1(ticker, (ILevel1Quote quote) -> {
             logger.info("Received Quote: {}", quote);
         });
 
     }
 
+    public void getOrderFlow() {
+        Ticker ticker = ParadexTickerRegistry.getInstance().lookupByBrokerSymbol("BTC-USD-PERP");
+
+        ParadexQuoteEngine quoteEngine = new ParadexQuoteEngine();
+
+        quoteEngine.subscribeOrderFlow(ticker, (OrderFlow orderFlow) -> {
+            logger.info("Received Order Flow: {}", orderFlow);
+        });
+    }
+
     public static void main(String[] args) {
-        new MarketDataParadexExample().start();
+        ParadexMarketDataExample example = new ParadexMarketDataExample();
+        // example.getLevel1Quotes();
+        example.getOrderFlow();
     }
 }

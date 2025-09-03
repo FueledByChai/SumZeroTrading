@@ -18,13 +18,14 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  
+
   <parent>
-      <groupId>com.sumzerotrading</groupId>
-      <artifactId>sumzero-api</artifactId>
-      <version>0.1.7-SNAPSHOT</version>
+    <groupId>com.sumzerotrading</groupId>
+    <artifactId>sumzero-api</artifactId>
+    <version>0.2.0-SNAPSHOT</version>
   </parent>
 
   <groupId>com.sumzerotrading</groupId>

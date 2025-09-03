@@ -351,6 +351,24 @@ public class QuoteEngineTest {
             }
 
             @Override
+            public void fireOrderFlow(OrderFlow orderFlow) {
+                throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods,
+                                                                               // choose Tools | Templates.
+            }
+
+            @Override
+            public void subscribeOrderFlow(Ticker ticker, OrderFlowListener listener) {
+                throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods,
+                                                                               // choose Tools | Templates.
+            }
+
+            @Override
+            public void unsubscribeOrderFlow(Ticker ticker, OrderFlowListener listener) {
+                throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods,
+                                                                               // choose Tools | Templates.
+            }
+
+            @Override
             public void useDelayedData(boolean useDelayed) {
                 throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods,
                                                                                // choose Tools | Templates.

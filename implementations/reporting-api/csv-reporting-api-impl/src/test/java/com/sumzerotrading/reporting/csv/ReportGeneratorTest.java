@@ -5,27 +5,31 @@
  */
 package com.sumzerotrading.reporting.csv;
 
-import com.sumzerotrading.broker.order.OrderEvent;
-import com.sumzerotrading.broker.order.OrderStatus;
-import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
-import com.sumzerotrading.data.StockTicker;
-import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.reporting.TradeReferenceLine;
-import com.sumzerotrading.reporting.TradeReferenceLine.Direction;
 import static com.sumzerotrading.reporting.TradeReferenceLine.Direction.LONG;
 import static com.sumzerotrading.reporting.TradeReferenceLine.Direction.SHORT;
-import com.sumzerotrading.reporting.TradeReferenceLine.Side;
 import static com.sumzerotrading.reporting.TradeReferenceLine.Side.ENTRY;
 import static com.sumzerotrading.reporting.TradeReferenceLine.Side.EXIT;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -34,19 +38,19 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.never;
+import org.mockito.Matchers;
 import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import org.mockito.Matchers;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.verify;
+
+import com.sumzerotrading.broker.order.OrderEvent;
+import com.sumzerotrading.broker.order.OrderStatus;
+import com.sumzerotrading.broker.order.TradeDirection;
+import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.data.InstrumentType;
+import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.reporting.TradeReferenceLine;
+import com.sumzerotrading.reporting.TradeReferenceLine.Direction;
+import com.sumzerotrading.reporting.TradeReferenceLine.Side;
 
 /**
  *
@@ -58,8 +62,7 @@ public class ReportGeneratorTest {
 
     @Spy
     protected ReportGenerator reportGenerator;
-    
-    
+
     protected IRoundTripBuilder pairRoundtripBuilder;
     protected TradeOrder order;
     protected String tmpDir;
@@ -82,7 +85,8 @@ public class ReportGeneratorTest {
         pairRoundtripBuilder = new PairTradeRoundTripBuilder();
         reportGenerator.roundTripBuilder = pairRoundtripBuilder;
         reportGenerator.strategyName = strategy;
-        order = new TradeOrder("123", new StockTicker("QQQ"), 100, TradeDirection.BUY);
+        order = new TradeOrder("123", new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK),
+                BigDecimal.valueOf(100), TradeDirection.BUY);
         String systemTmpDir = System.getProperty("java.io.tmpdir");
         if (!systemTmpDir.endsWith("/")) {
             systemTmpDir += "/";
@@ -119,7 +123,8 @@ public class ReportGeneratorTest {
         roundTrip.addTradeReference(order, tradeReferenceLine);
 
         order.setCurrentStatus(OrderStatus.Status.FILLED);
-        OrderEvent orderEvent = new OrderEvent(order, new OrderStatus(OrderStatus.Status.NEW, "", "", new StockTicker("QQQ"), ZonedDateTime.now()));
+        OrderEvent orderEvent = new OrderEvent(order, new OrderStatus(OrderStatus.Status.NEW, "", "",
+                new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK), ZonedDateTime.now()));
 
         TradeReferenceLine longExitLine = buildReferenceLine("123", LONG, EXIT);
         TradeReferenceLine shortEntryLine = buildReferenceLine("123", SHORT, ENTRY);
@@ -150,34 +155,33 @@ public class ReportGeneratorTest {
     }
 
     @Test
-    public void testOrderEvent_NotFilled() throws Exception{
+    public void testOrderEvent_NotFilled() throws Exception {
         order.setCurrentStatus(OrderStatus.Status.NEW);
-        OrderEvent orderEvent = new OrderEvent(order, new OrderStatus(OrderStatus.Status.NEW, "", "", new StockTicker("QQQ"), ZonedDateTime.now()));
+        OrderEvent orderEvent = new OrderEvent(order, new OrderStatus(OrderStatus.Status.NEW, "", "",
+                new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK), ZonedDateTime.now()));
         reportGenerator.orderEvent(orderEvent);
 
         verify(reportGenerator, never()).writeRoundTripToFile(any(PairTradeRoundTrip.class));
         verify(reportGenerator, never()).savePartial(Matchers.anyString(), anyObject());
     }
-    
+
     @Test
-    public void testOrderEvent_NotStrategy() throws Exception{
+    public void testOrderEvent_NotStrategy() throws Exception {
         order.setCurrentStatus(OrderStatus.Status.FILLED);
-        OrderEvent orderEvent = new OrderEvent(order, new OrderStatus(OrderStatus.Status.NEW, "", "", new StockTicker("QQQ"), ZonedDateTime.now()));
-        
+        OrderEvent orderEvent = new OrderEvent(order, new OrderStatus(OrderStatus.Status.NEW, "", "",
+                new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK), ZonedDateTime.now()));
+
         TradeReferenceLine tradeReferenceLine = new TradeReferenceLine();
-        tradeReferenceLine.setCorrelationId("123")
-                .setStrategy("Other Strategy")
-                .setDirection(LONG)
-                .setSide(EXIT);
+        tradeReferenceLine.setCorrelationId("123").setStrategy("Other Strategy").setDirection(LONG).setSide(EXIT);
         order.setCurrentStatus(OrderStatus.Status.FILLED);
 
         doReturn(tradeReferenceLine).when(reportGenerator).getTradeReferenceLine(any(String.class));
-        
+
         reportGenerator.orderEvent(orderEvent);
-        
+
         verify(reportGenerator, never()).writeRoundTripToFile(any(PairTradeRoundTrip.class));
         verify(reportGenerator, never()).savePartial(Matchers.anyString(), anyObject());
-    }    
+    }
 
     @Test
     public void testOrderEvent_FirstRoundTrip() throws Exception {
@@ -185,7 +189,8 @@ public class ReportGeneratorTest {
         tradeReferenceLine.setCorrelationId("123");
         tradeReferenceLine.setStrategy(strategy);
         order.setCurrentStatus(OrderStatus.Status.FILLED);
-        OrderEvent orderEvent = new OrderEvent(order, new OrderStatus(OrderStatus.Status.NEW, "", "", new StockTicker("QQQ"), ZonedDateTime.now()));
+        OrderEvent orderEvent = new OrderEvent(order, new OrderStatus(OrderStatus.Status.NEW, "", "",
+                new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK), ZonedDateTime.now()));
 
         doReturn(tradeReferenceLine).when(reportGenerator).getTradeReferenceLine(any(String.class));
         doNothing().when(reportGenerator).savePartial(any(String.class), any(PairTradeRoundTrip.class));
@@ -205,7 +210,8 @@ public class ReportGeneratorTest {
         roundTrip.addTradeReference(order, tradeReferenceLine);
 
         order.setCurrentStatus(OrderStatus.Status.FILLED);
-        OrderEvent orderEvent = new OrderEvent(order, new OrderStatus(OrderStatus.Status.NEW, "", "", new StockTicker("QQQ"), ZonedDateTime.now()));
+        OrderEvent orderEvent = new OrderEvent(order, new OrderStatus(OrderStatus.Status.NEW, "", "",
+                new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK), ZonedDateTime.now()));
 
         TradeReferenceLine longExitLine = buildReferenceLine("123", LONG, EXIT);
 
@@ -230,7 +236,8 @@ public class ReportGeneratorTest {
         roundTrip.addTradeReference(order, tradeReferenceLine);
 
         order.setCurrentStatus(OrderStatus.Status.FILLED);
-        OrderEvent orderEvent = new OrderEvent(order, new OrderStatus(OrderStatus.Status.NEW, "", "", new StockTicker("QQQ"), ZonedDateTime.now()));
+        OrderEvent orderEvent = new OrderEvent(order, new OrderStatus(OrderStatus.Status.NEW, "", "",
+                new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK), ZonedDateTime.now()));
 
         TradeReferenceLine longExitLine = buildReferenceLine("123", LONG, EXIT);
         TradeReferenceLine shortEntryLine = buildReferenceLine("123", SHORT, ENTRY);
@@ -260,14 +267,14 @@ public class ReportGeneratorTest {
         reportGenerator.outputFile = path.toString();
         String expected = "2016-03-19T07:01:10,Long,ABC,100,100.23,0,2016-03-20T06:01:10,101.23,0,Short,XYZ,50,250.34,0,251.34,0";
 
-        Ticker longTicker = new StockTicker("ABC");
-        Ticker shortTicker = new StockTicker("XYZ");
-        int longSize = 100;
-        int shortSize = 50;
-        double longEntryFillPrice = 100.23;
-        double longExitFillPrice = 101.23;
-        double shortEntryFillPrice = 250.34;
-        double shortExitFillPrice = 251.34;
+        Ticker longTicker = new Ticker("ABC").setInstrumentType(InstrumentType.STOCK);
+        Ticker shortTicker = new Ticker("XYZ").setInstrumentType(InstrumentType.STOCK);
+        BigDecimal longSize = BigDecimal.valueOf(100);
+        BigDecimal shortSize = BigDecimal.valueOf(50);
+        BigDecimal longEntryFillPrice = BigDecimal.valueOf(100.23);
+        BigDecimal longExitFillPrice = BigDecimal.valueOf(101.23);
+        BigDecimal shortEntryFillPrice = BigDecimal.valueOf(250.34);
+        BigDecimal shortExitFillPrice = BigDecimal.valueOf(251.34);
         ZonedDateTime entryTime = ZonedDateTime.of(2016, 3, 19, 7, 1, 10, 0, ZoneId.systemDefault());
         ZonedDateTime exitTime = ZonedDateTime.of(2016, 3, 20, 6, 1, 10, 0, ZoneId.systemDefault());
 
@@ -307,8 +314,8 @@ public class ReportGeneratorTest {
 
     @Test
     public void testReportGeneratorEndToEnd() throws Exception {
-        StockTicker longTicker = new StockTicker("ABC");
-        StockTicker shortTicker = new StockTicker("XYZ");
+        Ticker longTicker = new Ticker("ABC").setInstrumentType(InstrumentType.STOCK);
+        Ticker shortTicker = new Ticker("XYZ").setInstrumentType(InstrumentType.STOCK);
 
         ZonedDateTime entryOrderTime = ZonedDateTime.of(2016, 3, 25, 6, 18, 35, 0, ZoneId.systemDefault());
         ZonedDateTime exitOrderTime = ZonedDateTime.of(2016, 3, 25, 6, 19, 35, 0, ZoneId.systemDefault());
@@ -320,16 +327,16 @@ public class ReportGeneratorTest {
         Path reportPath = Paths.get(directory + "report.csv");
         Files.deleteIfExists(reportPath);
         System.out.println("Creating directory at: " + directory);
-        ReportGenerator generator = new ReportGenerator("EOD-Pair-Strategy", directory,pairRoundtripBuilder);
+        ReportGenerator generator = new ReportGenerator("EOD-Pair-Strategy", directory, pairRoundtripBuilder);
 
-        TradeOrder longEntryOrder = new TradeOrder("123", longTicker, 100, TradeDirection.BUY);
-        longEntryOrder.setFilledPrice(100.00);
+        TradeOrder longEntryOrder = new TradeOrder("123", longTicker, BigDecimal.valueOf(100), TradeDirection.BUY);
+        longEntryOrder.setFilledPrice(BigDecimal.valueOf(100.00));
         longEntryOrder.setReference("EOD-Pair-Strategy:guid-123:Entry:Long*");
         longEntryOrder.setCurrentStatus(OrderStatus.Status.FILLED);
         longEntryOrder.setOrderFilledTime(entryOrderTime);
 
-        TradeOrder shortEntryOrder = new TradeOrder("234", shortTicker, 50, TradeDirection.SELL);
-        shortEntryOrder.setFilledPrice(50.00);
+        TradeOrder shortEntryOrder = new TradeOrder("234", shortTicker, BigDecimal.valueOf(50), TradeDirection.SELL);
+        shortEntryOrder.setFilledPrice(BigDecimal.valueOf(50.00));
         shortEntryOrder.setReference("EOD-Pair-Strategy:guid-123:Entry:Short*");
         shortEntryOrder.setCurrentStatus(OrderStatus.Status.FILLED);
         shortEntryOrder.setOrderFilledTime(entryOrderTime);
@@ -340,14 +347,14 @@ public class ReportGeneratorTest {
         generator.orderEvent(new OrderEvent(shortEntryOrder, null));
         assertFalse(Files.exists(reportPath));
 
-        TradeOrder longExitOrder = new TradeOrder("1234", longTicker, 100, TradeDirection.SELL);
-        longExitOrder.setFilledPrice(105.00);
+        TradeOrder longExitOrder = new TradeOrder("1234", longTicker, BigDecimal.valueOf(100), TradeDirection.SELL);
+        longExitOrder.setFilledPrice(BigDecimal.valueOf(105.00));
         longExitOrder.setReference("EOD-Pair-Strategy:guid-123:Exit:Long*");
         longExitOrder.setCurrentStatus(OrderStatus.Status.FILLED);
         longExitOrder.setOrderFilledTime(exitOrderTime);
 
-        TradeOrder shortExitOrder = new TradeOrder("2345", shortTicker, 50, TradeDirection.BUY);
-        shortExitOrder.setFilledPrice(40.00);
+        TradeOrder shortExitOrder = new TradeOrder("2345", shortTicker, BigDecimal.valueOf(50), TradeDirection.BUY);
+        shortExitOrder.setFilledPrice(BigDecimal.valueOf(40.00));
         shortExitOrder.setReference("EOD-Pair-Strategy:guid-123:Exit:Short*");
         shortExitOrder.setCurrentStatus(OrderStatus.Status.FILLED);
         shortExitOrder.setOrderFilledTime(exitOrderTime);
@@ -379,10 +386,7 @@ public class ReportGeneratorTest {
 
     protected TradeReferenceLine buildReferenceLine(String id, Direction direction, Side side) {
         TradeReferenceLine line = new TradeReferenceLine();
-        line.setCorrelationId(id)
-                .setDirection(direction)
-                .setSide(side)
-                .setStrategy(strategy);
+        line.setCorrelationId(id).setDirection(direction).setSide(side).setStrategy(strategy);
 
         return line;
     }
@@ -394,7 +398,6 @@ public class ReportGeneratorTest {
         public MockGenerator(String strategyName, String dir, IRoundTripBuilder roundTripBuilder) {
             super(strategyName, dir, roundTripBuilder);
         }
-
 
         @Override
         public void loadPartialRoundTrips() throws IOException {

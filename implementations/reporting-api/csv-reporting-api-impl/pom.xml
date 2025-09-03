@@ -20,19 +20,20 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 -->
 
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
 
     <parent>
         <groupId>com.sumzerotrading</groupId>
         <artifactId>reporting-api</artifactId>
-        <version>0.1.7-SNAPSHOT</version>
+        <version>0.2.0-SNAPSHOT</version>
     </parent>
 
     <groupId>com.sumzerotrading</groupId>
     <artifactId>csv-reporting-api-impl</artifactId>
-    <version>0.1.7-SNAPSHOT</version>
+    <version>0.2.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>csv-reporting-api-impl</name>
