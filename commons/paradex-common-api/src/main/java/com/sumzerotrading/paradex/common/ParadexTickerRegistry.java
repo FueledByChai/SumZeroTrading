@@ -7,7 +7,7 @@ import com.sumzerotrading.data.ITickerBuilder;
 import com.sumzerotrading.data.InstrumentDescriptor;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.paradex.ParadexTickerBuiler;
+import com.sumzerotrading.paradex.ParadexTickerBuilder;
 import com.sumzerotrading.paradex.common.api.IParadexRestApi;
 import com.sumzerotrading.paradex.common.api.ParadexApiFactory;
 
@@ -18,7 +18,7 @@ public class ParadexTickerRegistry implements ITickerBuilder, IParadexTickerRegi
     protected Map<String, Ticker> commonSymbolMap = new HashMap<>();
     protected Map<InstrumentDescriptor, Ticker> descriptorMap = new HashMap<>();
     protected IParadexRestApi restApi = ParadexApiFactory.getPublicApi();
-    protected ITickerBuilder tickerBuilder = new ParadexTickerBuiler();
+    protected ITickerBuilder tickerBuilder = new ParadexTickerBuilder();
 
     public static IParadexTickerRegistry getInstance() {
         if (instace == null) {

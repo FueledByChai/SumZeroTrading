@@ -159,7 +159,7 @@ public class DyDxLevel1QuoteEngine extends QuoteEngine implements Runnable {
                     quoteMap.put(QuoteType.BID, new BigDecimal(orderBook.bids[0].price));
                     quoteMap.put(QuoteType.BID_SIZE, new BigDecimal(orderBook.bids[0].size));
                     if (includeFundingRate) {
-                        quoteMap.put(QuoteType.FUNDING_RATE,
+                        quoteMap.put(QuoteType.FUNDING_RATE_APR,
                                 allFundingRates.getMarkets().get(ticker.getSymbol()).getAnnualizedFundingRate());
                     }
                     Level1Quote quote = new Level1Quote(ticker, ZonedDateTime.now(), quoteMap);

@@ -7,7 +7,7 @@ import com.sumzerotrading.data.InstrumentDescriptor;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
 
-public class ParadexTickerBuiler implements ITickerBuilder {
+public class ParadexTickerBuilder implements ITickerBuilder {
 
     @Override
     public Ticker buildTicker(InstrumentDescriptor descriptor) {
@@ -17,7 +17,8 @@ public class ParadexTickerBuiler implements ITickerBuilder {
                     .setExchange(descriptor.getExchange()).setInstrumentType(descriptor.getInstrumentType())
                     .setMinimumTickSize(descriptor.getPriceTickSize())
                     .setOrderSizeIncrement(descriptor.getOrderSizeIncrement())
-                    .setPrimaryExchange(descriptor.getExchange()).setSymbol(descriptor.getExchangeSymbol());
+                    .setPrimaryExchange(descriptor.getExchange()).setSymbol(descriptor.getExchangeSymbol())
+                    .setFundingRateInterval(descriptor.getFundingPeriodHours());
 
             return ticker;
         } else {

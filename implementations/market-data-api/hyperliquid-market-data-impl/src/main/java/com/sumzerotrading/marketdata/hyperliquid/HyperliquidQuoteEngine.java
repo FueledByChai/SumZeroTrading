@@ -181,7 +181,7 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements Runnable {
                     if (includeFundingRate) {
                         String fundingString = allFundingRates.get(ticker.getSymbol()).funding;
                         Double annualFunding = Double.parseDouble(fundingString) * 24.0 * 365.0 * 100.0;
-                        quoteMap.put(QuoteType.FUNDING_RATE, new BigDecimal(annualFunding));
+                        quoteMap.put(QuoteType.FUNDING_RATE_APR, new BigDecimal(annualFunding));
                     }
                     Level1Quote quote = new Level1Quote(ticker, ZonedDateTime.now(), quoteMap);
                     fireLevel1Quote(quote);

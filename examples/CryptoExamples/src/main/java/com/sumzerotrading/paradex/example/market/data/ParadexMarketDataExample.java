@@ -35,8 +35,7 @@ public class ParadexMarketDataExample {
 
     public void getLevel1Quotes() {
 
-        Ticker ticker = new Ticker("BTC-USD-PERP").setInstrumentType(InstrumentType.PERPETUAL_FUTURES)
-                .setExchange(Exchange.PARADEX);
+        Ticker ticker = ParadexTickerRegistry.getInstance().lookupByBrokerSymbol("BTC-USD-PERP");
 
         ParadexQuoteEngine quoteEngine = new ParadexQuoteEngine();
 
@@ -58,7 +57,7 @@ public class ParadexMarketDataExample {
 
     public static void main(String[] args) {
         ParadexMarketDataExample example = new ParadexMarketDataExample();
-        // example.getLevel1Quotes();
-        example.getOrderFlow();
+        example.getLevel1Quotes();
+        // example.getOrderFlow();
     }
 }

@@ -51,6 +51,7 @@ public class Ticker implements Serializable {
     protected int expiryDay = 0;
     protected BigDecimal strike = null;
     protected Right right = Right.NONE;
+    protected int fundingRateInterval = 0;
 
     public Ticker() {
     }
@@ -197,6 +198,15 @@ public class Ticker implements Serializable {
         return this;
     }
 
+    public int getFundingRateInterval() {
+        return fundingRateInterval;
+    }
+
+    public Ticker setFundingRateInterval(int fundingRateInterval) {
+        this.fundingRateInterval = fundingRateInterval;
+        return this;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -215,6 +225,7 @@ public class Ticker implements Serializable {
         result = prime * result + expiryDay;
         result = prime * result + ((strike == null) ? 0 : strike.hashCode());
         result = prime * result + ((right == null) ? 0 : right.hashCode());
+        result = prime * result + fundingRateInterval;
         return result;
     }
 
@@ -282,6 +293,8 @@ public class Ticker implements Serializable {
                 return false;
         } else if (!strike.equals(other.strike))
             return false;
+        if (fundingRateInterval != other.fundingRateInterval)
+            return false;
         return true;
     }
 
@@ -292,7 +305,7 @@ public class Ticker implements Serializable {
                 + minimumTickSize + ", contractMultiplier=" + contractMultiplier + ", orderSizeIncrement="
                 + orderSizeIncrement + ", minimumOrderSize=" + minimumOrderSize + ", expiryMonth=" + expiryMonth
                 + ", expiryYear=" + expiryYear + ", expiryDay=" + expiryDay + ", strike=" + strike + ", right=" + right
-                + "]";
+                + ", fundingRateInterval=" + fundingRateInterval + "]";
     }
 
 }

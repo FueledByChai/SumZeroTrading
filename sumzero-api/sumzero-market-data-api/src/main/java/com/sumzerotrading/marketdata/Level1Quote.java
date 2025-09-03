@@ -19,16 +19,14 @@
  */
 package com.sumzerotrading.marketdata;
 
-import com.sumzerotrading.data.SumZeroException;
-import com.sumzerotrading.data.Ticker;
 import java.math.BigDecimal;
-import java.time.ZonedDateTime;
 import java.time.ZoneOffset;
-import java.util.HashMap;
-import java.util.List;
+import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.Objects;
-import static javax.management.Query.value;
+
+import com.sumzerotrading.data.SumZeroException;
+import com.sumzerotrading.data.Ticker;
 
 /**
  * Implementation of an ILevel1 quote
