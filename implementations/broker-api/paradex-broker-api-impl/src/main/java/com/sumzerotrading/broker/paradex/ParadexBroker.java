@@ -47,7 +47,7 @@ import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.broker.order.OrderStatus;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.ComboTicker;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.paradex.common.api.IParadexRestApi;
@@ -79,7 +79,7 @@ public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
     protected OrderStatusWebSocketProcessor orderStatusProcessor;
     protected AccountWebSocketProcessor accountWebSocketProcessor;
 
-    protected Set<TradeOrder> currencyOrderList = new HashSet<>();
+    protected Set<OrderTicket> currencyOrderList = new HashSet<>();
     protected BlockingQueue<Integer> nextIdQueue = new LinkedBlockingQueue<>();
     protected BlockingQueue<ZonedDateTime> brokerTimeQueue = new LinkedBlockingQueue<>();
     protected BlockingQueue<BrokerError> brokerErrorQueue = new LinkedBlockingQueue<>();
@@ -104,9 +104,9 @@ public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
     protected Map<String, OrderEvent> orderEventMap;
     protected CountDownLatch getPositionsCountdownLatch = null;
     protected List<Position> positionsList = new ArrayList<>();
-    protected Map<String, TradeOrder> tradeOrderMap = new HashMap<>();
+    protected Map<String, OrderTicket> tradeOrderMap = new HashMap<>();
 
-    protected Map<String, TradeOrder> completedOrderMap = new HashMap<>();
+    protected Map<String, OrderTicket> completedOrderMap = new HashMap<>();
 
     /**
      * Default constructor - uses centralized configuration for API initialization.
@@ -139,13 +139,13 @@ public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
     }
 
     @Override
-    public void cancelOrder(TradeOrder order) {
+    public void cancelOrder(OrderTicket order) {
         checkConnected();
         cancelOrder(order.getOrderId());
     }
 
     @Override
-    public void placeOrder(TradeOrder order) {
+    public void placeOrder(OrderTicket order) {
         checkConnected();
         String orderId = restApi.placeOrder(jwtToken, order);
         order.setOrderId(orderId);
@@ -258,19 +258,19 @@ public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
     }
 
     @Override
-    public TradeOrder requestOrderStatus(String orderId) {
+    public OrderTicket requestOrderStatus(String orderId) {
         throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
                                                                        // Tools | Templates.
     }
 
     @Override
-    public List<TradeOrder> getOpenOrders() {
+    public List<OrderTicket> getOpenOrders() {
         throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
                                                                        // Tools | Templates.
     }
 
     @Override
-    public void cancelAndReplaceOrder(String originalOrderId, TradeOrder newOrder) {
+    public void cancelAndReplaceOrder(String originalOrderId, OrderTicket newOrder) {
         throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
                                                                        // Tools | Templates.
     }
@@ -302,7 +302,7 @@ public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
     @Override
     public void orderStatusUpdated(IParadexOrderStatusUpdate orderStatus) {
         OrderStatus status = ParadexBrokerUtil.translateOrderStatus(orderStatus);
-        TradeOrder order = tradeOrderMap.get(orderStatus.getOrderId());
+        OrderTicket order = tradeOrderMap.get(orderStatus.getOrderId());
         order.setCurrentStatus(status.getStatus());
         order.setFilledPrice(status.getFillPrice());
         order.setFilledSize(status.getFilled());

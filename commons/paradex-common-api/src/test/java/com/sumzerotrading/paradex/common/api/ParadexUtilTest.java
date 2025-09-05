@@ -25,7 +25,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.BarData;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.paradex.common.api.historical.OHLCBar;
@@ -40,7 +40,7 @@ class ParadexUtilTest {
     private ParadexOrder mockParadexOrder;
 
     @Mock
-    private TradeOrder mockTradeOrder;
+    private OrderTicket mockTradeOrder;
 
     @Mock
     private Ticker mockTicker;
@@ -51,10 +51,10 @@ class ParadexUtilTest {
     @Test
     void testTranslateParadexOrderToTradeOrder() {
         // Test the method that currently returns empty TradeOrder
-        TradeOrder result = ParadexUtil.translateOrder(mockParadexOrder);
+        OrderTicket result = ParadexUtil.translateOrder(mockParadexOrder);
 
         assertNotNull(result);
-        assertInstanceOf(TradeOrder.class, result);
+        assertInstanceOf(OrderTicket.class, result);
         // Since the method is not implemented, we can only verify it returns a new
         // TradeOrder
     }
@@ -67,7 +67,7 @@ class ParadexUtilTest {
         when(mockTicker.getSymbol()).thenReturn("BTC-USD");
         when(mockTradeOrder.getTradeDirection()).thenReturn(TradeDirection.BUY);
         when(mockTradeOrder.getSize()).thenReturn(new BigDecimal("1.5"));
-        when(mockTradeOrder.getType()).thenReturn(TradeOrder.Type.MARKET);
+        when(mockTradeOrder.getType()).thenReturn(OrderTicket.Type.MARKET);
 
         // Execute
         ParadexOrder result = ParadexUtil.translateOrder(mockTradeOrder);
@@ -94,7 +94,7 @@ class ParadexUtilTest {
         when(mockTicker.getSymbol()).thenReturn("ETH-USD");
         when(mockTradeOrder.getTradeDirection()).thenReturn(TradeDirection.SELL);
         when(mockTradeOrder.getSize()).thenReturn(new BigDecimal("2.0"));
-        when(mockTradeOrder.getType()).thenReturn(TradeOrder.Type.LIMIT);
+        when(mockTradeOrder.getType()).thenReturn(OrderTicket.Type.LIMIT);
         when(mockTradeOrder.getLimitPrice()).thenReturn(new BigDecimal("3000.50"));
 
         // Execute
@@ -118,7 +118,7 @@ class ParadexUtilTest {
         when(mockTicker.getSymbol()).thenReturn("SOL-USD");
         when(mockTradeOrder.getTradeDirection()).thenReturn(TradeDirection.BUY);
         when(mockTradeOrder.getSize()).thenReturn(new BigDecimal("10.0"));
-        when(mockTradeOrder.getType()).thenReturn(TradeOrder.Type.STOP);
+        when(mockTradeOrder.getType()).thenReturn(OrderTicket.Type.STOP);
 
         // Execute
         ParadexOrder result = ParadexUtil.translateOrder(mockTradeOrder);
@@ -142,7 +142,7 @@ class ParadexUtilTest {
         when(mockTradeOrder.getSize()).thenReturn(new BigDecimal("100.0"));
 
         // Create a mock for an unsupported order type
-        TradeOrder.Type unsupportedType = mock(TradeOrder.Type.class);
+        OrderTicket.Type unsupportedType = mock(OrderTicket.Type.class);
         when(unsupportedType.toString()).thenReturn("UNSUPPORTED_TYPE");
         when(mockTradeOrder.getType()).thenReturn(unsupportedType);
 
@@ -157,7 +157,7 @@ class ParadexUtilTest {
     @Test
     void testTranslateOrdersList_EmptyList() {
         // Execute
-        List<TradeOrder> result = ParadexUtil.translateOrders(Collections.emptyList());
+        List<OrderTicket> result = ParadexUtil.translateOrders(Collections.emptyList());
 
         // Verify
         assertNotNull(result);
@@ -172,14 +172,14 @@ class ParadexUtilTest {
         List<ParadexOrder> paradexOrders = Arrays.asList(order1, order2);
 
         // Execute
-        List<TradeOrder> result = ParadexUtil.translateOrders(paradexOrders);
+        List<OrderTicket> result = ParadexUtil.translateOrders(paradexOrders);
 
         // Verify
         assertNotNull(result);
         assertEquals(2, result.size());
         // Since translateOrder(ParadexOrder) returns a new TradeOrder, we verify we get
         // TradeOrder instances
-        result.forEach(order -> assertInstanceOf(TradeOrder.class, order));
+        result.forEach(order -> assertInstanceOf(OrderTicket.class, order));
     }
 
     @Test
@@ -288,7 +288,7 @@ class ParadexUtilTest {
         when(mockTicker.getSymbol()).thenReturn("TEST-USD");
         when(mockTradeOrder.getTradeDirection()).thenReturn(TradeDirection.BUY);
         when(mockTradeOrder.getSize()).thenReturn(new BigDecimal("1.0"));
-        when(mockTradeOrder.getType()).thenReturn(TradeOrder.Type.MARKET);
+        when(mockTradeOrder.getType()).thenReturn(OrderTicket.Type.MARKET);
 
         ParadexOrder result = ParadexUtil.translateOrder(mockTradeOrder);
 

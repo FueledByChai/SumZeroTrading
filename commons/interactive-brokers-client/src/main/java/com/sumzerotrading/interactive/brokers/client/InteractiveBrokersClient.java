@@ -34,7 +34,7 @@ import com.sumzerotrading.broker.IBroker;
 import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.ib.InteractiveBrokersBroker;
 import com.sumzerotrading.broker.order.OrderEventListener;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.BarData;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.historicaldata.IHistoricalDataProvider;
@@ -161,7 +161,7 @@ public class InteractiveBrokersClient implements InteractiveBrokersClientInterfa
     }
 
     @Override
-    public void placeOrder(TradeOrder order) {
+    public void placeOrder(OrderTicket order) {
         broker.placeOrder(order);
     }
 
@@ -176,7 +176,7 @@ public class InteractiveBrokersClient implements InteractiveBrokersClientInterfa
     }
 
     @Override
-    public List<TradeOrder> getOpenOrders() {
+    public List<OrderTicket> getOpenOrders() {
         return broker.getOpenOrders();
     }
 

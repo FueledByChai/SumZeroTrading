@@ -7,7 +7,7 @@ package com.sumzerotrading.eod.trading.strategy;
 
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderStatus.Status;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -113,7 +113,7 @@ public class ReportGenerator implements IReportGenerator {
     @Override
     public void orderEvent(OrderEvent event) {
         logger.info("Received order event: " + event);
-        TradeOrder order = event.getOrder();
+        OrderTicket order = event.getOrder();
         if (order.getCurrentStatus() == Status.FILLED) {
             TradeReferenceLine line = getTradeReferenceLine(order.getReference());
             RoundTrip roundTrip = roundTripMap.get(line.getCorrelationId());

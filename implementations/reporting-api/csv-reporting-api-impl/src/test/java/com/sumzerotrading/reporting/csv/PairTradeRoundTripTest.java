@@ -25,7 +25,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.reporting.TradeReferenceLine;
@@ -37,7 +37,7 @@ import com.sumzerotrading.reporting.TradeReferenceLine;
 public class PairTradeRoundTripTest {
 
     protected PairTradeRoundTrip roundTrip;
-    protected TradeOrder order;
+    protected OrderTicket order;
     protected TradeReferenceLine referenceLine;
     protected Ticker ticker;
 
@@ -56,7 +56,7 @@ public class PairTradeRoundTripTest {
     public void setUp() {
         roundTrip = new PairTradeRoundTrip();
         ticker = new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK);
-        order = new TradeOrder("123", ticker, BigDecimal.valueOf(100), TradeDirection.BUY);
+        order = new OrderTicket("123", ticker, BigDecimal.valueOf(100), TradeDirection.BUY);
         referenceLine = new TradeReferenceLine();
         referenceLine.setCorrelationId("999");
     }
@@ -129,18 +129,18 @@ public class PairTradeRoundTripTest {
         ZonedDateTime entryDate = ZonedDateTime.of(2016, 3, 3, 5, 30, 45, 0, ZoneId.systemDefault());
         ZonedDateTime exitDate = ZonedDateTime.of(2016, 3, 4, 12, 45, 00, 0, ZoneId.systemDefault());
 
-        TradeOrder longEntryOrder = new TradeOrder("123", ticker, BigDecimal.valueOf(100), TradeDirection.BUY);
+        OrderTicket longEntryOrder = new OrderTicket("123", ticker, BigDecimal.valueOf(100), TradeDirection.BUY);
         longEntryOrder.setFilledPrice(BigDecimal.valueOf(50.43));
         longEntryOrder.setOrderFilledTime(entryDate);
 
-        TradeOrder longExitOrder = new TradeOrder("234", ticker, BigDecimal.valueOf(100), TradeDirection.SELL);
+        OrderTicket longExitOrder = new OrderTicket("234", ticker, BigDecimal.valueOf(100), TradeDirection.SELL);
         longExitOrder.setFilledPrice(BigDecimal.valueOf(51.46));
         longExitOrder.setOrderFilledTime(exitDate);
 
-        TradeOrder shortEntryOrder = new TradeOrder("345", shortTicker, BigDecimal.valueOf(50), TradeDirection.SELL);
+        OrderTicket shortEntryOrder = new OrderTicket("345", shortTicker, BigDecimal.valueOf(50), TradeDirection.SELL);
         shortEntryOrder.setFilledPrice(BigDecimal.valueOf(1.23));
 
-        TradeOrder shortExitOrder = new TradeOrder("456", shortTicker, BigDecimal.valueOf(50), TradeDirection.BUY);
+        OrderTicket shortExitOrder = new OrderTicket("456", shortTicker, BigDecimal.valueOf(50), TradeDirection.BUY);
         shortExitOrder.setFilledPrice(BigDecimal.valueOf(2.34));
 
         roundTrip.longEntry = longEntryOrder;

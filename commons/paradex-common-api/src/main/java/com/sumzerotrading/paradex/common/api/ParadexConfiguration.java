@@ -28,7 +28,8 @@ public class ParadexConfiguration {
     public static final String PARADEX_JWT_REFRESH_SECONDS = "paradex.jwt.refresh.seconds";
 
     // Default values
-    private static final String DEFAULT_ENVIRONMENT = "testnet";
+    // private static final String DEFAULT_ENVIRONMENT = "testnet";
+    private static final String DEFAULT_ENVIRONMENT = "prod";
     private static final String DEFAULT_TESTNET_REST_URL = "https://api.testnet.paradex.trade/v1";
     private static final String DEFAULT_TESTNET_WS_URL = "wss://ws.testnet.paradex.trade/v1";
     private static final String DEFAULT_PROD_REST_URL = "https://api.prod.paradex.trade/v1";

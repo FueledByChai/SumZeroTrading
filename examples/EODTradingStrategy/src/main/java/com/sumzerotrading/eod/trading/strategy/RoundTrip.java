@@ -5,7 +5,7 @@
  */
 package com.sumzerotrading.eod.trading.strategy;
 
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import java.io.Serializable;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
@@ -18,13 +18,13 @@ public class RoundTrip implements IRoundTrip {
 
     public static final long serialVersionUID = 1l;
     protected String correlationId;
-    protected TradeOrder longEntry;
-    protected TradeOrder longExit;
-    protected TradeOrder shortEntry;
-    protected TradeOrder shortExit;
+    protected OrderTicket longEntry;
+    protected OrderTicket longExit;
+    protected OrderTicket shortEntry;
+    protected OrderTicket shortExit;
 
     @Override
-    public void addTradeReference(TradeOrder order, TradeReferenceLine tradeReference) {
+    public void addTradeReference(OrderTicket order, TradeReferenceLine tradeReference) {
         correlationId = tradeReference.getCorrelationId();
         if (tradeReference.getDirection() == TradeReferenceLine.Direction.LONG) {
             if (tradeReference.getSide() == TradeReferenceLine.Side.ENTRY) {

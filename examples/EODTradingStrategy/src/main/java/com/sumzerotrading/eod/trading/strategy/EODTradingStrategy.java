@@ -24,7 +24,7 @@ import com.sumzerotrading.broker.BrokerErrorListener;
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClient;
@@ -48,8 +48,8 @@ public class EODTradingStrategy implements Level1QuoteListener, OrderEventListen
     protected int ibPort;
     protected int ibClientId;
     protected String strategyDirectory;
-    protected TradeOrder.Type entryOrderType;
-    protected TradeOrder.Type exitOrderType;
+    protected OrderTicket.Type entryOrderType;
+    protected OrderTicket.Type exitOrderType;
     protected int exitSeconds = 0;
 
     protected int orderSizeInDollars;
@@ -71,7 +71,7 @@ public class EODTradingStrategy implements Level1QuoteListener, OrderEventListen
         ibClient.addOrderStatusListener(reportGenerator);
         ibClient.connect();
 
-        List<TradeOrder> openOrders = ibClient.getOpenOrders();
+        List<OrderTicket> openOrders = ibClient.getOpenOrders();
         logger.debug("Found " + openOrders.size() + " open orders");
 
         ordersPlaced = checkOpenOrders(openOrders, longShortPairMap);
@@ -98,11 +98,12 @@ public class EODTradingStrategy implements Level1QuoteListener, OrderEventListen
         logger.info("Placing long orders for: " + longSize + " shares of: " + longTicker);
         logger.info("Placing short orders for: " + shortSize + " shares of: " + shortTicker);
 
-        TradeOrder longOrder = new TradeOrder(ibClient.getNextOrderId(), longTicker, longSize, TradeDirection.BUY);
+        OrderTicket longOrder = new OrderTicket(ibClient.getNextOrderId(), longTicker, longSize, TradeDirection.BUY);
         longOrder.setType(entryOrderType);
         longOrder.setReference("EOD-Pair-Strategy:" + correlationId + ":Entry:Long*");
 
-        TradeOrder longExitOrder = new TradeOrder(ibClient.getNextOrderId(), longTicker, longSize, TradeDirection.SELL);
+        OrderTicket longExitOrder = new OrderTicket(ibClient.getNextOrderId(), longTicker, longSize,
+                TradeDirection.SELL);
         longExitOrder.setType(exitOrderType);
         longExitOrder.setGoodAfterTime(getNextBusinessDay(lastReportedTime));
         longExitOrder.setReference("EOD-Pair-Strategy:" + correlationId + ":Exit:Long*");
@@ -110,12 +111,12 @@ public class EODTradingStrategy implements Level1QuoteListener, OrderEventListen
         logger.info("Placing long orders: " + longOrder);
         longOrder.addChildOrder(longExitOrder);
 
-        TradeOrder shortOrder = new TradeOrder(ibClient.getNextOrderId(), shortTicker, shortSize,
+        OrderTicket shortOrder = new OrderTicket(ibClient.getNextOrderId(), shortTicker, shortSize,
                 TradeDirection.SELL_SHORT);
         shortOrder.setType(entryOrderType);
         shortOrder.setReference("EOD-Pair-Strategy:" + correlationId + ":Entry:Short*");
 
-        TradeOrder shortExitOrder = new TradeOrder(ibClient.getNextOrderId(), shortTicker, shortSize,
+        OrderTicket shortExitOrder = new OrderTicket(ibClient.getNextOrderId(), shortTicker, shortSize,
                 TradeDirection.BUY_TO_COVER);
         shortExitOrder.setType(exitOrderType);
         shortExitOrder.setGoodAfterTime(getNextBusinessDay(lastReportedTime));
@@ -238,12 +239,12 @@ public class EODTradingStrategy implements Level1QuoteListener, OrderEventListen
         return true;
     }
 
-    protected boolean checkOpenOrders(List<TradeOrder> orders, Map<Ticker, Ticker> tickers) {
+    protected boolean checkOpenOrders(List<OrderTicket> orders, Map<Ticker, Ticker> tickers) {
         if (orders.isEmpty()) {
             return false;
         }
-        for (TradeOrder order : orders) {
-            if (order.getType() == TradeOrder.Type.MARKET_ON_CLOSE) {
+        for (OrderTicket order : orders) {
+            if (order.getType() == OrderTicket.Type.MARKET_ON_CLOSE) {
                 for (Ticker ticker : tickers.keySet()) {
                     if (order.getTicker().equals(ticker)) {
                         return true;

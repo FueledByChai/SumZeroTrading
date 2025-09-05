@@ -27,7 +27,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.reporting.TradeReferenceLine;
@@ -43,10 +43,10 @@ public class TradeRoundTripTest {
     protected TradeRoundTrip testRoundTrip;
 
     @Mock
-    protected TradeOrder mockEntryOrder;
+    protected OrderTicket mockEntryOrder;
 
     @Mock
-    protected TradeOrder mockExitOrder;
+    protected OrderTicket mockExitOrder;
 
     public TradeRoundTripTest() {
     }

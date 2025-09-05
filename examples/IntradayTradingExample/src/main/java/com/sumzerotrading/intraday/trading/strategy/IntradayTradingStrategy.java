@@ -11,7 +11,7 @@ import com.sumzerotrading.broker.BrokerErrorListener;
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.BarData;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
@@ -81,7 +81,7 @@ public class IntradayTradingStrategy implements OrderEventListener, BrokerErrorL
         ibClient.addOrderStatusListener(reportGenerator);
         ibClient.connect();
 
-        List<TradeOrder> openOrders = ibClient.getOpenOrders();
+        List<OrderTicket> openOrders = ibClient.getOpenOrders();
         logger.debug("Found " + openOrders.size() + " open orders");
 
         logger.info("Requesting historical data for: " + mainTicker);
@@ -156,10 +156,11 @@ public class IntradayTradingStrategy implements OrderEventListener, BrokerErrorL
 
         ZonedDateTime zdt = ZonedDateTime.of(LocalDate.now(ZoneId.of("GMT")), closeTime, ZoneId.of("GMT"));
 
-        TradeOrder entryOrder = new TradeOrder(ibClient.getNextOrderId(), ticker, BigDecimal.valueOf(size), direction);
+        OrderTicket entryOrder = new OrderTicket(ibClient.getNextOrderId(), ticker, BigDecimal.valueOf(size),
+                direction);
         entryOrder.setReference("Intraday-Strategy-" + ticker.getSymbol() + ":" + correlationId + ":Entry:"
                 + tradeReferenceDirection + "*");
-        TradeOrder exitOrder = new TradeOrder(ibClient.getNextOrderId(), ticker, BigDecimal.valueOf(size),
+        OrderTicket exitOrder = new OrderTicket(ibClient.getNextOrderId(), ticker, BigDecimal.valueOf(size),
                 exitDirection);
         exitOrder.setReference("Intraday-Strategy-" + ticker.getSymbol() + ":" + correlationId + ":Exit:"
                 + tradeReferenceDirection + "*");

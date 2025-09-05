@@ -18,7 +18,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.broker.order;
 
 import java.io.Serializable;
@@ -28,17 +27,17 @@ import java.io.Serializable;
  * @author Rob Terpilowski
  */
 public class OrderEvent implements Serializable {
-    
+
     public static long serialVersionUID = 1L;
-    protected TradeOrder order;
+    protected OrderTicket order;
     protected OrderStatus orderStatus;
 
-    public OrderEvent(TradeOrder order, OrderStatus orderStatus) {
+    public OrderEvent(OrderTicket order, OrderStatus orderStatus) {
         this.order = order;
         this.orderStatus = orderStatus;
     }
 
-    public TradeOrder getOrder() {
+    public OrderTicket getOrder() {
         return order;
     }
 
@@ -58,7 +57,8 @@ public class OrderEvent implements Serializable {
         if (this.order != other.order && (this.order == null || !this.order.equals(other.order))) {
             return false;
         }
-        if (this.orderStatus != other.orderStatus && (this.orderStatus == null || !this.orderStatus.equals(other.orderStatus))) {
+        if (this.orderStatus != other.orderStatus
+                && (this.orderStatus == null || !this.orderStatus.equals(other.orderStatus))) {
             return false;
         }
         return true;

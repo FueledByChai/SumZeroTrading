@@ -20,6 +20,11 @@
             <artifactId>paradex-historical-data-api-impl</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>paper-broker-api-impl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
     <properties>
 

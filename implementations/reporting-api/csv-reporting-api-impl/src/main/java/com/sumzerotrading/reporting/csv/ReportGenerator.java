@@ -7,7 +7,7 @@ package com.sumzerotrading.reporting.csv;
 
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderStatus.Status;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.reporting.IReportGenerator;
 import com.sumzerotrading.reporting.IRoundTrip;
 import com.sumzerotrading.reporting.TradeReferenceLine;
@@ -38,7 +38,7 @@ public class ReportGenerator implements IReportGenerator {
     protected IRoundTripBuilder roundTripBuilder;
     protected String strategyName;
 
-    //For unit tests
+    // For unit tests
     protected ReportGenerator() {
     }
 
@@ -119,10 +119,10 @@ public class ReportGenerator implements IReportGenerator {
     @Override
     public void orderEvent(OrderEvent event) {
         logger.info("Received order event: " + event);
-        TradeOrder order = event.getOrder();
+        OrderTicket order = event.getOrder();
         if (order.getCurrentStatus() == Status.FILLED) {
             TradeReferenceLine line = getTradeReferenceLine(order.getReference());
-            //we only care about orders for this strategy
+            // we only care about orders for this strategy
             if (strategyName.equals(line.getStrategy())) {
                 IRoundTrip roundTrip = roundTripMap.get(line.getCorrelationId());
                 if (roundTrip == null) {
@@ -153,14 +153,15 @@ public class ReportGenerator implements IReportGenerator {
         logger.info("Writing round trip to result file: " + roundTrip);
         String resultString = roundTrip.getResults() + "\n";
         try {
-            Files.write(Paths.get(outputFile), resultString.getBytes(), StandardOpenOption.APPEND, StandardOpenOption.CREATE);
+            Files.write(Paths.get(outputFile), resultString.getBytes(), StandardOpenOption.APPEND,
+                    StandardOpenOption.CREATE);
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
 
     }
-    
-    protected TradeReferenceLine getTradeReferenceLine( String line ) {
+
+    protected TradeReferenceLine getTradeReferenceLine(String line) {
         return TradeReferenceLine.parseLine(line);
     }
 

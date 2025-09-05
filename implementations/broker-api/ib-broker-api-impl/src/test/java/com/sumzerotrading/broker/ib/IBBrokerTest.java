@@ -33,7 +33,7 @@ import org.mockito.Mockito;
 
 import com.ib.client.EClientSocket;
 import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.ib.IBConnectionInterface;
 import com.sumzerotrading.ib.IBSocket;
 
@@ -120,7 +120,7 @@ public class IBBrokerTest {
     public void testCancelTradeOrder() {
         final String id = "99";
         final int intId = Integer.parseInt(id);
-        final TradeOrder tradeOrder = new TradeOrder(id, null, BigDecimal.valueOf(1), TradeDirection.BUY);
+        final OrderTicket tradeOrder = new OrderTicket(id, null, BigDecimal.valueOf(1), TradeDirection.BUY);
 
         testBroker.cancelOrder(tradeOrder);
 

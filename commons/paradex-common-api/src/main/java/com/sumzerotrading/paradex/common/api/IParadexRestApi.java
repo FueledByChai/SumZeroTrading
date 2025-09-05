@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.sumzerotrading.broker.Position;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.InstrumentDescriptor;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.paradex.common.api.historical.OHLCBar;
@@ -29,11 +29,11 @@ public interface IParadexRestApi {
     List<OHLCBar> getOHLCBars(String symbol, int resolutionInMinutes, int lookbackInMinutes,
             HistoricalPriceKind priceKind);
 
-    List<TradeOrder> getOpenOrders(String jwtToken, String market);
+    List<OrderTicket> getOpenOrders(String jwtToken, String market);
 
     void cancelOrder(String jwtToken, String orderId);
 
-    String placeOrder(String jwtToken, TradeOrder tradeOrder);
+    String placeOrder(String jwtToken, OrderTicket tradeOrder);
 
     String getJwtToken();
 

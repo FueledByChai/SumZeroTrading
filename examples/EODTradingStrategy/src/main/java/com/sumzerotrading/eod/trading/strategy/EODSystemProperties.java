@@ -1,8 +1,7 @@
 package com.sumzerotrading.eod.trading.strategy;
 
-
-import com.sumzerotrading.broker.order.TradeOrder;
-import com.sumzerotrading.broker.order.TradeOrder.Type;
+import com.sumzerotrading.broker.order.OrderTicket;
+import com.sumzerotrading.broker.order.OrderTicket.Type;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,7 +22,6 @@ import java.util.Properties;
  * @author RobTerpilowski
  */
 public class EODSystemProperties {
-    
 
     protected LocalTime startTime;
     protected LocalTime marketCloseTime;
@@ -32,23 +30,22 @@ public class EODSystemProperties {
     protected int twsPort;
     protected int twsClientId;
     protected int tradeSizeDollars;
-    protected Map<String,String> longShortTickerMap = new HashMap<>();
+    protected Map<String, String> longShortTickerMap = new HashMap<>();
     protected String strategyDirectory;
-    protected TradeOrder.Type entryOrderType;
+    protected OrderTicket.Type entryOrderType;
     protected int exitSeconds = 0;
-    protected TradeOrder.Type exitOrderType;
-    
-    
-    //For Unit tests
+    protected OrderTicket.Type exitOrderType;
+
+    // For Unit tests
     protected EODSystemProperties() {
-        
+
     }
-    
+
     public EODSystemProperties(String fileName) throws IOException {
-        this( new FileInputStream(fileName) );
-        
+        this(new FileInputStream(fileName));
+
     }
-    
+
     public EODSystemProperties(InputStream inputStream) throws IOException {
         Properties props = new Properties();
         props.load(inputStream);
@@ -88,7 +85,7 @@ public class EODSystemProperties {
         return strategyDirectory;
     }
 
-    public TradeOrder.Type getEntryOrderType() {
+    public OrderTicket.Type getEntryOrderType() {
         return entryOrderType;
     }
 
@@ -103,13 +100,8 @@ public class EODSystemProperties {
     public LocalTime getExitTime() {
         return exitTime;
     }
-    
-    
-    
-    
 
-
-    protected void parseProps( Properties props ) {
+    protected void parseProps(Properties props) {
         twsHost = props.getProperty("tws.host");
         twsPort = Integer.parseInt(props.getProperty("tws.port"));
         twsClientId = Integer.parseInt(props.getProperty("tws.client.id"));
@@ -123,30 +115,29 @@ public class EODSystemProperties {
         exitOrderType = getOrderType(props.getProperty("exit.order.type", "MOO"));
         exitSeconds = Integer.parseInt(props.getProperty("exit.seconds", "0"));
     }
-    
-    protected TradeOrder.Type getOrderType( String orderType ) {
-        if( "MKT".equalsIgnoreCase(orderType) ) {
+
+    protected OrderTicket.Type getOrderType(String orderType) {
+        if ("MKT".equalsIgnoreCase(orderType)) {
             return Type.MARKET;
-        } else if( "MOC".equalsIgnoreCase(orderType) ) {
+        } else if ("MOC".equalsIgnoreCase(orderType)) {
             return Type.MARKET_ON_CLOSE;
-        } else if( "MOO".equalsIgnoreCase(orderType) ) {
+        } else if ("MOO".equalsIgnoreCase(orderType)) {
             return Type.MARKET_ON_OPEN;
         } else {
-            throw new IllegalStateException( "Unknown order.type: " + orderType );
+            throw new IllegalStateException("Unknown order.type: " + orderType);
         }
     }
 
-    
-    protected Map<String,String> getLongShortTickers( Properties props ) {
-        Map<String,String> map = new HashMap<>();
-        for( Object key : props.keySet()) {
+    protected Map<String, String> getLongShortTickers(Properties props) {
+        Map<String, String> map = new HashMap<>();
+        for (Object key : props.keySet()) {
             String keyString = (String) key;
-            if( keyString.startsWith("pair") ) {
+            if (keyString.startsWith("pair")) {
                 String[] tickers = props.getProperty(keyString).split(":");
                 map.put(tickers[0], tickers[1]);
             }
         }
-        
+
         return map;
     }
 
@@ -221,10 +212,11 @@ public class EODSystemProperties {
 
     @Override
     public String toString() {
-        return "EODSystemProperties{" + "startTime=" + startTime + ", marketCloseTime=" + marketCloseTime + ", exitTime=" + exitTime + ", twsHost=" + twsHost + ", twsPort=" + twsPort + ", twsClientId=" + twsClientId + ", tradeSizeDollars=" + tradeSizeDollars + ", longShortTickerMap=" + longShortTickerMap + ", strategyDirectory=" + strategyDirectory + ", entryOrderType=" + entryOrderType + ", exitSeconds=" + exitSeconds + ", exitOrderType=" + exitOrderType + '}';
+        return "EODSystemProperties{" + "startTime=" + startTime + ", marketCloseTime=" + marketCloseTime
+                + ", exitTime=" + exitTime + ", twsHost=" + twsHost + ", twsPort=" + twsPort + ", twsClientId="
+                + twsClientId + ", tradeSizeDollars=" + tradeSizeDollars + ", longShortTickerMap=" + longShortTickerMap
+                + ", strategyDirectory=" + strategyDirectory + ", entryOrderType=" + entryOrderType + ", exitSeconds="
+                + exitSeconds + ", exitOrderType=" + exitOrderType + '}';
     }
 
-    
-    
-    
 }

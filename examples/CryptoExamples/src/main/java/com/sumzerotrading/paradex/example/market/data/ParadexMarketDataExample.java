@@ -21,8 +21,6 @@ package com.sumzerotrading.paradex.example.market.data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sumzerotrading.data.Exchange;
-import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.marketdata.ILevel1Quote;
 import com.sumzerotrading.marketdata.OrderFlow;
@@ -35,7 +33,7 @@ public class ParadexMarketDataExample {
 
     public void getLevel1Quotes() {
 
-        Ticker ticker = ParadexTickerRegistry.getInstance().lookupByBrokerSymbol("BTC-USD-PERP");
+        Ticker ticker = ParadexTickerRegistry.getInstance().lookupByBrokerSymbol("IP-USD-PERP");
 
         ParadexQuoteEngine quoteEngine = new ParadexQuoteEngine();
 

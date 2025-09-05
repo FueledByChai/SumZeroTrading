@@ -27,7 +27,7 @@ import org.junit.Test;
 import com.sumzerotrading.broker.IBroker;
 import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.BarData;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
@@ -160,7 +160,7 @@ public class InteractiveBrokersClientTest {
 
     @Test
     public void testPlaceOrder() {
-        TradeOrder order = new TradeOrder("123", new Ticker("ABC").setInstrumentType(InstrumentType.STOCK),
+        OrderTicket order = new OrderTicket("123", new Ticker("ABC").setInstrumentType(InstrumentType.STOCK),
                 BigDecimal.valueOf(10), TradeDirection.SELL);
         client.placeOrder(order);
         verify(mockBroker).placeOrder(order);
@@ -181,8 +181,8 @@ public class InteractiveBrokersClientTest {
 
     @Test
     public void testGetOpenOrders() {
-        List<TradeOrder> list = new ArrayList<>();
-        list.add(new TradeOrder("123", new Ticker("ABC").setInstrumentType(InstrumentType.STOCK),
+        List<OrderTicket> list = new ArrayList<>();
+        list.add(new OrderTicket("123", new Ticker("ABC").setInstrumentType(InstrumentType.STOCK),
                 BigDecimal.valueOf(123), TradeDirection.SELL));
         when(mockBroker.getOpenOrders()).thenReturn(list);
         assertEquals(list, mockBroker.getOpenOrders());

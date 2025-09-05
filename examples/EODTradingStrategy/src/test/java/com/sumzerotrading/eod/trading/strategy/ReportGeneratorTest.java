@@ -41,7 +41,7 @@ import org.junit.Test;
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderStatus;
 import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.eod.trading.strategy.TradeReferenceLine.Direction;
@@ -55,7 +55,7 @@ import com.sumzerotrading.eod.trading.strategy.TradeReferenceLine.Side;
 public class ReportGeneratorTest {
 
     protected ReportGenerator reportGenerator;
-    protected TradeOrder order;
+    protected OrderTicket order;
     protected String tmpDir;
     protected String partialDir;
 
@@ -73,7 +73,7 @@ public class ReportGeneratorTest {
     @Before
     public void setUp() throws Exception {
         reportGenerator = spy(ReportGenerator.class);
-        order = new TradeOrder("123", new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK),
+        order = new OrderTicket("123", new Ticker("QQQ").setInstrumentType(InstrumentType.STOCK),
                 BigDecimal.valueOf(100), TradeDirection.BUY);
         String systemTmpDir = System.getProperty("java.io.tmpdir");
         if (!systemTmpDir.endsWith("/")) {
@@ -257,19 +257,19 @@ public class ReportGeneratorTest {
         ZonedDateTime entryTime = ZonedDateTime.of(2016, 3, 19, 7, 1, 10, 0, ZoneId.systemDefault());
         ZonedDateTime exitTime = ZonedDateTime.of(2016, 3, 20, 6, 1, 10, 0, ZoneId.systemDefault());
 
-        TradeOrder longEntry = new TradeOrder("123", longTicker, longSize, TradeDirection.BUY);
+        OrderTicket longEntry = new OrderTicket("123", longTicker, longSize, TradeDirection.BUY);
         longEntry.setFilledPrice(longEntryFillPrice);
         longEntry.setOrderFilledTime(entryTime);
 
-        TradeOrder longExit = new TradeOrder("123", longTicker, longSize, TradeDirection.SELL);
+        OrderTicket longExit = new OrderTicket("123", longTicker, longSize, TradeDirection.SELL);
         longExit.setFilledPrice(longExitFillPrice);
         longExit.setOrderFilledTime(exitTime);
 
-        TradeOrder shortEntry = new TradeOrder("123", shortTicker, shortSize, TradeDirection.SELL);
+        OrderTicket shortEntry = new OrderTicket("123", shortTicker, shortSize, TradeDirection.SELL);
         shortEntry.setFilledPrice(shortEntryFillPrice);
         shortEntry.setOrderFilledTime(entryTime);
 
-        TradeOrder shortExit = new TradeOrder("123", shortTicker, shortSize, TradeDirection.BUY);
+        OrderTicket shortExit = new OrderTicket("123", shortTicker, shortSize, TradeDirection.BUY);
         shortExit.setFilledPrice(shortExitFillPrice);
         shortExit.setOrderFilledTime(exitTime);
 
@@ -308,13 +308,13 @@ public class ReportGeneratorTest {
         System.out.println("Creating directory at: " + directory);
         ReportGenerator generator = new ReportGenerator(directory);
 
-        TradeOrder longEntryOrder = new TradeOrder("123", longTicker, BigDecimal.valueOf(100), TradeDirection.BUY);
+        OrderTicket longEntryOrder = new OrderTicket("123", longTicker, BigDecimal.valueOf(100), TradeDirection.BUY);
         longEntryOrder.setFilledPrice(BigDecimal.valueOf(100.00));
         longEntryOrder.setReference("EOD-Pair-Strategy:guid-123:Entry:Long*");
         longEntryOrder.setCurrentStatus(OrderStatus.Status.FILLED);
         longEntryOrder.setOrderFilledTime(entryOrderTime);
 
-        TradeOrder shortEntryOrder = new TradeOrder("234", shortTicker, BigDecimal.valueOf(50), TradeDirection.SELL);
+        OrderTicket shortEntryOrder = new OrderTicket("234", shortTicker, BigDecimal.valueOf(50), TradeDirection.SELL);
         shortEntryOrder.setFilledPrice(BigDecimal.valueOf(50.00));
         shortEntryOrder.setReference("EOD-Pair-Strategy:guid-123:Entry:Short*");
         shortEntryOrder.setCurrentStatus(OrderStatus.Status.FILLED);
@@ -326,13 +326,13 @@ public class ReportGeneratorTest {
         generator.orderEvent(new OrderEvent(shortEntryOrder, null));
         assertFalse(Files.exists(reportPath));
 
-        TradeOrder longExitOrder = new TradeOrder("1234", longTicker, BigDecimal.valueOf(100), TradeDirection.SELL);
+        OrderTicket longExitOrder = new OrderTicket("1234", longTicker, BigDecimal.valueOf(100), TradeDirection.SELL);
         longExitOrder.setFilledPrice(BigDecimal.valueOf(105.00));
         longExitOrder.setReference("EOD-Pair-Strategy:guid-123:Exit:Long*");
         longExitOrder.setCurrentStatus(OrderStatus.Status.FILLED);
         longExitOrder.setOrderFilledTime(exitOrderTime);
 
-        TradeOrder shortExitOrder = new TradeOrder("2345", shortTicker, BigDecimal.valueOf(50), TradeDirection.BUY);
+        OrderTicket shortExitOrder = new OrderTicket("2345", shortTicker, BigDecimal.valueOf(50), TradeDirection.BUY);
         shortExitOrder.setFilledPrice(BigDecimal.valueOf(40.00));
         shortExitOrder.setReference("EOD-Pair-Strategy:guid-123:Exit:Short*");
         shortExitOrder.setCurrentStatus(OrderStatus.Status.FILLED);

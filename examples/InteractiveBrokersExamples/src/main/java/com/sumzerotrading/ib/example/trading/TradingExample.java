@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.Exchange;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
@@ -59,8 +59,8 @@ public class TradingExample {
         int contracts = 5;
 
         // Create the order and send to Interactive Brokers
-        TradeOrder order = new TradeOrder(orderId, futuresTicker, BigDecimal.valueOf(contracts), TradeDirection.BUY);
-        order.setType(TradeOrder.Type.LIMIT);
+        OrderTicket order = new OrderTicket(orderId, futuresTicker, BigDecimal.valueOf(contracts), TradeDirection.BUY);
+        order.setType(OrderTicket.Type.LIMIT);
         order.setLimitPrice(BigDecimal.valueOf(32.50));
         ibClient.placeOrder(order);
     }
@@ -71,7 +71,7 @@ public class TradingExample {
         String orderId = ibClient.getNextOrderId();
         int shares = 500;
 
-        TradeOrder order = new TradeOrder(orderId, amazonTicker, BigDecimal.valueOf(shares), TradeDirection.SELL);
+        OrderTicket order = new OrderTicket(orderId, amazonTicker, BigDecimal.valueOf(shares), TradeDirection.SELL);
 
         // ibClient.placeOrder(order);
         ibClient.getOpenPositions();
@@ -89,7 +89,7 @@ public class TradingExample {
         logger.info("Next Order ID: " + orderId);
         int amount = 50000;
 
-        TradeOrder order = new TradeOrder(orderId, eurTicker, BigDecimal.valueOf(amount), TradeDirection.BUY);
+        OrderTicket order = new OrderTicket(orderId, eurTicker, BigDecimal.valueOf(amount), TradeDirection.BUY);
 
         logger.info("Waiting for 15 seconds before placing order...");
         Thread.sleep(20000);

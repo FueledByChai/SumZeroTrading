@@ -134,7 +134,9 @@ public class ParadexQuoteEngine extends QuoteEngine
 
         double hourlyFundingRate = Double.parseDouble(fundingRate) / (double) ticker.getFundingRateInterval();
         double annualizedFundingRate = hourlyFundingRate * 24 * 365 * 100;
+        double fundingRateHourlyBps = hourlyFundingRate * 10000;
         BigDecimal fundingRateApr = BigDecimal.valueOf(annualizedFundingRate);
+        BigDecimal fundingRateHourlyBpsBigDecimal = BigDecimal.valueOf(fundingRateHourlyBps);
 
         // The bid and the ask from this market summary websocket aren't reliably
         // upddated, better to use thee
@@ -146,6 +148,7 @@ public class ParadexQuoteEngine extends QuoteEngine
         quoteValues.put(QuoteType.VOLUME, new BigDecimal(volume24h));
         quoteValues.put(QuoteType.UNDERLYING_PRICE, new BigDecimal(underlyingPrice));
         quoteValues.put(QuoteType.FUNDING_RATE_APR, fundingRateApr);
+        quoteValues.put(QuoteType.FUNDING_RATE_HOURLY_BPS, fundingRateHourlyBpsBigDecimal);
 
         ILevel1Quote quote = new Level1Quote(ticker, convertToZonedDateTime(createdAtTimestamp), quoteValues);
         super.fireLevel1Quote(quote);

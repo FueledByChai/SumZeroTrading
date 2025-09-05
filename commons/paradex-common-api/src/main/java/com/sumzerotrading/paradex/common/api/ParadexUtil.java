@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.BarData;
 import com.sumzerotrading.paradex.common.api.historical.OHLCBar;
 import com.sumzerotrading.paradex.common.api.order.OrderType;
@@ -17,13 +17,13 @@ import com.sumzerotrading.paradex.common.api.order.Side;
 
 public class ParadexUtil {
 
-    public static TradeOrder translateOrder(ParadexOrder order) {
-        TradeOrder tradeOrder = new TradeOrder();
+    public static OrderTicket translateOrder(ParadexOrder order) {
+        OrderTicket tradeOrder = new OrderTicket();
 
         return tradeOrder;
     }
 
-    public static ParadexOrder translateOrder(TradeOrder order) {
+    public static ParadexOrder translateOrder(OrderTicket order) {
         ParadexOrder paradoxOrder = new ParadexOrder();
         paradoxOrder.setClientId(order.getReference());
         paradoxOrder.setTicker(order.getTicker().getSymbol());
@@ -36,24 +36,24 @@ public class ParadexUtil {
 
         paradoxOrder.setSize(order.getSize());
 
-        if (order.getType() == TradeOrder.Type.MARKET) {
+        if (order.getType() == OrderTicket.Type.MARKET) {
             paradoxOrder.setOrderType(OrderType.MARKET);
-        } else if (order.getType() == TradeOrder.Type.LIMIT) {
+        } else if (order.getType() == OrderTicket.Type.LIMIT) {
             paradoxOrder.setOrderType(OrderType.LIMIT);
-        } else if (order.getType() == TradeOrder.Type.STOP) {
+        } else if (order.getType() == OrderTicket.Type.STOP) {
             paradoxOrder.setOrderType(OrderType.STOP);
         } else {
             throw new UnsupportedOperationException("Order type " + order.getType() + " is not supported");
         }
 
-        if (order.getType() == TradeOrder.Type.LIMIT) {
+        if (order.getType() == OrderTicket.Type.LIMIT) {
             paradoxOrder.setLimitPrice(order.getLimitPrice());
         }
 
         return paradoxOrder;
     }
 
-    public static List<TradeOrder> translateOrders(List<ParadexOrder> orders) {
+    public static List<OrderTicket> translateOrders(List<ParadexOrder> orders) {
         return orders.stream().map(ParadexUtil::translateOrder).collect(Collectors.toList());
     }
 

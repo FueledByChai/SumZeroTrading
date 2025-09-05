@@ -8,7 +8,7 @@ package com.sumzerotrading.interactive.brokers.client;
 import com.sumzerotrading.broker.BrokerErrorListener;
 import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.order.OrderEventListener;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.BarData;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.historicaldata.IHistoricalDataProvider;
@@ -27,44 +27,47 @@ import java.util.List;
  */
 public interface InteractiveBrokersClientInterface {
 
-    void addOrderStatusListener(OrderEventListener listener);
+        void addOrderStatusListener(OrderEventListener listener);
 
-    void connect();
+        void connect();
 
-    void disconnect();
+        void disconnect();
 
-    int getClientId();
+        int getClientId();
 
-    String getHost();
+        String getHost();
 
-    String getNextOrderId();
+        String getNextOrderId();
 
-    int getPort();
+        int getPort();
 
-    void placeOrder(TradeOrder order);
+        void placeOrder(OrderTicket order);
 
-    List<BarData> requestHistoricalData(Ticker ticker, int duration, BarData.LengthUnit lengthUnit, int barSize, BarData.LengthUnit barSizeUnit, IHistoricalDataProvider.ShowProperty showProperty);
-    
-    List<BarData> requestHistoricalData( Ticker ticker, Date endDateTime, int duration, BarData.LengthUnit durationLengthUnit, int barSize, BarData.LengthUnit barSizeUnit, ShowProperty whatToShow, boolean useRTH  ) throws IOException;
+        List<BarData> requestHistoricalData(Ticker ticker, int duration, BarData.LengthUnit lengthUnit, int barSize,
+                        BarData.LengthUnit barSizeUnit, IHistoricalDataProvider.ShowProperty showProperty);
 
-    void subscribeLevel1(Ticker ticker, Level1QuoteListener listener);
+        List<BarData> requestHistoricalData(Ticker ticker, Date endDateTime, int duration,
+                        BarData.LengthUnit durationLengthUnit, int barSize, BarData.LengthUnit barSizeUnit,
+                        ShowProperty whatToShow, boolean useRTH) throws IOException;
 
-    void subscribeMarketDepth(Ticker ticker, Level2QuoteListener listener);
+        void subscribeLevel1(Ticker ticker, Level1QuoteListener listener);
 
-    void unsubscribeLevel1(Ticker ticker, Level1QuoteListener listener);
+        void subscribeMarketDepth(Ticker ticker, Level2QuoteListener listener);
 
-    void unsubscribeMarketDepth(Ticker ticker, Level2QuoteListener listener);
-    
-    void addBrokerErrorListener( BrokerErrorListener listener );
-    
-    void removeBrokerErrorListener( BrokerErrorListener listener );
-    
-    List<TradeOrder> getOpenOrders();
-    
-    void useDelayedData( boolean useDelayedData );
-    
-    List<Position> getOpenPositions();
-    
-    public void subscribeRealtimeBar(RealtimeBarRequest request, RealtimeBarListener listener );
-    
+        void unsubscribeLevel1(Ticker ticker, Level1QuoteListener listener);
+
+        void unsubscribeMarketDepth(Ticker ticker, Level2QuoteListener listener);
+
+        void addBrokerErrorListener(BrokerErrorListener listener);
+
+        void removeBrokerErrorListener(BrokerErrorListener listener);
+
+        List<OrderTicket> getOpenOrders();
+
+        void useDelayedData(boolean useDelayedData);
+
+        List<Position> getOpenPositions();
+
+        public void subscribeRealtimeBar(RealtimeBarRequest request, RealtimeBarListener listener);
+
 }

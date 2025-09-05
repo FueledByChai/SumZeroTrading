@@ -21,7 +21,7 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 package com.sumzerotrading.broker;
 
 import com.sumzerotrading.broker.order.OrderEventListener;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.ComboTicker;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.time.TimeUpdatedListener;
@@ -44,7 +44,7 @@ public interface IBroker {
      *
      * @param order The order to cancel
      */
-    public abstract void cancelOrder(TradeOrder order);
+    public abstract void cancelOrder(OrderTicket order);
 
     /**
      * Cancels all orders for the specified ticker.
@@ -63,7 +63,7 @@ public interface IBroker {
      *
      * @param order The order to place with the broker.
      */
-    public abstract void placeOrder(TradeOrder order);
+    public abstract void placeOrder(OrderTicket order);
 
     /**
      * Gets the next order ID, or -1 if there was a problem getting the orderId
@@ -172,14 +172,14 @@ public interface IBroker {
      * @param orderId The orderId of the Order to retreive.
      * @return The TradeOrder for the specified ID, or null if no trade was found.
      */
-    public TradeOrder requestOrderStatus(String orderId);
+    public OrderTicket requestOrderStatus(String orderId);
 
     /**
      * Requests all open orders
      * 
      * @return A list of all open orders.
      */
-    public List<TradeOrder> getOpenOrders();
+    public List<OrderTicket> getOpenOrders();
 
     /**
      * Cancels the order with the specified ID, and replaced it with the specified
@@ -188,7 +188,7 @@ public interface IBroker {
      * @param originalOrderId The ID of the order to cancel
      * @param newOrder        The order to replace the canceled order with.
      */
-    public void cancelAndReplaceOrder(String originalOrderId, TradeOrder newOrder);
+    public void cancelAndReplaceOrder(String originalOrderId, OrderTicket newOrder);
 
     /**
      * The broker will send out updates once per second so that the trading

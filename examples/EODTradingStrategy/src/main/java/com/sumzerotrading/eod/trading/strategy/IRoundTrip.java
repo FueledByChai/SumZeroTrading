@@ -5,7 +5,7 @@
  */
 package com.sumzerotrading.eod.trading.strategy;
 
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import java.io.Serializable;
 
 /**
@@ -14,12 +14,12 @@ import java.io.Serializable;
  */
 public interface IRoundTrip extends Serializable {
 
-    public void addTradeReference(TradeOrder order, TradeReferenceLine tradeReference);
+    public void addTradeReference(OrderTicket order, TradeReferenceLine tradeReference);
 
     public String getCorrelationId();
 
     public String getResults();
 
     public boolean isComplete();
-    
+
 }

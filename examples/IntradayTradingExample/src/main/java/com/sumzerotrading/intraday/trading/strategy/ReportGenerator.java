@@ -7,7 +7,7 @@ package com.sumzerotrading.intraday.trading.strategy;
 
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderStatus.Status;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -33,91 +33,87 @@ public class ReportGenerator implements IReportGenerator {
     protected String outputFile;
     protected String outputDir;
     protected String partialDir;
-    
 
-    //For unit tests
+    // For unit tests
     protected ReportGenerator() {
     }
 
     public ReportGenerator(String dir) {
         StringBuilder sb = new StringBuilder();
         sb.append(dir);
-        if( ! dir.endsWith("/") ) {
+        if (!dir.endsWith("/")) {
             sb.append("/");
         }
-        
+
         this.outputDir = sb.toString();
         partialDir = sb.toString() + "partial/";
-        
+
         try {
             Files.createDirectories(Paths.get(outputDir));
         } catch (IOException ex) {
             throw new IllegalStateException(ex);
         }
-        
+
         try {
             Files.createDirectories(Paths.get(partialDir));
-        } catch( IOException ex ) {
+        } catch (IOException ex) {
             throw new IllegalStateException(ex);
         }
-        
+
         sb.append("report.csv");
         outputFile = sb.toString();
-        
-        logger.info( "Created new Report Generator with output dir: " + outputDir );
-        logger.info( "...and partialDir: " + partialDir);
-        
+
+        logger.info("Created new Report Generator with output dir: " + outputDir);
+        logger.info("...and partialDir: " + partialDir);
+
         try {
-            logger.info( "Loading partial round trips..." );
+            logger.info("Loading partial round trips...");
             loadPartialRoundTrips();
-            logger.info( "Round Trips loaded");
-        } catch( IOException ex ) {
+            logger.info("Round Trips loaded");
+        } catch (IOException ex) {
             throw new IllegalStateException(ex);
         }
-        
+
     }
-    
-    
-    
+
     @Override
     public void loadPartialRoundTrips() throws IOException {
         File[] files = new File(partialDir).listFiles();
-        for( File file : files ) {
+        for (File file : files) {
             ObjectInputStream input = new ObjectInputStream(new FileInputStream(file));
             RoundTrip trip;
             try {
                 trip = (RoundTrip) input.readObject();
-                logger.info("Loading round trip: " + trip );
+                logger.info("Loading round trip: " + trip);
                 roundTripMap.put(trip.getCorrelationId(), trip);
             } catch (ClassNotFoundException ex) {
                 throw new IllegalStateException(ex);
             }
             input.close();
-            
+
         }
     }
-    
+
     @Override
-    public void savePartial(String correlationId, RoundTrip trip ) throws IOException {
+    public void savePartial(String correlationId, RoundTrip trip) throws IOException {
         logger.info("Saving partial round trip: " + trip);
         String filename = partialDir + correlationId + ".ser";
         ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(filename));
         output.writeObject(trip);
         output.close();
     }
-    
+
     @Override
     public void deletePartial(String correlationId) throws IOException {
-        logger.info( "Deleting partial round trip with correlation ID: "  + correlationId );
+        logger.info("Deleting partial round trip with correlation ID: " + correlationId);
         String filename = partialDir + correlationId + ".ser";
         Files.deleteIfExists(Paths.get(filename));
     }
 
-    
     @Override
     public void orderEvent(OrderEvent event) {
         logger.info("Received order event: " + event);
-        TradeOrder order = event.getOrder();
+        OrderTicket order = event.getOrder();
         if (order.getCurrentStatus() == Status.FILLED) {
             TradeReferenceLine line = getTradeReferenceLine(order.getReference());
             RoundTrip roundTrip = roundTripMap.get(line.getCorrelationId());
@@ -131,25 +127,25 @@ public class ReportGenerator implements IReportGenerator {
                     writeRoundTripToFile(roundTrip);
                     deletePartial(roundTrip.getCorrelationId());
                     roundTripMap.remove(line.getCorrelationId());
-                } catch( IOException ex ) {
+                } catch (IOException ex) {
                     throw new IllegalStateException(ex);
                 }
             } else {
                 try {
                     savePartial(line.getCorrelationId(), roundTrip);
-                } catch( IOException ex ) {
+                } catch (IOException ex) {
                     throw new IllegalStateException(ex);
                 }
             }
         }
     }
-    
 
     protected synchronized void writeRoundTripToFile(RoundTrip roundTrip) {
         logger.info("Writing round trip to result file: " + roundTrip);
         String resultString = roundTrip.getResults() + "\n";
         try {
-            Files.write(Paths.get(outputFile), resultString.getBytes(),  StandardOpenOption.APPEND, StandardOpenOption.CREATE);
+            Files.write(Paths.get(outputFile), resultString.getBytes(), StandardOpenOption.APPEND,
+                    StandardOpenOption.CREATE);
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }

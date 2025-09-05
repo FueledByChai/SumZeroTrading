@@ -24,8 +24,8 @@ import com.sumzerotrading.bitmex.entity.BitmexOrder;
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderStatus;
 import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
-import com.sumzerotrading.broker.order.TradeOrder.Type;
+import com.sumzerotrading.broker.order.OrderTicket;
+import com.sumzerotrading.broker.order.OrderTicket.Type;
 import com.sumzerotrading.data.SumZeroException;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
@@ -36,7 +36,7 @@ import java.time.ZonedDateTime;
  */
 public class OrderManagmentUtil {
 
-    public static BitmexOrder createBitmexOrder(TradeOrder order) {
+    public static BitmexOrder createBitmexOrder(OrderTicket order) {
         BitmexOrder bitmexOrder = new BitmexOrder();
         bitmexOrder.setOrderID(order.getOrderId());
         bitmexOrder.setOrdType(getBitmexOrderType(order.getType()));
@@ -49,7 +49,7 @@ public class OrderManagmentUtil {
 
     }
 
-    public static String getBitmexTIF(TradeOrder.Duration duration) {
+    public static String getBitmexTIF(OrderTicket.Duration duration) {
         switch (duration) {
         case DAY:
             return "Day";
@@ -100,7 +100,7 @@ public class OrderManagmentUtil {
      * @param whyHeld
      * @return
      */
-    public static OrderEvent createOrderEvent(TradeOrder order, String statusString, BigDecimal filled,
+    public static OrderEvent createOrderEvent(OrderTicket order, String statusString, BigDecimal filled,
             BigDecimal remaining, double avgFillPrice, int permId, int parentId, double lastFillPrice, int clientId,
             String whyHeld, ZonedDateTime timestamp) {
         OrderStatus.Status status = null;

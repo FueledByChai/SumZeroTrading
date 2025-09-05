@@ -32,7 +32,7 @@ import javax.imageio.ImageIO;
 import com.ib.client.TagValue;
 import com.sumzerotrading.broker.order.OrderStatus;
 import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.SumZeroException;
 import com.sumzerotrading.data.Ticker;
@@ -70,7 +70,7 @@ public class IbUtils {
         }
     }
 
-    public static String getOrderType(TradeOrder.Type orderType) {
+    public static String getOrderType(OrderTicket.Type orderType) {
         if (null != orderType) {
             switch (orderType) {
             case LIMIT:
@@ -91,7 +91,7 @@ public class IbUtils {
         }
     }
 
-    public static String getTif(TradeOrder.Duration duration) {
+    public static String getTif(OrderTicket.Duration duration) {
         if (duration == null) {
             return "DAY";
         }

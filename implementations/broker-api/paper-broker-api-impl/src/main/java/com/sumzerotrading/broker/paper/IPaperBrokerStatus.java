@@ -3,7 +3,7 @@ package com.sumzerotrading.broker.paper;
 import java.util.Collection;
 import java.util.Set;
 
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 
 public interface IPaperBrokerStatus {
 
@@ -27,13 +27,13 @@ public interface IPaperBrokerStatus {
 
     void setTotalTrades(int totalTrades);
 
-    Collection<TradeOrder> getOpenOrders();
+    Collection<OrderTicket> getOpenOrders();
 
-    void setOpenOrders(Collection<TradeOrder> openOrders);
+    void setOpenOrders(Collection<OrderTicket> openOrders);
 
-    Set<TradeOrder> getExecutedOrders();
+    Set<OrderTicket> getExecutedOrders();
 
-    void setExecutedOrders(Set<TradeOrder> executedOrders);
+    void setExecutedOrders(Set<OrderTicket> executedOrders);
 
     double getBestBid();
 

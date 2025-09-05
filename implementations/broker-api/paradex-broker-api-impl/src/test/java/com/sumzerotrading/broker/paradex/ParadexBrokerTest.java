@@ -36,7 +36,7 @@ import com.sumzerotrading.broker.BrokerErrorListener;
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.broker.order.OrderStatus;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.paradex.common.api.ParadexConfiguration;
 import com.sumzerotrading.paradex.common.api.ParadexRestApi;
@@ -63,7 +63,7 @@ public class ParadexBrokerTest {
     private ScheduledExecutorService mockAuthenticationScheduler;
 
     @Mock
-    private TradeOrder mockTradeOrder;
+    private OrderTicket mockTradeOrder;
 
     @Mock
     private OrderEventListener mockOrderEventListener;
@@ -365,7 +365,7 @@ public class ParadexBrokerTest {
         // Arrange
         CountDownLatch latch = new CountDownLatch(1);
         OrderEventListener asyncListener = mock(OrderEventListener.class);
-        TradeOrder mockTradeOrder = mock(TradeOrder.class);
+        OrderTicket mockTradeOrder = mock(OrderTicket.class);
 
         // Configure the mock to signal when called
         doAnswer(invocation -> {
@@ -581,7 +581,7 @@ public class ParadexBrokerTest {
     public void testOrderStatusUpdated_FilledOrderRemoval() {
         // Arrange
         String orderId = "filledOrder";
-        TradeOrder mockTradeOrder = mock(TradeOrder.class);
+        OrderTicket mockTradeOrder = mock(OrderTicket.class);
         broker.tradeOrderMap.put(orderId, mockTradeOrder);
         broker.orderEventExecutor = Executors.newCachedThreadPool();
 
@@ -607,7 +607,7 @@ public class ParadexBrokerTest {
     public void testOrderStatusUpdated_CanceledOrderRemoval() {
         // Arrange
         String orderId = "canceledOrder";
-        TradeOrder mockTradeOrder = mock(TradeOrder.class);
+        OrderTicket mockTradeOrder = mock(OrderTicket.class);
         broker.tradeOrderMap.put(orderId, mockTradeOrder);
         broker.orderEventExecutor = Executors.newCachedThreadPool();
 
@@ -633,7 +633,7 @@ public class ParadexBrokerTest {
     public void testOrderStatusUpdated_NewOrderNotRemoved() {
         // Arrange
         String orderId = "newOrder";
-        TradeOrder mockTradeOrder = mock(TradeOrder.class);
+        OrderTicket mockTradeOrder = mock(OrderTicket.class);
         broker.tradeOrderMap.put(orderId, mockTradeOrder);
         broker.orderEventExecutor = Executors.newCachedThreadPool();
 
@@ -659,7 +659,7 @@ public class ParadexBrokerTest {
     public void testOrderStatusUpdated_ExecutorShutdown() {
         // Arrange
         String orderId = "testOrder";
-        TradeOrder mockTradeOrder = mock(TradeOrder.class);
+        OrderTicket mockTradeOrder = mock(OrderTicket.class);
         broker.tradeOrderMap.put(orderId, mockTradeOrder);
         broker.orderEventExecutor = Executors.newCachedThreadPool();
         broker.orderEventExecutor.shutdown(); // Shutdown executor before test
@@ -687,7 +687,7 @@ public class ParadexBrokerTest {
     public void testOrderStatusUpdated_ListenerExceptionHandling() throws InterruptedException {
         // Arrange
         String orderId = "testOrder";
-        TradeOrder mockTradeOrder = mock(TradeOrder.class);
+        OrderTicket mockTradeOrder = mock(OrderTicket.class);
         broker.tradeOrderMap.put(orderId, mockTradeOrder);
         broker.orderEventExecutor = Executors.newCachedThreadPool();
 
@@ -963,7 +963,7 @@ public class ParadexBrokerTest {
             // Create multiple order status updates with valid status
             for (int i = 0; i < numThreads; i++) {
                 final int orderId = i;
-                TradeOrder order = mock(TradeOrder.class);
+                OrderTicket order = mock(OrderTicket.class);
                 broker.tradeOrderMap.put(String.valueOf(orderId), order);
 
                 IParadexOrderStatusUpdate update = mock(IParadexOrderStatusUpdate.class);

@@ -37,8 +37,9 @@ class ParadexApiFactoryTest {
     @Test
     void testDefaultConfiguration() {
         String configInfo = ParadexApiFactory.getConfigurationInfo();
+        System.out.println("Default config info: " + configInfo);
         assertNotNull(configInfo);
-        assertTrue(configInfo.contains("testnet"));
+        assertTrue(configInfo.contains("prod"));
 
         // Default should be testnet with no private API
         assertFalse(ParadexApiFactory.isPrivateApiAvailable());
@@ -49,7 +50,7 @@ class ParadexApiFactoryTest {
 
         // WebSocket URL should be testnet
         String wsUrl = ParadexApiFactory.getWebSocketUrl();
-        assertTrue(wsUrl.contains("testnet"));
+        assertTrue(wsUrl.contains("prod"));
     }
 
     @Test

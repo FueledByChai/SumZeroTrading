@@ -38,7 +38,7 @@ import org.junit.Test;
 import com.ib.client.TagValue;
 import com.sumzerotrading.broker.order.OrderStatus;
 import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.marketdata.QuoteType;
@@ -70,16 +70,16 @@ public class IbUtilsTest {
 
     @Test
     public void testGetTif() {
-        TradeOrder.Duration[] values = TradeOrder.Duration.values();
-        for (TradeOrder.Duration value : values) {
+        OrderTicket.Duration[] values = OrderTicket.Duration.values();
+        for (OrderTicket.Duration value : values) {
             assertNotNull(IbUtils.getTif(value));
         }
 
-        assertEquals("DAY", IbUtils.getTif(TradeOrder.Duration.DAY));
-        assertEquals("GTC", IbUtils.getTif(TradeOrder.Duration.GOOD_UNTIL_CANCELED));
-        assertEquals("IOC", IbUtils.getTif(TradeOrder.Duration.FILL_OR_KILL));
-        assertEquals("GTD", IbUtils.getTif(TradeOrder.Duration.GOOD_UNTIL_TIME));
-        assertEquals("OPG", IbUtils.getTif(TradeOrder.Duration.MARKET_ON_OPEN));
+        assertEquals("DAY", IbUtils.getTif(OrderTicket.Duration.DAY));
+        assertEquals("GTC", IbUtils.getTif(OrderTicket.Duration.GOOD_UNTIL_CANCELED));
+        assertEquals("IOC", IbUtils.getTif(OrderTicket.Duration.FILL_OR_KILL));
+        assertEquals("GTD", IbUtils.getTif(OrderTicket.Duration.GOOD_UNTIL_TIME));
+        assertEquals("OPG", IbUtils.getTif(OrderTicket.Duration.MARKET_ON_OPEN));
         assertEquals("DAY", IbUtils.getTif(null));
     }
 
@@ -106,13 +106,13 @@ public class IbUtilsTest {
     public void testGetOrderType() {
 
         // First make sure we have a mapping for all types.
-        TradeOrder.Type[] values = TradeOrder.Type.values();
+        OrderTicket.Type[] values = OrderTicket.Type.values();
 
-        assertEquals("MKT", IbUtils.getOrderType(TradeOrder.Type.MARKET));
-        assertEquals("LMT", IbUtils.getOrderType(TradeOrder.Type.LIMIT));
-        assertEquals("STP", IbUtils.getOrderType(TradeOrder.Type.STOP));
-        assertEquals("MKT", IbUtils.getOrderType(TradeOrder.Type.MARKET_ON_OPEN));
-        assertEquals("MOC", IbUtils.getOrderType(TradeOrder.Type.MARKET_ON_CLOSE));
+        assertEquals("MKT", IbUtils.getOrderType(OrderTicket.Type.MARKET));
+        assertEquals("LMT", IbUtils.getOrderType(OrderTicket.Type.LIMIT));
+        assertEquals("STP", IbUtils.getOrderType(OrderTicket.Type.STOP));
+        assertEquals("MKT", IbUtils.getOrderType(OrderTicket.Type.MARKET_ON_OPEN));
+        assertEquals("MOC", IbUtils.getOrderType(OrderTicket.Type.MARKET_ON_CLOSE));
 
         try {
             IbUtils.getOrderType(null);
@@ -122,21 +122,21 @@ public class IbUtilsTest {
         }
 
         try {
-            IbUtils.getOrderType(TradeOrder.Type.STOP_LIMIT);
+            IbUtils.getOrderType(OrderTicket.Type.STOP_LIMIT);
             fail();
         } catch (IllegalStateException ex) {
             // this should happen
         }
 
         try {
-            IbUtils.getOrderType(TradeOrder.Type.TRAILING_STOP);
+            IbUtils.getOrderType(OrderTicket.Type.TRAILING_STOP);
             fail();
         } catch (IllegalStateException ex) {
             // this should happen
         }
 
         try {
-            IbUtils.getOrderType(TradeOrder.Type.TRAILING_STOP_LIMIT);
+            IbUtils.getOrderType(OrderTicket.Type.TRAILING_STOP_LIMIT);
             fail();
         } catch (IllegalStateException ex) {
             // this should happen

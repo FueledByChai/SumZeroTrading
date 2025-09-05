@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.Exchange;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
@@ -67,7 +67,7 @@ public class TradingExampleWithOrderStatusListener implements OrderEventListener
         int contracts = 1;
 
         // Create the order and send to Interactive Brokers
-        TradeOrder order = new TradeOrder(orderId, futuresTicker, BigDecimal.valueOf(contracts), TradeDirection.BUY);
+        OrderTicket order = new OrderTicket(orderId, futuresTicker, BigDecimal.valueOf(contracts), TradeDirection.BUY);
         order.setGoodAfterTime(date);
         ibClient.placeOrder(order);
     }
@@ -81,7 +81,7 @@ public class TradingExampleWithOrderStatusListener implements OrderEventListener
         String orderId = ibClient.getNextOrderId();
         int shares = 500;
 
-        TradeOrder order = new TradeOrder(orderId, amazonTicker, BigDecimal.valueOf(shares), TradeDirection.SELL);
+        OrderTicket order = new OrderTicket(orderId, amazonTicker, BigDecimal.valueOf(shares), TradeDirection.SELL);
 
         ibClient.placeOrder(order);
     }
@@ -96,14 +96,14 @@ public class TradingExampleWithOrderStatusListener implements OrderEventListener
         String orderId = ibClient.getNextOrderId();
         int amount = 50000;
 
-        TradeOrder order = new TradeOrder(orderId, eurTicker, BigDecimal.valueOf(amount), TradeDirection.BUY);
+        OrderTicket order = new OrderTicket(orderId, eurTicker, BigDecimal.valueOf(amount), TradeDirection.BUY);
 
         ibClient.placeOrder(order);
 
         Thread.sleep(90 * 1000);
 
         ibClient.placeOrder(
-                new TradeOrder(ibClient.getNextOrderId(), eurTicker, BigDecimal.valueOf(amount), TradeDirection.SELL));
+                new OrderTicket(ibClient.getNextOrderId(), eurTicker, BigDecimal.valueOf(amount), TradeDirection.SELL));
     }
 
     @Override

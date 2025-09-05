@@ -75,14 +75,14 @@ public class OrderSerializationTest {
 
     @Test
     public void testTradeOrder() throws Exception {
-        TradeOrder order = new TradeOrder("123", new Ticker("123").setInstrumentType(InstrumentType.STOCK),
+        OrderTicket order = new OrderTicket("123", new Ticker("123").setInstrumentType(InstrumentType.STOCK),
                 BigDecimal.valueOf(100), TradeDirection.BUY);
         test(order);
     }
 
     @Test
     public void testOrderEvent() throws Exception {
-        TradeOrder order = new TradeOrder("123", new Ticker("123").setInstrumentType(InstrumentType.STOCK),
+        OrderTicket order = new OrderTicket("123", new Ticker("123").setInstrumentType(InstrumentType.STOCK),
                 BigDecimal.valueOf(100), TradeDirection.BUY);
         OrderStatus status = new OrderStatus(OrderStatus.Status.NEW, "123", BigDecimal.valueOf(10),
                 BigDecimal.valueOf(10), BigDecimal.ZERO, new Ticker("ABC").setInstrumentType(InstrumentType.STOCK),
@@ -104,8 +104,8 @@ public class OrderSerializationTest {
         Object object2 = deserialize(object.getClass(), serialized);
 
         // Compare objects based on their type for better assertions
-        if (object instanceof TradeOrder) {
-            assertTradeOrderEquals((TradeOrder) object, (TradeOrder) object2);
+        if (object instanceof OrderTicket) {
+            assertTradeOrderEquals((OrderTicket) object, (OrderTicket) object2);
         } else if (object instanceof OrderEvent) {
             assertOrderEventEquals((OrderEvent) object, (OrderEvent) object2);
         } else if (object instanceof OrderStatus) {
@@ -115,7 +115,7 @@ public class OrderSerializationTest {
         }
     }
 
-    private void assertTradeOrderEquals(TradeOrder expected, TradeOrder actual) {
+    private void assertTradeOrderEquals(OrderTicket expected, OrderTicket actual) {
         assertNotNull(actual);
         assertEquals(expected.getTicker().getSymbol(), actual.getTicker().getSymbol());
         assertEquals(expected.getDirection(), actual.getDirection());

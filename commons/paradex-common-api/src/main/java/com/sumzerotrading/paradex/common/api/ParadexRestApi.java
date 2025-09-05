@@ -28,7 +28,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import com.sumzerotrading.broker.Position;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.Exchange;
 import com.sumzerotrading.data.InstrumentDescriptor;
 import com.sumzerotrading.data.InstrumentType;
@@ -184,7 +184,7 @@ public class ParadexRestApi implements IParadexRestApi {
     }
 
     @Override
-    public List<TradeOrder> getOpenOrders(String jwtToken, String market) {
+    public List<OrderTicket> getOpenOrders(String jwtToken, String market) {
         return executeWithRetry(() -> {
 
             String path = "/orders";
@@ -307,7 +307,7 @@ public class ParadexRestApi implements IParadexRestApi {
     }
 
     @Override
-    public String placeOrder(String jwtToken, TradeOrder tradeOrder) {
+    public String placeOrder(String jwtToken, OrderTicket tradeOrder) {
         return executeWithRetry(() -> {
             ParadexOrder order = ParadexUtil.translateOrder(tradeOrder);
             String path = "/orders";
@@ -656,7 +656,7 @@ public class ParadexRestApi implements IParadexRestApi {
                 order.getOrderType().toString(), order.getChainSize(), order.getChainLimitPrice());
     }
 
-    protected List<TradeOrder> parseParadoxOrders(String responseBody) {
+    protected List<OrderTicket> parseParadoxOrders(String responseBody) {
 
         JsonObject jsonObject = JsonParser.parseString(responseBody).getAsJsonObject();
         JsonArray resultsArray = jsonObject.getAsJsonArray("results");

@@ -25,7 +25,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClientInterface;
@@ -94,11 +94,11 @@ public class IntradayTradingStrategyTest {
         String entryOrderReference = "Intraday-Strategy-XYZ:123:Entry:LONG*";
         String exitOrderReference = "Intraday-Strategy-XYZ:123:Exit:LONG*";
 
-        TradeOrder expectedEntryOrder = new TradeOrder(entryOrderId, ticker, BigDecimal.valueOf(100),
+        OrderTicket expectedEntryOrder = new OrderTicket(entryOrderId, ticker, BigDecimal.valueOf(100),
                 TradeDirection.BUY);
         expectedEntryOrder.setReference(entryOrderReference);
 
-        TradeOrder expectedExitOrder = new TradeOrder(exitOrderId, ticker, BigDecimal.valueOf(100),
+        OrderTicket expectedExitOrder = new OrderTicket(exitOrderId, ticker, BigDecimal.valueOf(100),
                 TradeDirection.SELL);
         expectedExitOrder.setReference(exitOrderReference);
         ZonedDateTime zdt = ZonedDateTime.of(LocalDate.now(ZoneId.of("GMT")), closeTime, ZoneId.of("GMT"));

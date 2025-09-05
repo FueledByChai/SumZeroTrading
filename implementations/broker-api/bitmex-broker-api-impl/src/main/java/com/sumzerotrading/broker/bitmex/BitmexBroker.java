@@ -29,7 +29,7 @@ import com.sumzerotrading.broker.IBroker;
 import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderEventListener;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.ComboTicker;
 import com.sumzerotrading.data.SumZeroException;
 import com.sumzerotrading.data.Ticker;
@@ -61,7 +61,7 @@ public class BitmexBroker implements IBroker {
     // protected EClientSocket ibConnection;
     // protected IBSocket ibSocket;
     // protected IBConnectionInterface callbackInterface;
-    protected Set<TradeOrder> currencyOrderList = new HashSet<>();
+    protected Set<OrderTicket> currencyOrderList = new HashSet<>();
     protected BlockingQueue<Integer> nextIdQueue = new LinkedBlockingQueue<>();
     protected BlockingQueue<ZonedDateTime> brokerTimeQueue = new LinkedBlockingQueue<>();
     protected BlockingQueue<BrokerError> brokerErrorQueue = new LinkedBlockingQueue<>();
@@ -87,7 +87,7 @@ public class BitmexBroker implements IBroker {
 
     protected IBitmexClient bitmexClient;
     protected Map<String, BitmexOrder> openOrderMap = new HashMap<>();
-    protected Map<String, TradeOrder> completedOrderMap = new HashMap<>();
+    protected Map<String, OrderTicket> completedOrderMap = new HashMap<>();
 
     @Override
     public void cancelOrder(String id) {
@@ -96,13 +96,13 @@ public class BitmexBroker implements IBroker {
     }
 
     @Override
-    public void cancelOrder(TradeOrder order) {
+    public void cancelOrder(OrderTicket order) {
         checkConnected();
         cancelOrder(order.getOrderId());
     }
 
     @Override
-    public void placeOrder(TradeOrder order) {
+    public void placeOrder(OrderTicket order) {
         BitmexOrder bitmexOrder = OrderManagmentUtil.createBitmexOrder(order);
         BitmexOrder submittedOrder = bitmexClient.submitOrder(bitmexOrder);
         openOrderMap.put(submittedOrder.getOrderID(), submittedOrder);
@@ -209,19 +209,19 @@ public class BitmexBroker implements IBroker {
     }
 
     @Override
-    public TradeOrder requestOrderStatus(String orderId) {
+    public OrderTicket requestOrderStatus(String orderId) {
         throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
                                                                        // Tools | Templates.
     }
 
     @Override
-    public List<TradeOrder> getOpenOrders() {
+    public List<OrderTicket> getOpenOrders() {
         throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
                                                                        // Tools | Templates.
     }
 
     @Override
-    public void cancelAndReplaceOrder(String originalOrderId, TradeOrder newOrder) {
+    public void cancelAndReplaceOrder(String originalOrderId, OrderTicket newOrder) {
         throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
                                                                        // Tools | Templates.
     }

@@ -35,7 +35,7 @@ import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.broker.order.OrderStatus;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.ComboTicker;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.SumZeroException;
@@ -85,7 +85,7 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
     protected EClientSocket ibConnection;
     protected IBSocket ibSocket;
     protected IBConnectionInterface callbackInterface;
-    protected Set<TradeOrder> currencyOrderList = new HashSet<>();
+    protected Set<OrderTicket> currencyOrderList = new HashSet<>();
     protected BlockingQueue<Integer> nextIdQueue = new LinkedBlockingQueue<>();
     protected BlockingQueue<ZonedDateTime> brokerTimeQueue = new LinkedBlockingQueue<>();
     protected BlockingQueue<BrokerError> brokerErrorQueue = new LinkedBlockingQueue<>();
@@ -94,8 +94,8 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
     protected int nextOrderId = -1;
     protected SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
     protected DateTimeFormatter zonedDateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
-    protected Map<String, TradeOrder> orderMap = new HashMap<>();
-    protected Map<String, TradeOrder> completedOrderMap = new HashMap<>();
+    protected Map<String, OrderTicket> orderMap = new HashMap<>();
+    protected Map<String, OrderTicket> completedOrderMap = new HashMap<>();
     protected List<OrderEventListener> orderEventListeners = new ArrayList<>();
     protected IBOrderEventProcessor orderProcessor;
     protected Set<String> filledOrderSet = new HashSet<>();
@@ -225,7 +225,7 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
         logger.debug("OrderStatus(): orderId: " + orderId + " Status: " + status + " filled: " + filled + " remaining: "
                 + remaining + " avgFillPrice: " + avgFillPrice + " permId: " + permId + " parentId: " + parentId
                 + " lastFillePrice: " + lastFillPrice + " clientId: " + clientId + " whyHeld: " + whyHeld);
-        TradeOrder order = orderMap.get(Integer.toString(orderId));
+        OrderTicket order = orderMap.get(Integer.toString(orderId));
 
         if (order == null) {
             logger.error("Open Order with ID: " + orderId + " not found");
@@ -306,7 +306,7 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
         IbUtils.throwUnsupportedException();
     }
 
-    public void cancelOrder(TradeOrder order) {
+    public void cancelOrder(OrderTicket order) {
         int id = Integer.parseInt(order.getOrderId());
         // ibConnection.cancelOrder(id);
         IbUtils.throwUnsupportedException();
@@ -347,7 +347,7 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
         return ++nextOrderId + "";
     }
 
-    public void placeOrder(TradeOrder order) {
+    public void placeOrder(OrderTicket order) {
         logger.info("Order received: " + order);
         order.setOrderEntryTime(getZoneDateTime());
 
@@ -410,14 +410,14 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
     }
 
     @Override
-    public synchronized TradeOrder requestOrderStatus(String orderId) {
+    public synchronized OrderTicket requestOrderStatus(String orderId) {
         ExecutionFilter filter = new ExecutionFilter();
         ibConnection.reqExecutions(executionRequestId++, filter);
         throw new IllegalStateException("Not yet implemented");
     }
 
     @Override
-    public List<TradeOrder> getOpenOrders() {
+    public List<OrderTicket> getOpenOrders() {
         return new ArrayList<>(orderMap.values());
     }
 
@@ -492,7 +492,7 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
         return System.getProperty("user.dir") + "/" + "ib-order-management/client-" + ibSocket.getClientId() + "/";
     }
 
-    protected void queueOrder(TradeOrder order) {
+    protected void queueOrder(OrderTicket order) {
         currencyOrderList.add(order);
     }
 
@@ -503,7 +503,7 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
 
         if (!isIdealProClosed()) {
             synchronized (currencyOrderList) {
-                for (TradeOrder order : currencyOrderList) {
+                for (OrderTicket order : currencyOrderList) {
                     placeOrder(order);
                 }
                 currencyOrderList.clear();
@@ -536,7 +536,7 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
         }
     }
 
-    protected List<IbOrderAndContract> buildOrderAndContract(TradeOrder order) {
+    protected List<IbOrderAndContract> buildOrderAndContract(OrderTicket order) {
         List<IbOrderAndContract> orderList = new ArrayList<>();
 
         orderMap.put(order.getOrderId(), order);
@@ -545,8 +545,8 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
                 .buildContract(order.getTicker());
 
         Order ibOrder = new Order();
-        if (order.getType() == TradeOrder.Type.MARKET_ON_OPEN) {
-            order.setDuration(TradeOrder.Duration.MARKET_ON_OPEN);
+        if (order.getType() == OrderTicket.Type.MARKET_ON_OPEN) {
+            order.setDuration(OrderTicket.Duration.MARKET_ON_OPEN);
         }
 
         ibOrder.action(IbUtils.getAction(order.getTradeDirection()));
@@ -564,7 +564,7 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
             ibOrder.parentId(Integer.parseInt(order.getParentOrderId()));
         }
 
-        if (order.getDuration() == TradeOrder.Duration.GOOD_UNTIL_TIME) {
+        if (order.getDuration() == OrderTicket.Duration.GOOD_UNTIL_TIME) {
             if (order.getGoodUntilTime() != null) {
                 ibOrder.goodTillDate(getFormattedDate(order.getGoodUntilTime()));
             } else {
@@ -572,14 +572,14 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
             }
         }
 
-        if (order.getType() == TradeOrder.Type.LIMIT) {
+        if (order.getType() == OrderTicket.Type.LIMIT) {
             if (order.getLimitPrice() == null) {
                 throw new IllegalStateException("Limit price not set for LMT order: " + order.getOrderId());
             }
             double limitPrice = QuoteUtil.getBigDecimalValue(order.getTicker(), order.getLimitPrice().doubleValue())
                     .doubleValue();
             ibOrder.lmtPrice(limitPrice);
-        } else if (order.getType() == TradeOrder.Type.STOP) {
+        } else if (order.getType() == OrderTicket.Type.STOP) {
             if (order.getStopPrice() == null) {
                 throw new IllegalStateException("Stop price not set for StopLoss order: " + order.getOrderId());
             }
@@ -605,7 +605,7 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
         order.setSubmitted(true);
 
         orderList.add(new IbOrderAndContract(ibOrder, contract));
-        for (TradeOrder tradeOrder : order.getChildOrders()) {
+        for (OrderTicket tradeOrder : order.getChildOrders()) {
             orderList.addAll(buildOrderAndContract(tradeOrder));
         }
 
@@ -624,7 +624,7 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
                                                                        // Tools | Templates.
     }
 
-    public void cancelAndReplaceOrder(String originalOrderId, TradeOrder newOrder) {
+    public void cancelAndReplaceOrder(String originalOrderId, OrderTicket newOrder) {
         throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
                                                                        // Tools | Templates.
     }

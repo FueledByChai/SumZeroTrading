@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayDeque;
@@ -39,15 +40,15 @@ import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.broker.order.OrderStatus;
 import com.sumzerotrading.broker.order.OrderStatus.CancelReason;
 import com.sumzerotrading.broker.order.OrderStatus.Status;
+import com.sumzerotrading.broker.order.OrderTicket;
+import com.sumzerotrading.broker.order.OrderTicket.Modifier;
+import com.sumzerotrading.broker.order.OrderTicket.Type;
 import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
-import com.sumzerotrading.broker.order.TradeOrder.Modifier;
-import com.sumzerotrading.broker.order.TradeOrder.Type;
 import com.sumzerotrading.data.ComboTicker;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.marketdata.ILevel1Quote;
+import com.sumzerotrading.marketdata.IOrderBook;
 import com.sumzerotrading.marketdata.Level1QuoteListener;
-import com.sumzerotrading.marketdata.OrderBook;
 import com.sumzerotrading.marketdata.QuoteEngine;
 import com.sumzerotrading.marketdata.QuoteType;
 import com.sumzerotrading.time.TimeUpdatedListener;
@@ -67,8 +68,8 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
     protected double startingAccountBalance = 100000.0; // Starting account balance for paper trading
     protected double currentAccountBalance = startingAccountBalance; // Current account balance
 
-    protected ConcurrentHashMap<String, TradeOrder> openBids = new ConcurrentHashMap<>();
-    protected ConcurrentHashMap<String, TradeOrder> openAsks = new ConcurrentHashMap<>();
+    protected ConcurrentHashMap<String, OrderTicket> openBids = new ConcurrentHashMap<>();
+    protected ConcurrentHashMap<String, OrderTicket> openAsks = new ConcurrentHashMap<>();
 
     protected double bestBidPrice = 0.0; // Best bid price
     protected double bestAskPrice = Double.MAX_VALUE; // Best ask price
@@ -96,19 +97,19 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
 
     protected boolean firstTradeWrittenToFile = false;
 
-    protected Map<String, TradeOrder> openOrders = new LinkedHashMap<>(); // Map to hold open orders, ordered by
-                                                                          // insertion
-    protected final Set<TradeOrder> executedOrders = java.util.Collections
-            .synchronizedSet(new TreeSet<TradeOrder>(new java.util.Comparator<TradeOrder>() {
+    protected Map<String, OrderTicket> openOrders = new LinkedHashMap<>(); // Map to hold open orders, ordered by
+    // insertion
+    protected final Set<OrderTicket> executedOrders = java.util.Collections
+            .synchronizedSet(new TreeSet<OrderTicket>(new java.util.Comparator<OrderTicket>() {
                 @Override
-                public int compare(TradeOrder o1, TradeOrder o2) {
+                public int compare(OrderTicket o1, OrderTicket o2) {
                     return o2.getOrderEntryTime().compareTo(o1.getOrderEntryTime());
                 }
             }));
 
-    protected OrderBook orderBook; // Order book for managing market data
+    protected IOrderBook orderBook; // Order book for managing market data
 
-    protected IPaperBrokerStatus brokerStatus; // Broker status for reporting
+    protected IPaperBrokerStatus brokerStatus = new PaperBrokerStatus(); // Broker status for reporting
 
     // protected ISystemConfig systemConfig; // System configuration for the broker
     protected Ticker ticker;
@@ -117,11 +118,16 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
 
     protected int totalOrdersPlaced = 0; // Total number of orders placed
     protected double dollarVolume = 0.0; // Total value of orders placed
-    String csvFilePath;
+    protected String csvFilePath = null;
 
     private final Deque<SpreadEntry> spreadHistory = new ArrayDeque<>();
     private final long timeWindowMillis = 6000; // 6 seconds
     private final double dislocationMultiplier = 7.5; // Multiplier for dislocation threshold
+
+    public PaperBroker(IOrderBook orderBook, Ticker ticker) {
+        this.orderBook = orderBook;
+        this.ticker = ticker;
+    }
 
     private static class SpreadEntry {
         double spread;
@@ -218,9 +224,9 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
     public synchronized void cancelAllOrders(Ticker ticker) {
         executorService.submit(() -> {
             delay(); // Simulate network delay
-            Iterator<Map.Entry<String, TradeOrder>> bidIterator = openBids.entrySet().iterator();
+            Iterator<Map.Entry<String, OrderTicket>> bidIterator = openBids.entrySet().iterator();
             while (bidIterator.hasNext()) {
-                Map.Entry<String, TradeOrder> entry = bidIterator.next();
+                Map.Entry<String, OrderTicket> entry = bidIterator.next();
                 try {
                     cancelOrderSubmitWithDelay(entry.getKey(), false); // Call cancelOrder for each order ID
                     bidIterator.remove(); // Remove the entry from the map
@@ -230,9 +236,9 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
             }
 
             // Safely iterate over openAsks using an iterator
-            Iterator<Map.Entry<String, TradeOrder>> askIterator = openAsks.entrySet().iterator();
+            Iterator<Map.Entry<String, OrderTicket>> askIterator = openAsks.entrySet().iterator();
             while (askIterator.hasNext()) {
-                Map.Entry<String, TradeOrder> entry = askIterator.next();
+                Map.Entry<String, OrderTicket> entry = askIterator.next();
                 try {
                     cancelOrderSubmitWithDelay(entry.getKey(), false); // Call cancelOrder for each order ID
                     askIterator.remove(); // Remove the entry from the map
@@ -257,13 +263,13 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
         }
 
         if (openBids.containsKey(orderId)) {
-            TradeOrder order = openBids.remove(orderId); // Remove the order from open bids
+            OrderTicket order = openBids.remove(orderId); // Remove the order from open bids
             if (order != null) {
                 cancelOrder(orderId, CancelReason.USER_CANCELED); // Notify listeners of cancellation
             }
             logger.info("Order {} cancelled from bids.", orderId);
         } else if (openAsks.containsKey(orderId)) {
-            TradeOrder order = openAsks.remove(orderId); // Remove the order from open asks
+            OrderTicket order = openAsks.remove(orderId); // Remove the order from open asks
             if (order != null) {
                 cancelOrder(orderId, CancelReason.USER_CANCELED); // Notify listeners of cancellation
             }
@@ -274,15 +280,15 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
 
     }
 
-    public List<TradeOrder> getOpenOrders(Ticker ticker) {
+    public List<OrderTicket> getOpenOrders(Ticker ticker) {
         delay(); // Simulate network delay
-        List<TradeOrder> openOrders = new ArrayList<>(); // List to hold open orders
+        List<OrderTicket> openOrders = new ArrayList<>(); // List to hold open orders
         // Add all open bids to the list
-        for (TradeOrder order : openBids.values()) {
+        for (OrderTicket order : openBids.values()) {
             openOrders.add(order);
         }
         // Add all open asks to the list
-        for (TradeOrder order : openAsks.values()) {
+        for (OrderTicket order : openAsks.values()) {
             openOrders.add(order);
         }
 
@@ -301,11 +307,11 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
     }
 
     @Override
-    public void placeOrder(TradeOrder order) {
+    public void placeOrder(OrderTicket order) {
 
         String orderId = System.currentTimeMillis() + "-" + (int) (Math.random() * 10000); // Generate a unique order ID
         order.setOrderId(orderId); // Set the generated order ID
-        order.setOrderEntryTime(ZonedDateTime.now());
+        order.setOrderEntryTime(getCurrentTime());
         openOrders.put(orderId, order); // Add the order to open orders
 
         executorService.submit(() -> {
@@ -416,16 +422,16 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
 
     }
 
-    protected List<TradeOrder> checkAsksFills(double bestBid) {
-        List<TradeOrder> filledOrders = new ArrayList<>();
+    protected List<OrderTicket> checkAsksFills(double bestBid) {
+        List<OrderTicket> filledOrders = new ArrayList<>();
         bidsLock.lock(); // Lock the bids to ensure thread safety
         try {
             bestBidPrice = bestBid; // Update the best ask price
             midPrice = (bestBidPrice + bestAskPrice) / 2.0; // Update the mid price
 
-            for (Iterator<Map.Entry<String, TradeOrder>> it = openAsks.entrySet().iterator(); it.hasNext();) {
-                Map.Entry<String, TradeOrder> entry = it.next();
-                TradeOrder order = entry.getValue();
+            for (Iterator<Map.Entry<String, OrderTicket>> it = openAsks.entrySet().iterator(); it.hasNext();) {
+                Map.Entry<String, OrderTicket> entry = it.next();
+                OrderTicket order = entry.getValue();
 
                 boolean filled = order.getLimitPrice().doubleValue() < bestBidPrice; // Check if the order can be filled
                                                                                      // at
@@ -444,16 +450,16 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
         return filledOrders;
     }
 
-    protected List<TradeOrder> checkBidsFills(double askPrice) {
-        List<TradeOrder> filledOrders = new ArrayList<>();
+    protected List<OrderTicket> checkBidsFills(double askPrice) {
+        List<OrderTicket> filledOrders = new ArrayList<>();
         asksLock.lock(); // Lock the asks to ensure thread safety
         try {
             bestAskPrice = askPrice; // Update the best bid price
             midPrice = (bestBidPrice + bestAskPrice) / 2.0; // Update the mid price
 
-            for (Iterator<Map.Entry<String, TradeOrder>> it = openBids.entrySet().iterator(); it.hasNext();) {
-                Map.Entry<String, TradeOrder> entry = it.next();
-                TradeOrder order = entry.getValue();
+            for (Iterator<Map.Entry<String, OrderTicket>> it = openBids.entrySet().iterator(); it.hasNext();) {
+                Map.Entry<String, OrderTicket> entry = it.next();
+                OrderTicket order = entry.getValue();
 
                 boolean filled = order.getLimitPrice().doubleValue() > askPrice; // Check if the order can be filled at
                                                                                  // the
@@ -473,6 +479,10 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
     }
 
     protected void updateStatus() {
+        if (brokerStatus == null) {
+            logger.warn("Broker status is not set, cannot update status.");
+            return;
+        }
         synchronized (brokerStatus) { // Ensure thread-safe access
             brokerStatus.setCurrentPosition(currentPosition.doubleValue()); // Update current position
             brokerStatus.setAccountValue(getNetAccountValue()); // Update account value
@@ -498,7 +508,7 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
         }
     }
 
-    protected void fillOrder(TradeOrder order, double price) {
+    protected void fillOrder(OrderTicket order, double price) {
         logger.debug("Attempting to remove order with ID: {} from openOrders", order.getOrderId());
         if (openOrders.containsKey(order.getOrderId())) {
             logger.debug("Order with ID: {} exists in openOrders before removal", order.getOrderId());
@@ -542,7 +552,7 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
 
     protected synchronized void cancelOrder(String orderId, CancelReason reason) {
         logger.debug("Attempting to remove order with ID: {} from openOrders", orderId);
-        TradeOrder order = openOrders.remove(orderId);
+        OrderTicket order = openOrders.remove(orderId);
         BigDecimal remainingSize = BigDecimal.ZERO;
 
         Status status = OrderStatus.Status.CANCELED;
@@ -664,7 +674,7 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
         return notional * feeRate; // Calculate and return the fee
     }
 
-    protected void writeTradeToCsv(TradeOrder order, double price, double fee) {
+    protected void writeTradeToCsv(OrderTicket order, double price, double fee) {
         executorService.submit(() -> {
             try {
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(csvFilePath, true))) {
@@ -702,7 +712,7 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
 
     protected String generateCsvFilename(String symbol) {
         // Get the current date and time
-        LocalDateTime now = LocalDateTime.now();
+        ZonedDateTime now = getCurrentTime();
 
         // Format the date and time as yyyyMMdd-HHmm
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd-HHmm");
@@ -761,30 +771,40 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
     }
 
     @Override
-    public void cancelAndReplaceOrder(String originalOrderId, TradeOrder newOrder) {
-        throw new UnsupportedOperationException("Cancel and replace not supported in PaperBroker");
+    public void cancelAndReplaceOrder(String originalOrderId, OrderTicket newOrder) {
+        cancelOrder(originalOrderId);
+        placeOrder(newOrder);
     }
 
     @Override
-    public void cancelOrder(TradeOrder order) {
-        throw new UnsupportedOperationException("Cancel order not supported in PaperBroker");
+    public void cancelOrder(OrderTicket order) {
+        cancelOrder(order.getOrderId());
 
     }
 
     @Override
     public void connect() {
-        throw new UnsupportedOperationException("Connect not supported in PaperBroker");
+        while (!orderBook.isInitialized()) {
+            try {
+                logger.info("Waiting for order book to initialize...");
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // Restore interrupted status
+                logger.error("Interrupted while waiting for order book to initialize: {}", e.getMessage(), e);
+            }
+        }
+        startAccountUpdateTask();
+
     }
 
     @Override
     public void disconnect() {
-        throw new UnsupportedOperationException("Disconnect not supported in PaperBroker");
 
     }
 
     @Override
     public ZonedDateTime getCurrentTime() {
-        throw new UnsupportedOperationException("getCurrentTime not supported in PaperBroker");
+        return ZonedDateTime.now(ZoneId.of("UTC"));
     }
 
     @Override
@@ -803,7 +823,7 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
     }
 
     @Override
-    public List<TradeOrder> getOpenOrders() {
+    public List<OrderTicket> getOpenOrders() {
         throw new UnsupportedOperationException("getOpenOrders not supported in PaperBroker");
     }
 
@@ -841,31 +861,27 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
     }
 
     @Override
-    public TradeOrder requestOrderStatus(String orderId) {
+    public OrderTicket requestOrderStatus(String orderId) {
         throw new UnsupportedOperationException("requestOrderStatus not supported in PaperBroker");
     }
 
     @Override
     public void quoteRecieved(ILevel1Quote quote) {
-        BigDecimal markPrice = quote.getValue(QuoteType.MARK_PRICE);
-        BigDecimal fundingApr = quote.getValue(QuoteType.FUNDING_RATE_APR);
-        BigDecimal bid = quote.getValue(QuoteType.BID);
-        BigDecimal ask = quote.getValue(QuoteType.ASK);
 
-        if (markPrice != null) {
-            markPriceUpdated(ticker.getSymbol(), markPrice, quote.getTimeStamp());
+        if (quote.containsType(QuoteType.MARK_PRICE)) {
+            markPriceUpdated(ticker.getSymbol(), quote.getValue(QuoteType.MARK_PRICE), quote.getTimeStamp());
         }
 
-        if (fundingApr != null) {
-            fundingRateUpdated(ticker.getSymbol(), fundingApr, quote.getTimeStamp());
+        if (quote.containsType(QuoteType.FUNDING_RATE_APR)) {
+            fundingRateUpdated(ticker.getSymbol(), quote.getValue(QuoteType.FUNDING_RATE_APR), quote.getTimeStamp());
         }
 
-        if (bid != null) {
-            bidUpdated(bid);
+        if (quote.containsType(QuoteType.BID)) {
+            bidUpdated(quote.getValue(QuoteType.BID));
         }
 
-        if (ask != null) {
-            askUpdated(ask);
+        if (quote.containsType(QuoteType.ASK)) {
+            askUpdated(quote.getValue(QuoteType.ASK));
         }
     }
 

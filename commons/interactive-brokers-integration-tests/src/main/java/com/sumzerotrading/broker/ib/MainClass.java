@@ -12,7 +12,7 @@ import java.util.List;
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.ib.IBConnectionUtil;
@@ -49,14 +49,14 @@ public class MainClass implements OrderEventListener, Level1QuoteListener {
 
         String orderId = broker.getNextOrderId();
         System.out.println("Order id: " + orderId);
-        TradeOrder order = new TradeOrder(orderId, qqqTicker, BigDecimal.valueOf(100), TradeDirection.BUY);
+        OrderTicket order = new OrderTicket(orderId, qqqTicker, BigDecimal.valueOf(100), TradeDirection.BUY);
         broker.placeOrder(order);
 
         Thread thread = new Thread(() -> {
             sleep(10000);
             String orderId2 = broker.getNextOrderId();
             System.out.println("Order id: " + orderId);
-            TradeOrder order2 = new TradeOrder(orderId2, qqqTicker, BigDecimal.valueOf(200), TradeDirection.BUY);
+            OrderTicket order2 = new OrderTicket(orderId2, qqqTicker, BigDecimal.valueOf(200), TradeDirection.BUY);
             broker.placeOrder(order2);
 
             new Thread(() -> {

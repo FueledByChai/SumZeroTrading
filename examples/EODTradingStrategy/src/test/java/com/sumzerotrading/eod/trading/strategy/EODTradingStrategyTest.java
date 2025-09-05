@@ -36,7 +36,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.order.TradeOrder;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.interactive.brokers.client.InteractiveBrokersClient;
@@ -82,8 +82,8 @@ public class EODTradingStrategyTest {
         strategy.ibHost = ibHost;
         strategy.ibPort = ibPort;
         strategy.ibClientId = ibClientId;
-        strategy.entryOrderType = TradeOrder.Type.MARKET_ON_CLOSE;
-        strategy.exitOrderType = TradeOrder.Type.MARKET_ON_OPEN;
+        strategy.entryOrderType = OrderTicket.Type.MARKET_ON_CLOSE;
+        strategy.exitOrderType = OrderTicket.Type.MARKET_ON_OPEN;
         strategy.exitSeconds = 0;
         propFile = Paths.get(getClass().getResource("/eod.test.properties").toURI()).toString();
         doReturn(mockReportGenerator).when(strategy).getReportGenerator(any(String.class));
@@ -96,8 +96,8 @@ public class EODTradingStrategyTest {
     @Test
     public void testStart() {
 
-        TradeOrder order = new TradeOrder("123", longTicker, BigDecimal.valueOf(100), TradeDirection.SELL);
-        List<TradeOrder> openOrders = new ArrayList<>();
+        OrderTicket order = new OrderTicket("123", longTicker, BigDecimal.valueOf(100), TradeDirection.SELL);
+        List<OrderTicket> openOrders = new ArrayList<>();
         openOrders.add(order);
         when(mockIbClient.getOpenOrders()).thenReturn(openOrders);
         doReturn(true).when(strategy).checkOpenOrders(openOrders, strategy.longShortPairMap);
@@ -131,23 +131,24 @@ public class EODTradingStrategyTest {
         doReturn(orderTime).when(strategy).getNextBusinessDay(currentDateTime);
         when(mockIbClient.getNextOrderId()).thenReturn("100", "101", "102", "103", "104", "105");
 
-        TradeOrder expectedLongOrder = new TradeOrder("100", longTicker, longSize, TradeDirection.BUY);
-        expectedLongOrder.setType(TradeOrder.Type.MARKET_ON_CLOSE);
+        OrderTicket expectedLongOrder = new OrderTicket("100", longTicker, longSize, TradeDirection.BUY);
+        expectedLongOrder.setType(OrderTicket.Type.MARKET_ON_CLOSE);
         expectedLongOrder.setReference("EOD-Pair-Strategy:123:Entry:Long*");
 
-        TradeOrder expectedLongExitOrder = new TradeOrder("101", longTicker, longSize, TradeDirection.SELL);
-        expectedLongExitOrder.setType(TradeOrder.Type.MARKET_ON_OPEN);
+        OrderTicket expectedLongExitOrder = new OrderTicket("101", longTicker, longSize, TradeDirection.SELL);
+        expectedLongExitOrder.setType(OrderTicket.Type.MARKET_ON_OPEN);
         expectedLongExitOrder.setGoodAfterTime(orderTime);
         expectedLongExitOrder.setReference("EOD-Pair-Strategy:123:Exit:Long*");
 
         expectedLongOrder.addChildOrder(expectedLongExitOrder);
 
-        TradeOrder expectedShortOrder = new TradeOrder("102", shortTicker, shortSize, TradeDirection.SELL_SHORT);
-        expectedShortOrder.setType(TradeOrder.Type.MARKET_ON_CLOSE);
+        OrderTicket expectedShortOrder = new OrderTicket("102", shortTicker, shortSize, TradeDirection.SELL_SHORT);
+        expectedShortOrder.setType(OrderTicket.Type.MARKET_ON_CLOSE);
         expectedShortOrder.setReference("EOD-Pair-Strategy:123:Entry:Short*");
 
-        TradeOrder expectedShortExitOrder = new TradeOrder("103", shortTicker, shortSize, TradeDirection.BUY_TO_COVER);
-        expectedShortExitOrder.setType(TradeOrder.Type.MARKET_ON_OPEN);
+        OrderTicket expectedShortExitOrder = new OrderTicket("103", shortTicker, shortSize,
+                TradeDirection.BUY_TO_COVER);
+        expectedShortExitOrder.setType(OrderTicket.Type.MARKET_ON_OPEN);
         expectedShortExitOrder.setGoodAfterTime(orderTime);
         expectedShortExitOrder.setReference("EOD-Pair-Strategy:123:Exit:Short*");
 
@@ -345,8 +346,8 @@ public class EODTradingStrategyTest {
         assertEquals(new Ticker("IWM").setInstrumentType(InstrumentType.STOCK),
                 strategy.longShortPairMap.get(new Ticker("DIA").setInstrumentType(InstrumentType.STOCK)));
         assertEquals("/some/test/dir/", strategy.strategyDirectory);
-        assertEquals(TradeOrder.Type.MARKET_ON_CLOSE, strategy.entryOrderType);
-        assertEquals(TradeOrder.Type.MARKET, strategy.exitOrderType);
+        assertEquals(OrderTicket.Type.MARKET_ON_CLOSE, strategy.entryOrderType);
+        assertEquals(OrderTicket.Type.MARKET, strategy.exitOrderType);
         assertEquals(3, strategy.exitSeconds);
     }
 
@@ -413,8 +414,8 @@ public class EODTradingStrategyTest {
 
     @Test
     public void testCheckOpenOrders_NoMocOrders() {
-        List<TradeOrder> orders = new ArrayList<>();
-        orders.add(new TradeOrder("123", new Ticker("ABC").setInstrumentType(InstrumentType.STOCK),
+        List<OrderTicket> orders = new ArrayList<>();
+        orders.add(new OrderTicket("123", new Ticker("ABC").setInstrumentType(InstrumentType.STOCK),
                 BigDecimal.valueOf(10), TradeDirection.SELL));
 
         assertFalse(strategy.checkOpenOrders(orders, new HashMap<>()));
@@ -422,10 +423,10 @@ public class EODTradingStrategyTest {
 
     @Test
     public void testCheckOpenOrders_MocOrdersDontMatchTickers() {
-        List<TradeOrder> orders = new ArrayList<>();
-        TradeOrder order = new TradeOrder("123", new Ticker("ABC").setInstrumentType(InstrumentType.STOCK),
+        List<OrderTicket> orders = new ArrayList<>();
+        OrderTicket order = new OrderTicket("123", new Ticker("ABC").setInstrumentType(InstrumentType.STOCK),
                 BigDecimal.valueOf(10), TradeDirection.SELL);
-        order.setType(TradeOrder.Type.MARKET_ON_CLOSE);
+        order.setType(OrderTicket.Type.MARKET_ON_CLOSE);
         orders.add(order);
         Map<Ticker, Ticker> tickerMap = new HashMap<>();
         tickerMap.put(new Ticker("AAA").setInstrumentType(InstrumentType.STOCK),
@@ -436,10 +437,10 @@ public class EODTradingStrategyTest {
 
     @Test
     public void testCheckOpenOrders_HappyPath() {
-        List<TradeOrder> orders = new ArrayList<>();
-        TradeOrder order = new TradeOrder("123", new Ticker("ABC").setInstrumentType(InstrumentType.STOCK),
+        List<OrderTicket> orders = new ArrayList<>();
+        OrderTicket order = new OrderTicket("123", new Ticker("ABC").setInstrumentType(InstrumentType.STOCK),
                 BigDecimal.valueOf(10), TradeDirection.SELL);
-        order.setType(TradeOrder.Type.MARKET_ON_CLOSE);
+        order.setType(OrderTicket.Type.MARKET_ON_CLOSE);
         orders.add(order);
         Map<Ticker, Ticker> tickerMap = new HashMap<>();
         tickerMap.put(new Ticker("ABC").setInstrumentType(InstrumentType.STOCK),
