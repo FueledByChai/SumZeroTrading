@@ -504,7 +504,8 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
             brokerStatus.setFundingAccruedOrPaid(fundingAccruedOrPaid); // Update total funding paid or collected
             brokerStatus.setFundingRateAnnualized(((fundingRate / 8.0) * 24.0 * 365.0) * 100.0);
 
-            logger.info("Broker status updated: {}", brokerStatus); // Log the updated status
+            // logger.info("Broker status updated: {}", brokerStatus); // Log the updated
+            // status
         }
     }
 
