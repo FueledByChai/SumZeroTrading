@@ -21,6 +21,7 @@ package com.sumzerotrading.data;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 
 /**
@@ -94,6 +95,34 @@ public class Ticker implements Serializable {
     public Ticker setMinimumTickSize(BigDecimal minimumTickSize) {
         this.minimumTickSize = minimumTickSize;
         return this;
+    }
+
+    /**
+     * Formats a price according to the minimum tick size precision. For example, if
+     * minimumTickSize is 0.001 and price is 1.25, returns 1.250
+     */
+    public BigDecimal formatPrice(BigDecimal price) {
+        if (minimumTickSize == null || price == null) {
+            return price;
+        }
+
+        // Calculate the scale (number of decimal places) from the minimum tick size
+        int scale = minimumTickSize.scale();
+
+        // Set the price to the same scale as the minimum tick size
+        return price.setScale(scale, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Convenience method to format a price string according to the minimum tick
+     * size precision.
+     */
+    public BigDecimal formatPrice(String priceString) {
+        if (priceString == null) {
+            return null;
+        }
+        BigDecimal price = new BigDecimal(priceString);
+        return formatPrice(price);
     }
 
     public BigDecimal getContractMultiplier() {

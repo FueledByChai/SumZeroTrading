@@ -111,7 +111,7 @@ public class ParadexQuoteEngine extends QuoteEngine
     @Override
     public void bestBidUpdated(Ticker ticker, BigDecimal bestBid, ZonedDateTime timestamp) {
         Level1Quote quote = new Level1Quote(ticker, timestamp);
-        quote.addQuote(QuoteType.BID, bestBid);
+        quote.addQuote(QuoteType.BID, ticker.formatPrice(bestBid));
         super.fireLevel1Quote(quote);
 
     }
@@ -119,7 +119,7 @@ public class ParadexQuoteEngine extends QuoteEngine
     @Override
     public void bestAskUpdated(Ticker ticker, BigDecimal bestAsk, ZonedDateTime timestamp) {
         Level1Quote quote = new Level1Quote(ticker, timestamp);
-        quote.addQuote(QuoteType.ASK, bestAsk);
+        quote.addQuote(QuoteType.ASK, ticker.formatPrice(bestAsk));
         super.fireLevel1Quote(quote);
 
     }
@@ -136,8 +136,11 @@ public class ParadexQuoteEngine extends QuoteEngine
 
         Ticker ticker = tickerRegistry.lookupByBrokerSymbol(market);
 
-        OrderFlow orderFlow = new OrderFlow(ticker, new BigDecimal(price), new BigDecimal(size),
-                OrderFlow.Side.valueOf(side), convertToZonedDateTime(createdAtTimestamp));
+        // Format the price according to the ticker's minimum tick size precision
+        BigDecimal formattedPrice = ticker.formatPrice(price);
+
+        OrderFlow orderFlow = new OrderFlow(ticker, formattedPrice, new BigDecimal(size), OrderFlow.Side.valueOf(side),
+                convertToZonedDateTime(createdAtTimestamp));
         super.fireOrderFlow(orderFlow);
     }
 
@@ -157,11 +160,11 @@ public class ParadexQuoteEngine extends QuoteEngine
         // upddated, better to use thee
         // top of the order book.
         Map<QuoteType, BigDecimal> quoteValues = new HashMap<>();
-        quoteValues.put(QuoteType.LAST, new BigDecimal(lastPrice));
-        quoteValues.put(QuoteType.MARK_PRICE, new BigDecimal(markPrice));
+        quoteValues.put(QuoteType.LAST, ticker.formatPrice(lastPrice));
+        quoteValues.put(QuoteType.MARK_PRICE, ticker.formatPrice(markPrice));
         quoteValues.put(QuoteType.OPEN_INTEREST, new BigDecimal(openInterest));
         quoteValues.put(QuoteType.VOLUME, new BigDecimal(volume24h));
-        quoteValues.put(QuoteType.UNDERLYING_PRICE, new BigDecimal(underlyingPrice));
+        quoteValues.put(QuoteType.UNDERLYING_PRICE, ticker.formatPrice(underlyingPrice));
         quoteValues.put(QuoteType.FUNDING_RATE_APR, fundingRateApr);
         quoteValues.put(QuoteType.FUNDING_RATE_HOURLY_BPS, fundingRateHourlyBpsBigDecimal);
 
