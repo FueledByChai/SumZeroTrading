@@ -16,6 +16,8 @@ import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.marketdata.ILevel1Quote;
 import com.sumzerotrading.marketdata.Level1Quote;
 import com.sumzerotrading.marketdata.Level1QuoteListener;
+import com.sumzerotrading.marketdata.Level2Quote;
+import com.sumzerotrading.marketdata.Level2QuoteListener;
 import com.sumzerotrading.marketdata.OrderBookUpdateListener;
 import com.sumzerotrading.marketdata.OrderFlow;
 import com.sumzerotrading.marketdata.OrderFlowListener;
@@ -78,6 +80,12 @@ public class ParadexQuoteEngine extends QuoteEngine
     }
 
     @Override
+    public void subscribeMarketDepth(Ticker ticker, Level2QuoteListener listener) {
+        super.subscribeMarketDepth(ticker, listener);
+        OrderBookRegistry.getInstance().getOrderBook(ticker).addOrderBookUpdateListener(this);
+    }
+
+    @Override
     public void subscribeLevel1(Ticker ticker, Level1QuoteListener listener) {
         super.subscribeLevel1(ticker, listener);
         OrderBookRegistry.getInstance().getOrderBook(ticker).addOrderBookUpdateListener(this);
@@ -101,19 +109,26 @@ public class ParadexQuoteEngine extends QuoteEngine
     }
 
     @Override
-    public void bestBidUpdated(Ticker ticker, BigDecimal bestBid) {
-        Level1Quote quote = new Level1Quote(ticker);
+    public void bestBidUpdated(Ticker ticker, BigDecimal bestBid, ZonedDateTime timestamp) {
+        Level1Quote quote = new Level1Quote(ticker, timestamp);
         quote.addQuote(QuoteType.BID, bestBid);
         super.fireLevel1Quote(quote);
 
     }
 
     @Override
-    public void bestAskUpdated(Ticker ticker, BigDecimal bestAsk) {
-        Level1Quote quote = new Level1Quote(ticker);
+    public void bestAskUpdated(Ticker ticker, BigDecimal bestAsk, ZonedDateTime timestamp) {
+        Level1Quote quote = new Level1Quote(ticker, timestamp);
         quote.addQuote(QuoteType.ASK, bestAsk);
         super.fireLevel1Quote(quote);
 
+    }
+
+    @Override
+    public void orderBookImbalanceUpdated(Ticker ticker, BigDecimal imbalance, ZonedDateTime timestamp) {
+        Level2Quote quote = new Level2Quote(ticker, timestamp);
+        quote.addQuote(QuoteType.ORDER_BOOK_IMBALANCE, imbalance);
+        super.fireMarketDepthQuote(quote);
     }
 
     @Override

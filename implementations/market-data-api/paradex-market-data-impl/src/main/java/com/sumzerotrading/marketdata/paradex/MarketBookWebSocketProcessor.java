@@ -1,5 +1,7 @@
 package com.sumzerotrading.marketdata.paradex;
 
+import java.time.ZonedDateTime;
+
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,11 +58,19 @@ public class MarketBookWebSocketProcessor implements IWebSocketProcessor {
                 JSONObject params = jsonObject.getJSONObject("params");
                 JSONObject data = params.getJSONObject("data");
                 String updateType = data.getString("update_type");
+                long timestampMillis = data.getLong("last_updated_at");
+                ZonedDateTime timestamp = ZonedDateTime.now(java.time.ZoneId.of("GMT")); // Default to now if not
+                                                                                         // provided
+
+                if (timestampMillis > 0) {
+                    timestamp = ZonedDateTime.ofInstant(java.time.Instant.ofEpochMilli(timestampMillis),
+                            java.time.ZoneId.of("GMT"));
+                }
 
                 if ("s".equals(updateType)) {
-                    orderBook.handleSnapshot(data.toMap());
+                    orderBook.handleSnapshot(data.toMap(), timestamp);
                 } else {
-                    orderBook.applyDelta(data.toMap());
+                    orderBook.applyDelta(data.toMap(), timestamp);
                 }
             } else {
                 logger.warn("Unknown message type: " + method);

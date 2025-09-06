@@ -25,6 +25,7 @@ import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.sumzerotrading.data.SumZeroException;
 import com.sumzerotrading.data.Ticker;
 
 /**
@@ -62,6 +63,25 @@ public abstract class AbstractQuote implements IQuote {
 
 	public void addQuote(QuoteType type, BigDecimal value) {
 		quoteMap.put(type, value);
+	}
+
+	@Override
+	public QuoteType[] getTypes() {
+		return quoteMap.keySet().toArray(new QuoteType[] {});
+	}
+
+	@Override
+	public boolean containsType(QuoteType type) {
+		return quoteMap.containsKey(type);
+	}
+
+	@Override
+	public BigDecimal getValue(QuoteType type) {
+		if (containsType(type)) {
+			return quoteMap.get(type);
+		} else {
+			throw new SumZeroException("Quote does not contain type: " + type);
+		}
 	}
 
 	/**

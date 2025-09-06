@@ -26,45 +26,43 @@ import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.List;
 
-
 /**
- * Describes what consists of a quote.  Level 1 and Level 2 quotes will implement this interface.
+ * Describes what consists of a quote. Level 1 and Level 2 quotes will implement
+ * this interface.
  * 
  * 
  * @author RobTerpilowski
  */
 public interface IQuote {
-	
-        
+
         /**
          * The ticker the quote is for.
          * 
          * @return The ticker this quote is for.
          */
-	public Ticker getTicker();
-	
-        
+        public Ticker getTicker();
 
         /**
          * The type of quotes this IQuote object contains, ie BID, ASK, MIDPOINT, etc.
          * 
          * @return The type of quote
          */
-	public QuoteType[] getTypes();
-        
-        
+        public QuoteType[] getTypes();
+
         /**
          * Returns true if the quote contains the specified quote type
+         * 
          * @param type The type of quote to check for
          * @return true if the quote object contains the type of quote
          */
         public boolean containsType(QuoteType type);
-        
-        
+
         /**
          * The time of the quote
          * 
          * @return The time of the quote.
          */
-	public ZonedDateTime getTimeStamp();
+        public ZonedDateTime getTimeStamp();
+
+        public BigDecimal getValue(QuoteType type);
 }

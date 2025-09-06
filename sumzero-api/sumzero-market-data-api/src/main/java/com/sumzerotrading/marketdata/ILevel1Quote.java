@@ -21,20 +21,22 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 package com.sumzerotrading.marketdata;
 
 import java.math.BigDecimal;
+import java.time.ZonedDateTime;
 
 /**
- *  Level1 Quotes will implement this interface which provides a means to get the value of the quote.
+ * Level1 Quotes will implement this interface which provides a means to get the
+ * value of the quote.
  * 
  * @author Rob Terpilowski
  */
 public interface ILevel1Quote extends IQuote {
-    
+
     /**
-     * The value of this quote, based on the quote type. The ILevel1Quote object
-     * can potentially contain the open/bid/ask/last/etc all in the same object.
+     * The value of this quote, based on the quote type. The ILevel1Quote object can
+     * potentially contain the open/bid/ask/last/etc all in the same object.
      * 
      * @return The quote value.
      */
     public BigDecimal getValue(QuoteType type);
-    
+
 }

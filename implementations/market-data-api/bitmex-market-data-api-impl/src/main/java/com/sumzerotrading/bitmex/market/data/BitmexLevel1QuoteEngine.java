@@ -29,13 +29,13 @@ import org.eclipse.jetty.websocket.client.WebSocketClient;
  *
  * @author RobTerpilowski
  */
-public class BitmexLevel1QuoteEngine extends QuoteEngine implements IQuoteListener, ITradeListener  {
+public class BitmexLevel1QuoteEngine extends QuoteEngine implements IQuoteListener, ITradeListener {
 
     protected BitmexRestClient restClient;
     protected BitmexWebsocketClient websocketClient;
     protected boolean isStarted = false;
     protected Map<String, Ticker> tickerMap = new HashMap<>();
-    
+
     @Override
     public void startEngine() {
         websocketClient = BitmexClientRegistry.getInstance().getWebsocketClient();
@@ -71,7 +71,7 @@ public class BitmexLevel1QuoteEngine extends QuoteEngine implements IQuoteListen
 
     @Override
     public void subscribeLevel1(Ticker ticker, Level1QuoteListener listener) {
-        super.subscribeLevel1(ticker, listener); 
+        super.subscribeLevel1(ticker, listener);
         tickerMap.put(ticker.getSymbol(), ticker);
         websocketClient.subscribeQuotes(ticker, this);
         websocketClient.subscribeTrades(ticker, this);
@@ -79,7 +79,7 @@ public class BitmexLevel1QuoteEngine extends QuoteEngine implements IQuoteListen
 
     @Override
     public void quoteUpdated(BitmexQuote quoteData) {
-        logger.debug("Received from Bitmex: " + quoteData );
+        logger.debug("Received from Bitmex: " + quoteData);
         Ticker ticker = tickerMap.get(quoteData.getSymbol());
         Map<QuoteType, BigDecimal> quoteMap = new HashMap<>();
         quoteMap.put(QuoteType.ASK, new BigDecimal(quoteData.getAskPrice()));
@@ -88,13 +88,12 @@ public class BitmexLevel1QuoteEngine extends QuoteEngine implements IQuoteListen
         quoteMap.put(QuoteType.ASK_SIZE, new BigDecimal(quoteData.getAskSize()));
         quoteMap.put(QuoteType.MIDPOINT, new BigDecimal((quoteData.getAskPrice() + quoteData.getBidPrice()) / 2.0));
         ZonedDateTime timestamp = getTimestamp(quoteData.getTimestamp());
-        
+
         Level1Quote quote = new Level1Quote(ticker, timestamp, quoteMap);
         fireLevel1Quote(quote);
-        
+
     }
 
-    
     @Override
     public void tradeUpdated(BitmexTrade trade) {
         Ticker ticker = tickerMap.get(trade.getSymbol());
@@ -102,17 +101,17 @@ public class BitmexLevel1QuoteEngine extends QuoteEngine implements IQuoteListen
         quoteMap.put(QuoteType.LAST, new BigDecimal(trade.getPrice()));
         quoteMap.put(QuoteType.LAST_SIZE, new BigDecimal(trade.getSize()));
         ZonedDateTime timestamp = getTimestamp(trade.getTimestamp());
-        
+
         Level1Quote quote = new Level1Quote(ticker, timestamp, quoteMap);
         fireLevel1Quote(quote);
     }
-    
+
     public int getMessageProcessorQueueSize() {
         return websocketClient.getMessageProcessorCount();
     }
-    
+
     protected ZonedDateTime getTimestamp(String timestamp) {
         return ZonedDateTime.parse(timestamp);
     }
-    
+
 }

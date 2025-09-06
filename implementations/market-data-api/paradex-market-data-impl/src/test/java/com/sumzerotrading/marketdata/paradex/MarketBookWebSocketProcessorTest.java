@@ -1,5 +1,6 @@
 package com.sumzerotrading.marketdata.paradex;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -89,6 +90,7 @@ class MarketBookWebSocketProcessorTest {
                     "params": {
                         "data": {
                             "update_type": "s",
+                            "last_updated_at": 1625247600000,
                             "inserts": [
                                 {"price": "100.50", "size": "10", "side": "BUY"}
                             ]
@@ -101,8 +103,8 @@ class MarketBookWebSocketProcessorTest {
         processor.messageReceived(message);
 
         // Then
-        verify(mockOrderBook).handleSnapshot(anyMap());
-        verify(mockOrderBook, never()).applyDelta(anyMap());
+        verify(mockOrderBook).handleSnapshot(anyMap(), any());
+        verify(mockOrderBook, never()).applyDelta(anyMap(), any());
         verifyNoInteractions(mockListener);
     }
 
@@ -115,6 +117,7 @@ class MarketBookWebSocketProcessorTest {
                     "params": {
                         "data": {
                             "update_type": "d",
+                            "last_updated_at": 1625247600000,
                             "inserts": [
                                 {"price": "101.00", "size": "5", "side": "SELL"}
                             ]
@@ -127,8 +130,8 @@ class MarketBookWebSocketProcessorTest {
         processor.messageReceived(message);
 
         // Then
-        verify(mockOrderBook).applyDelta(anyMap());
-        verify(mockOrderBook, never()).handleSnapshot(anyMap());
+        verify(mockOrderBook).applyDelta(anyMap(), any());
+        verify(mockOrderBook, never()).handleSnapshot(anyMap(), any());
         verifyNoInteractions(mockListener);
     }
 

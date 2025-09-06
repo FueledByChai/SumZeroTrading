@@ -18,7 +18,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.sumzerotrading.marketdata.ib;
 
 import com.sumzerotrading.data.Ticker;
@@ -59,7 +58,6 @@ public class IBLevel2QuoteProcessor extends IBQuoteProcessor<Level2QuoteData> {
         int size = data.getSize();
         IMarketDepthBook book;
         MarketDepthBook.Side depthSide;
-        
 
         if (side == SIDE_BID) {
             book = bidBookMap.get(data.getTicker());
@@ -79,49 +77,44 @@ public class IBLevel2QuoteProcessor extends IBQuoteProcessor<Level2QuoteData> {
             }
         }
 
-
-         BigDecimal bdPrice = QuoteUtil.getBigDecimalValue(ticker, price);
+        BigDecimal bdPrice = QuoteUtil.getBigDecimalValue(ticker, price);
 
         MarketDepthLevel level = new MarketDepthLevel(depthSide, bdPrice, size);
-        if( operation == OP_INSERT ) {
+        if (operation == OP_INSERT) {
             book.insertLevel(position, level);
-        } else if ( operation == OP_UPDATE ) {
-            book.updateLevel( position, level );
-        } else if( operation == OP_DELETE ) {
+        } else if (operation == OP_UPDATE) {
+            book.updateLevel(position, level);
+        } else if (operation == OP_DELETE) {
             book.deleteLevel(position);
         } else {
-            throw new IllegalStateException( "Unknown operation: " + operation );
+            throw new IllegalStateException("Unknown operation: " + operation);
         }
         buildAndFireEvent(ticker, book);
-        
+
     }
-    
-    
-    public void removeTicker( Ticker ticker ) {
+
+    public void removeTicker(Ticker ticker) {
         bidBookMap.remove(ticker);
         askBookMap.remove(ticker);
     }
-    
-    
+
     protected void buildAndFireEvent(Ticker ticker, IMarketDepthBook book) {
         QuoteType type;
-        if( book.getSide() == MarketDepthBook.Side.ASK ) {
+        if (book.getSide() == MarketDepthBook.Side.ASK) {
             type = QuoteType.MARKET_DEPTH_ASK;
         } else {
             type = QuoteType.MARKET_DEPTH_BID;
         }
         quoteEngine.fireMarketDepthQuote(new Level2Quote(ticker, type, getTime(), book));
-    }    
-    
-    
+    }
+
     /**
      * Overridden by unit tests.
-     * @return 
+     * 
+     * @return
      */
     protected ZonedDateTime getTime() {
         return ZonedDateTime.now();
     }
-
-
 
 }

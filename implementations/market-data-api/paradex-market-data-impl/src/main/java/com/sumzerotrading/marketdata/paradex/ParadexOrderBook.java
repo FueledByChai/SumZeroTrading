@@ -1,6 +1,7 @@
 package com.sumzerotrading.marketdata.paradex;
 
 import java.math.BigDecimal;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -18,7 +19,7 @@ public class ParadexOrderBook extends OrderBook implements IParadexOrderBook {
     }
 
     @Override
-    public void handleSnapshot(Map<String, Object> snapshot) {
+    public void handleSnapshot(Map<String, Object> snapshot, ZonedDateTime timestamp) {
         // Clear existing order book
         buySide.clear();
         sellSide.clear();
@@ -32,16 +33,18 @@ public class ParadexOrderBook extends OrderBook implements IParadexOrderBook {
             String side = (String) orderData.get("side");
 
             if ("BUY".equals(side)) {
-                buySide.insert(price, size);
+                buySide.insert(price, size, timestamp);
             } else {
-                sellSide.insert(price, size);
+                sellSide.insert(price, size, timestamp);
             }
         }
         initialized = true;
+        double obi = calculateWeightedOrderBookImbalance(obiLambda);
+        super.notifyOrderBookUpdateListenersImbalance(BigDecimal.valueOf(obi), timestamp);
     }
 
     @Override
-    public void applyDelta(Map<String, Object> delta) {
+    public void applyDelta(Map<String, Object> delta, ZonedDateTime timestamp) {
         // Process delta data
         List<Map<String, Object>> inserts = (List<Map<String, Object>>) delta.get("inserts");
         List<Map<String, Object>> updates = (List<Map<String, Object>>) delta.get("updates");
@@ -53,9 +56,9 @@ public class ParadexOrderBook extends OrderBook implements IParadexOrderBook {
             String side = (String) orderData.get("side");
 
             if ("BUY".equals(side)) {
-                buySide.insert(price, size);
+                buySide.insert(price, size, timestamp);
             } else {
-                sellSide.insert(price, size);
+                sellSide.insert(price, size, timestamp);
             }
         }
 
@@ -65,9 +68,9 @@ public class ParadexOrderBook extends OrderBook implements IParadexOrderBook {
             String side = (String) orderData.get("side");
 
             if ("BUY".equals(side)) {
-                buySide.update(price, size);
+                buySide.update(price, size, timestamp);
             } else {
-                sellSide.update(price, size);
+                sellSide.update(price, size, timestamp);
             }
         }
 
@@ -76,11 +79,13 @@ public class ParadexOrderBook extends OrderBook implements IParadexOrderBook {
             String side = (String) orderData.get("side");
 
             if ("BUY".equals(side)) {
-                buySide.remove(price);
+                buySide.remove(price, timestamp);
             } else {
-                sellSide.remove(price);
+                sellSide.remove(price, timestamp);
             }
         }
+        double obi = calculateWeightedOrderBookImbalance(obiLambda);
+        super.notifyOrderBookUpdateListenersImbalance(BigDecimal.valueOf(obi), timestamp);
     }
 
 }

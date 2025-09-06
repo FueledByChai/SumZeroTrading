@@ -35,8 +35,8 @@ import com.sumzerotrading.data.Ticker;
  */
 public class Level1Quote extends AbstractQuote implements ILevel1Quote {
 
-    public Level1Quote(Ticker ticker) {
-        super(ticker, ZonedDateTime.now(ZoneOffset.UTC));
+    public Level1Quote(Ticker ticker, ZonedDateTime timeStamp) {
+        super(ticker, timeStamp);
     }
 
     /**
@@ -50,26 +50,6 @@ public class Level1Quote extends AbstractQuote implements ILevel1Quote {
     public Level1Quote(Ticker ticker, ZonedDateTime timestamp, Map<QuoteType, BigDecimal> quoteValues) {
         super(ticker, timestamp);
         this.quoteMap = quoteValues;
-    }
-
-    @Override
-    public QuoteType[] getTypes() {
-        return quoteMap.keySet().toArray(new QuoteType[] {});
-    }
-
-    @Override
-    public boolean containsType(QuoteType type) {
-        return quoteMap.containsKey(type);
-    }
-
-    @Override
-    public BigDecimal getValue(QuoteType type) {
-        if (containsType(type)) {
-            return quoteMap.get(type);
-        } else {
-            throw new SumZeroException("Quote does not contain type: " + type);
-        }
-
     }
 
     @Override

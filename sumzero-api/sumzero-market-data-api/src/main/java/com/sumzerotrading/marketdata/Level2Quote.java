@@ -20,32 +20,25 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 package com.sumzerotrading.marketdata;
 
-
 import com.sumzerotrading.data.Ticker;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 
 public class Level2Quote extends AbstractQuote implements ILevel2Quote {
 
-	protected IMarketDepthBook book;
-	
-	public Level2Quote( Ticker ticker, QuoteType type, ZonedDateTime timeStamp, IMarketDepthBook book ) {
-		super( ticker, timeStamp );
-		this.book = book;
-	}
-	
-	public IMarketDepthBook getMarketDepthBook() {
-		return book;
-	}
+    protected IMarketDepthBook book;
 
-    @Override
-    public QuoteType[] getTypes() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public Level2Quote(Ticker ticker, ZonedDateTime timeStamp) {
+        super(ticker, timeStamp);
     }
 
-    @Override
-    public boolean containsType(QuoteType type) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public Level2Quote(Ticker ticker, QuoteType type, ZonedDateTime timeStamp, IMarketDepthBook book) {
+        super(ticker, timeStamp);
+        this.book = book;
+    }
+
+    public IMarketDepthBook getMarketDepthBook() {
+        return book;
     }
 
     @Override
@@ -77,12 +70,5 @@ public class Level2Quote extends AbstractQuote implements ILevel2Quote {
     public String toString() {
         return "Level2Quote{" + "book=" + book + '}';
     }
-        
-        
-        
 
-    
-	
-	
-	
 }

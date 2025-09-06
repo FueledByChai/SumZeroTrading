@@ -2,6 +2,7 @@ package com.sumzerotrading.marketdata;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,7 @@ public class OrderBook implements IOrderBook {
     protected BigDecimal bestAsk = BigDecimal.ZERO; // Best ask price
     protected List<OrderBookUpdateListener> orderbookUpdateListeners = new ArrayList<>();
     protected Ticker ticker;
+    protected double obiLambda = 0.75; // Default lambda for OBI calculation
 
     // Executor for asynchronous Level1Quote listener notifications
     protected volatile ExecutorService listenerExecutor = Executors.newCachedThreadPool(new ThreadFactory() {
@@ -245,12 +247,12 @@ public class OrderBook implements IOrderBook {
         orderbookUpdateListeners.remove(listener);
     }
 
-    protected void notifyOrderBookUpdateListenersNewBid(BigDecimal bestBid) {
+    protected void notifyOrderBookUpdateListenersNewBid(BigDecimal bestBid, ZonedDateTime timestamp) {
         try {
             for (OrderBookUpdateListener listener : orderbookUpdateListeners) {
                 listenerExecutor.submit(() -> {
                     try {
-                        listener.bestBidUpdated(ticker, bestBid);
+                        listener.bestBidUpdated(ticker, bestBid, timestamp);
                     } catch (Throwable t) {
                         logger.error("Listener threw exception for {}: {}", ticker, t.getMessage(), t);
                     }
@@ -261,12 +263,28 @@ public class OrderBook implements IOrderBook {
         }
     }
 
-    protected void notifyOrderBookUpdateListenersNewAsk(BigDecimal bestAsk) {
+    protected void notifyOrderBookUpdateListenersNewAsk(BigDecimal bestAsk, ZonedDateTime timestamp) {
         try {
             for (OrderBookUpdateListener listener : orderbookUpdateListeners) {
                 listenerExecutor.submit(() -> {
                     try {
-                        listener.bestAskUpdated(ticker, bestAsk);
+                        listener.bestAskUpdated(ticker, bestAsk, timestamp);
+                    } catch (Throwable t) {
+                        logger.error("Listener threw exception for {}: {}", ticker, t.getMessage(), t);
+                    }
+                });
+            }
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+        }
+    }
+
+    protected void notifyOrderBookUpdateListenersImbalance(BigDecimal imbalance, ZonedDateTime timestamp) {
+        try {
+            for (OrderBookUpdateListener listener : orderbookUpdateListeners) {
+                listenerExecutor.submit(() -> {
+                    try {
+                        listener.orderBookImbalanceUpdated(ticker, imbalance, timestamp);
                     } catch (Throwable t) {
                         logger.error("Listener threw exception for {}: {}", ticker, t.getMessage(), t);
                     }
@@ -286,19 +304,19 @@ public class OrderBook implements IOrderBook {
             this.descending = descending;
         }
 
-        public void insert(BigDecimal price, Double size) {
+        public void insert(BigDecimal price, Double size, ZonedDateTime timestamp) {
             orders.put(price, size);
-            updateBestPrice();
+            updateBestPrice(timestamp);
         }
 
-        public void update(BigDecimal price, Double size) {
+        public void update(BigDecimal price, Double size, ZonedDateTime timestamp) {
             orders.put(price, size);
-            updateBestPrice();
+            updateBestPrice(timestamp);
         }
 
-        public void remove(BigDecimal price) {
+        public void remove(BigDecimal price, ZonedDateTime timestamp) {
             orders.remove(price);
-            updateBestPrice();
+            updateBestPrice(timestamp);
         }
 
         public void clear() {
@@ -349,7 +367,7 @@ public class OrderBook implements IOrderBook {
             }, Map.Entry::getValue, Double::sum, ConcurrentHashMap::new));
         }
 
-        private void updateBestPrice() {
+        protected void updateBestPrice(ZonedDateTime timestamp) {
             BigDecimal bestPrice = orders.keySet().stream()
                     .sorted(descending ? (price1, price2) -> price2.compareTo(price1)
                             : (price1, price2) -> price1.compareTo(price2))
@@ -360,7 +378,7 @@ public class OrderBook implements IOrderBook {
                 synchronized (OrderBook.this) {
                     if (!bestPrice.equals(bestBid)) {
                         logger.debug("Best Bid updated from {} to {}", bestBid, bestPrice);
-                        notifyOrderBookUpdateListenersNewBid(bestPrice);
+                        notifyOrderBookUpdateListenersNewBid(bestPrice, timestamp);
                     }
                     bestBid = bestPrice;
                 }
@@ -369,7 +387,7 @@ public class OrderBook implements IOrderBook {
                 synchronized (OrderBook.this) {
                     if (!bestPrice.equals(bestAsk)) {
                         logger.debug("Best Ask updated from {} to {}", bestAsk, bestPrice);
-                        notifyOrderBookUpdateListenersNewAsk(bestPrice);
+                        notifyOrderBookUpdateListenersNewAsk(bestPrice, timestamp);
                     }
                     bestAsk = bestPrice;
                 }
