@@ -46,7 +46,7 @@ import com.sumzerotrading.broker.order.TradeDirection;
 import com.sumzerotrading.data.ComboTicker;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.marketdata.ILevel1Quote;
-import com.sumzerotrading.marketdata.IOrderBook;
+
 import com.sumzerotrading.marketdata.Level1QuoteListener;
 import com.sumzerotrading.marketdata.QuoteEngine;
 import com.sumzerotrading.marketdata.QuoteType;
@@ -106,7 +106,7 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
                 }
             }));
 
-    protected IOrderBook orderBook; // Order book for managing market data
+    // protected IOrderBook orderBook; // Order book for managing market data
 
     protected IPaperBrokerStatus brokerStatus = new PaperBrokerStatus(); // Broker status for reporting
 
@@ -123,8 +123,8 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
     private final long timeWindowMillis = 6000; // 6 seconds
     private final double dislocationMultiplier = 7.5; // Multiplier for dislocation threshold
 
-    public PaperBroker(IOrderBook orderBook, Ticker ticker) {
-        this.orderBook = orderBook;
+    public PaperBroker(QuoteEngine quoteEngine, Ticker ticker) {
+        this.quoteEngine = quoteEngine;
         this.ticker = ticker;
     }
 
@@ -183,6 +183,7 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
                 }
             }
         }, 0, 1000); // Schedule with a delay of 0 and period of 1000ms (1 second)
+        quoteEngine.subscribeLevel1(ticker, this); // Subscribe to level 1 quotes for the ticker
     }
 
     private void writeCurrentBalanceToFile(String filePath) {
@@ -410,7 +411,6 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
 
     public void askUpdated(BigDecimal newAsk) {
         bestAskPrice = newAsk.doubleValue();
-
         checkBidsFills(newAsk.doubleValue()); // Check for filled orders based on the new ask price
 
     }
@@ -423,7 +423,7 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
 
     protected List<OrderTicket> checkAsksFills(double bestBid) {
         List<OrderTicket> filledOrders = new ArrayList<>();
-        bidsLock.lock(); // Lock the bids to ensure thread safety
+        asksLock.lock(); // Lock the asks to ensure thread safety
         try {
             bestBidPrice = bestBid; // Update the best ask price
             midPrice = (bestBidPrice + bestAskPrice) / 2.0; // Update the mid price
@@ -443,7 +443,7 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
                 }
             }
         } finally {
-            bidsLock.unlock(); // Ensure the lock is released after processing
+            asksLock.unlock(); // Ensure the lock is released after processing
         }
 
         return filledOrders;
@@ -451,7 +451,7 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
 
     protected List<OrderTicket> checkBidsFills(double askPrice) {
         List<OrderTicket> filledOrders = new ArrayList<>();
-        asksLock.lock(); // Lock the asks to ensure thread safety
+        bidsLock.lock(); // Lock the bids to ensure thread safety
         try {
             bestAskPrice = askPrice; // Update the best bid price
             midPrice = (bestBidPrice + bestAskPrice) / 2.0; // Update the mid price
@@ -471,7 +471,7 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
                 }
             }
         } finally {
-            asksLock.unlock(); // Ensure the lock is released after processing
+            bidsLock.unlock(); // Ensure the lock is released after processing
         }
 
         return filledOrders;
@@ -491,9 +491,11 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
             brokerStatus.setBestAsk(bestAskPrice); // Update best ask price
             brokerStatus.setBestBid(bestBidPrice); // Update best bid price
             brokerStatus.setMidPoint(midPrice); // Update mid price
-            brokerStatus.setVWAPMidpoint(orderBook.getVWAPMidpoint(30).doubleValue()); // Update VWAP midpoint from
-            brokerStatus.setCOGMidpoint(orderBook.getCenterOfGravityMidpoint(30).doubleValue()); // Update COG midpoint
-                                                                                                 // from order
+            // brokerStatus.setVWAPMidpoint(orderBook.getVWAPMidpoint(30).doubleValue()); //
+            // Update VWAP midpoint from
+            // brokerStatus.setCOGMidpoint(orderBook.getCenterOfGravityMidpoint(30).doubleValue());
+            // // Update COG midpoint
+            // from order
             brokerStatus.setRealizedPnL(realizedPnL); // Update realized PnL
             brokerStatus.setUnrealizedPnL(getUnrealizedPnL()); // Update unrealized PnL
             brokerStatus.setTotalPnL(realizedPnL + getUnrealizedPnL()); // Update total PnL
@@ -784,15 +786,16 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
 
     @Override
     public void connect() {
-        while (!orderBook.isInitialized()) {
-            try {
-                logger.info("Waiting for order book to initialize...");
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt(); // Restore interrupted status
-                logger.error("Interrupted while waiting for order book to initialize: {}", e.getMessage(), e);
-            }
-        }
+        // while (!orderBook.isInitialized()) {
+        // try {
+        // logger.info("Waiting for order book to initialize...");
+        // Thread.sleep(500);
+        // } catch (InterruptedException e) {
+        // Thread.currentThread().interrupt(); // Restore interrupted status
+        // logger.error("Interrupted while waiting for order book to initialize: {}",
+        // e.getMessage(), e);
+        // }
+        // }
         startAccountUpdateTask();
 
     }
