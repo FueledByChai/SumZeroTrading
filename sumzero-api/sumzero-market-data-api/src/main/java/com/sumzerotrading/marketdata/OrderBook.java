@@ -3,13 +3,14 @@ package com.sumzerotrading.marketdata;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -26,7 +27,7 @@ public class OrderBook implements IOrderBook {
     protected BigDecimal tickSize;
     protected BigDecimal bestBid = BigDecimal.ZERO; // Best bid price
     protected BigDecimal bestAsk = BigDecimal.ZERO; // Best ask price
-    protected List<OrderBookUpdateListener> orderbookUpdateListeners = new ArrayList<>();
+    protected final List<OrderBookUpdateListener> orderbookUpdateListeners = new CopyOnWriteArrayList<>();
     protected Ticker ticker;
     protected double obiLambda = 0.75; // Default lambda for OBI calculation
 
@@ -68,6 +69,27 @@ public class OrderBook implements IOrderBook {
         buySide.clear();
         sellSide.clear();
         initialized = false;
+    }
+
+    /**
+     * Shutdown the listener executor service and cleanup resources. This should be
+     * called when the OrderBook is no longer needed to prevent resource leaks.
+     */
+    public void shutdown() {
+        if (listenerExecutor != null && !listenerExecutor.isShutdown()) {
+            listenerExecutor.shutdown();
+            try {
+                // Wait for existing tasks to complete
+                if (!listenerExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+                    // Force shutdown if tasks don't complete within timeout
+                    listenerExecutor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                // Force shutdown if interrupted
+                listenerExecutor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     @Override
@@ -248,50 +270,50 @@ public class OrderBook implements IOrderBook {
     }
 
     protected void notifyOrderBookUpdateListenersNewBid(BigDecimal bestBid, ZonedDateTime timestamp) {
-        try {
-            for (OrderBookUpdateListener listener : orderbookUpdateListeners) {
-                listenerExecutor.submit(() -> {
-                    try {
-                        listener.bestBidUpdated(ticker, bestBid, timestamp);
-                    } catch (Throwable t) {
-                        logger.error("Listener threw exception for {}: {}", ticker, t.getMessage(), t);
-                    }
-                });
-            }
-        } catch (Exception e) {
-            logger.error(e.getLocalizedMessage(), e);
+        // CopyOnWriteArrayList provides thread-safe iteration without
+        // ConcurrentModificationException
+        // The iteration is performed on a snapshot of the list at the time the iterator
+        // was created
+        for (OrderBookUpdateListener listener : orderbookUpdateListeners) {
+            listenerExecutor.submit(() -> {
+                try {
+                    listener.bestBidUpdated(ticker, bestBid, timestamp);
+                } catch (Throwable t) {
+                    logger.error("Listener threw exception for {}: {}", ticker, t.getMessage(), t);
+                }
+            });
         }
     }
 
     protected void notifyOrderBookUpdateListenersNewAsk(BigDecimal bestAsk, ZonedDateTime timestamp) {
-        try {
-            for (OrderBookUpdateListener listener : orderbookUpdateListeners) {
-                listenerExecutor.submit(() -> {
-                    try {
-                        listener.bestAskUpdated(ticker, bestAsk, timestamp);
-                    } catch (Throwable t) {
-                        logger.error("Listener threw exception for {}: {}", ticker, t.getMessage(), t);
-                    }
-                });
-            }
-        } catch (Exception e) {
-            logger.error(e.getLocalizedMessage(), e);
+        // CopyOnWriteArrayList provides thread-safe iteration without
+        // ConcurrentModificationException
+        // The iteration is performed on a snapshot of the list at the time the iterator
+        // was created
+        for (OrderBookUpdateListener listener : orderbookUpdateListeners) {
+            listenerExecutor.submit(() -> {
+                try {
+                    listener.bestAskUpdated(ticker, bestAsk, timestamp);
+                } catch (Throwable t) {
+                    logger.error("Listener threw exception for {}: {}", ticker, t.getMessage(), t);
+                }
+            });
         }
     }
 
     protected void notifyOrderBookUpdateListenersImbalance(BigDecimal imbalance, ZonedDateTime timestamp) {
-        try {
-            for (OrderBookUpdateListener listener : orderbookUpdateListeners) {
-                listenerExecutor.submit(() -> {
-                    try {
-                        listener.orderBookImbalanceUpdated(ticker, imbalance, timestamp);
-                    } catch (Throwable t) {
-                        logger.error("Listener threw exception for {}: {}", ticker, t.getMessage(), t);
-                    }
-                });
-            }
-        } catch (Exception e) {
-            logger.error(e.getLocalizedMessage(), e);
+        // CopyOnWriteArrayList provides thread-safe iteration without
+        // ConcurrentModificationException
+        // The iteration is performed on a snapshot of the list at the time the iterator
+        // was created
+        for (OrderBookUpdateListener listener : orderbookUpdateListeners) {
+            listenerExecutor.submit(() -> {
+                try {
+                    listener.orderBookImbalanceUpdated(ticker, imbalance, timestamp);
+                } catch (Throwable t) {
+                    logger.error("Listener threw exception for {}: {}", ticker, t.getMessage(), t);
+                }
+            });
         }
     }
 
