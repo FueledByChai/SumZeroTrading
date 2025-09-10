@@ -2,6 +2,7 @@ package com.sumzerotrading.marketdata.hyperliquid;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
@@ -41,7 +42,7 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements Runnable {
     private final OkHttpClient httpClient;
     private final ObjectMapper objectMapper;
 
-    protected int sleepTimeInSeconds = 10;
+    protected int sleepTimeMS = 500;
     protected ArrayList<String> urlStrings = new ArrayList<>();
     private OrderBookResponse orderBook;
     protected Map<String, FundingData> allFundingRates;
@@ -92,7 +93,7 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements Runnable {
         if (threadCompleted) {
             throw new IllegalStateException("Quote Engine was already stopped");
         }
-        logger.info("starting engine with " + sleepTimeInSeconds + " second interval");
+        logger.info("starting engine with " + sleepTimeMS + " second interval");
         started = true;
         thread.start();
     }
@@ -101,7 +102,7 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements Runnable {
     public void startEngine(Properties props) {
         String sleepTimeString = props.getProperty(SLEEP_TIME_PROPERTY_KEY);
         if (sleepTimeString != null) {
-            sleepTimeInSeconds = Integer.parseInt(sleepTimeString);
+            sleepTimeMS = Integer.parseInt(sleepTimeString);
         }
         String includeFundingRatesString = props.getProperty(INCLUDE_FUNDING_RATE_PROPERTY_KEY);
         if (includeFundingRatesString != null) {
@@ -142,7 +143,7 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements Runnable {
 
             try {
                 getQuotes();
-                Thread.sleep(sleepTimeInSeconds * 1000);
+                Thread.sleep(sleepTimeMS);
             } catch (Exception ex) {
                 logger.error(ex.getMessage(), ex);
             }
@@ -183,7 +184,7 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements Runnable {
                         Double annualFunding = Double.parseDouble(fundingString) * 24.0 * 365.0 * 100.0;
                         quoteMap.put(QuoteType.FUNDING_RATE_APR, new BigDecimal(annualFunding));
                     }
-                    Level1Quote quote = new Level1Quote(ticker, ZonedDateTime.now(), quoteMap);
+                    Level1Quote quote = new Level1Quote(ticker, ZonedDateTime.now(ZoneId.of("GMT")), quoteMap);
                     fireLevel1Quote(quote);
                 }
             } catch (Exception ex) {
@@ -291,12 +292,12 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements Runnable {
         public String name;
     }
 
-    public void setSleepTimeInSeconds(int seconds) {
-        this.sleepTimeInSeconds = seconds;
+    public void setSleepTimeMS(int seconds) {
+        this.sleepTimeMS = seconds;
     }
 
-    public int getSleepTimeInSeconds() {
-        return sleepTimeInSeconds;
+    public int getSleepTimeMS() {
+        return sleepTimeMS;
     }
 
 }

@@ -21,10 +21,10 @@ public class TestApp implements Level1QuoteListener {
                 .setExchange(Exchange.HYPERLIQUID);
 
         quoteEngine.startEngine();
-        quoteEngine.subscribeLevel1(ticker, this);
-        quoteEngine.subscribeLevel1(eth, this);
+        // quoteEngine.subscribeLevel1(ticker, this);
+        // quoteEngine.subscribeLevel1(eth, this);
         quoteEngine.subscribeLevel1(xrp, this);
-        quoteEngine.subscribeLevel1(sol, this);
+        // quoteEngine.subscribeLevel1(sol, this);
 
     }
 
