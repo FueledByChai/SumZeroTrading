@@ -10,12 +10,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+// removed unused ThreadPoolExecutor import
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sumzerotrading.data.Ticker;
@@ -36,24 +41,32 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements Runnable {
 
     public static final String SLEEP_TIME_PROPERTY_KEY = "sleep.time.in.seconds";
     public static final String INCLUDE_FUNDING_RATE_PROPERTY_KEY = "include.funding.rates";
+    public static final String FUNDING_RATE_UPDATE_INTERVAL_PROPERTY_KEY = "funding.rate.update.interval.seconds";
+
     protected volatile boolean started = false;
     protected boolean threadCompleted = false;
     protected Thread thread = new Thread(this);
     private final OkHttpClient httpClient;
     private final ObjectMapper objectMapper;
+    private ScheduledExecutorService fundingRateExecutor;
 
     protected int sleepTimeMS = 500;
+    protected int fundingRateUpdateIntervalSeconds = 5;
     protected ArrayList<String> urlStrings = new ArrayList<>();
     private OrderBookResponse orderBook;
-    protected Map<String, FundingData> allFundingRates;
+    protected volatile Map<String, FundingData> allFundingRates;
     private static final String BASE_URL = "https://api.hyperliquid.xyz/info";
-    protected boolean includeFundingRate = false;
+    protected boolean includeFundingRate = true;
 
     public HyperliquidQuoteEngine() {
         this.httpClient = new OkHttpClient();
         this.objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
+        this.fundingRateExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "hyperliquid-funding-rate-updater");
+            t.setDaemon(true);
+            return t;
+        });
     }
 
     public OrderBookResponse getOrderBook(String coin) {
@@ -93,8 +106,14 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements Runnable {
         if (threadCompleted) {
             throw new IllegalStateException("Quote Engine was already stopped");
         }
-        logger.info("starting engine with " + sleepTimeMS + " second interval");
+        logger.info("starting engine with " + sleepTimeMS + " ms interval");
         started = true;
+
+        // Start the funding rate update scheduler if funding rates are enabled
+        if (includeFundingRate) {
+            startFundingRateUpdates();
+        }
+
         thread.start();
     }
 
@@ -108,6 +127,10 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements Runnable {
         if (includeFundingRatesString != null) {
             includeFundingRate = Boolean.parseBoolean(includeFundingRatesString);
         }
+        String fundingRateIntervalString = props.getProperty(FUNDING_RATE_UPDATE_INTERVAL_PROPERTY_KEY);
+        if (fundingRateIntervalString != null) {
+            fundingRateUpdateIntervalSeconds = Integer.parseInt(fundingRateIntervalString);
+        }
         startEngine();
     }
 
@@ -119,11 +142,72 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements Runnable {
     @Override
     public void stopEngine() {
         started = false;
+        stopFundingRateUpdates();
     }
 
     @Override
     public void useDelayedData(boolean useDelayed) {
         logger.error("useDelayedData() Not supported for hyperliquid market data");
+    }
+
+    /**
+     * Starts periodic funding rate refreshes using a background scheduler.
+     * Delegates to a helper that sets up a fixed-rate timer every N seconds.
+     */
+    private synchronized void startFundingRateUpdates() {
+        if (!includeFundingRate) {
+            return;
+        }
+        // (Re)create the scheduler if needed
+        if (fundingRateExecutor == null || fundingRateExecutor.isShutdown()) {
+            fundingRateExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
+                Thread t = new Thread(r, "hyperliquid-funding-rate-updater");
+                t.setDaemon(true);
+                return t;
+            });
+        }
+        startFundingRateTimer();
+    }
+
+    /**
+     * Schedules a fixed-rate task to fetch all funding rates and cache them.
+     * Default cadence is every 5 seconds (configurable via property).
+     */
+    private void startFundingRateTimer() {
+        // Avoid multiple schedules if already active
+        // We rely on single-thread executor; scheduleAtFixedRate can be called multiple
+        // times
+        // but here we only set up one repeating task when the engine starts.
+        fundingRateExecutor.scheduleAtFixedRate(() -> {
+            try {
+                Map<String, FundingData> latest = getAllFundingRates();
+                allFundingRates = latest; // volatile ensures visibility
+                if (latest != null) {
+                    logger.debug("Funding rates updated ({} assets)", latest.size());
+                }
+            } catch (Exception e) {
+                logger.error("Error refreshing funding rates", e);
+            }
+        }, 0, fundingRateUpdateIntervalSeconds, TimeUnit.SECONDS);
+    }
+
+    /**
+     * Stops the funding rate scheduler gracefully.
+     */
+    private synchronized void stopFundingRateUpdates() {
+        if (fundingRateExecutor != null) {
+            fundingRateExecutor.shutdown();
+            try {
+                if (!fundingRateExecutor.awaitTermination(2, TimeUnit.SECONDS)) {
+                    fundingRateExecutor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                fundingRateExecutor.shutdownNow();
+                Thread.currentThread().interrupt();
+            } finally {
+                fundingRateExecutor = null;
+            }
+        }
     }
 
     @Override
@@ -153,13 +237,8 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements Runnable {
     }
 
     protected void getQuotes() {
-        if (includeFundingRate) {
-            try {
-                allFundingRates = getAllFundingRates();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
+        // Removed the funding rate fetching from this method since it's now handled
+        // separately
         for (Ticker ticker : level1ListenerMap.keySet()) {
             try {
                 if (!level1ListenerMap.get(ticker).isEmpty()) {
@@ -179,11 +258,21 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements Runnable {
                     quoteMap.put(QuoteType.ASK_SIZE, new BigDecimal(askSizeString));
                     quoteMap.put(QuoteType.BID, new BigDecimal(bidPriceString));
                     quoteMap.put(QuoteType.BID_SIZE, new BigDecimal(bidSizeString));
-                    if (includeFundingRate) {
-                        String fundingString = allFundingRates.get(ticker.getSymbol()).funding;
-                        Double annualFunding = Double.parseDouble(fundingString) * 24.0 * 365.0 * 100.0;
-                        quoteMap.put(QuoteType.FUNDING_RATE_APR, new BigDecimal(annualFunding));
+
+                    // Use the cached funding rates if available (updated by separate thread)
+                    if (includeFundingRate && allFundingRates != null) {
+                        FundingData fundingData = allFundingRates.get(ticker.getSymbol());
+                        if (fundingData != null) {
+                            String fundingString = fundingData.funding;
+                            Double annualFunding = Double.parseDouble(fundingString) * 24.0 * 365.0 * 100.0;
+                            Double hourlyFundingBps = Double.parseDouble(fundingString) * 100.0;
+                            quoteMap.put(QuoteType.FUNDING_RATE_APR, new BigDecimal(annualFunding));
+                            quoteMap.put(QuoteType.FUNDING_RATE_HOURLY_BPS, new BigDecimal(hourlyFundingBps));
+                        } else {
+                            logger.debug("No funding data available for ticker: {}", ticker.getSymbol());
+                        }
                     }
+
                     Level1Quote quote = new Level1Quote(ticker, ZonedDateTime.now(ZoneId.of("GMT")), quoteMap);
                     fireLevel1Quote(quote);
                 }
@@ -220,7 +309,8 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements Runnable {
 
     public Map<String, FundingData> parseResponse(String jsonResponse) throws Exception {
         // Deserialize the response into two parts: Universe and FundingData
-        List<Object> response = objectMapper.readValue(jsonResponse, List.class);
+        List<Object> response = objectMapper.readValue(jsonResponse, new TypeReference<List<Object>>() {
+        });
 
         UniverseData universeData = objectMapper.convertValue(response.get(0), UniverseData.class);
         List<FundingData> fundingDataList = objectMapper.convertValue(response.get(1),
