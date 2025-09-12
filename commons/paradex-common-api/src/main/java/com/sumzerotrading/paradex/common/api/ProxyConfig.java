@@ -5,7 +5,7 @@ import java.net.Proxy;
 
 public class ProxyConfig {
 
-    public static boolean runningLocally = true;
+    public static boolean runningLocally = false;
 
     public static Proxy getProxy() {
         if (!runningLocally) {
