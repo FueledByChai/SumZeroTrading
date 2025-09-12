@@ -9,6 +9,7 @@ import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.broker.order.OrderTicket.Type;
 import com.sumzerotrading.broker.order.TradeDirection;
 import com.sumzerotrading.broker.paper.PaperBroker;
+import com.sumzerotrading.broker.paper.PaperBrokerCommission;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.marketdata.paradex.ParadexQuoteEngine;
 import com.sumzerotrading.paradex.common.ParadexTickerRegistry;
@@ -23,7 +24,7 @@ public class TradingPaperBrokerWithParadexData {
         ParadexQuoteEngine quoteEngine = new ParadexQuoteEngine();
         quoteEngine.startEngine();
 
-        PaperBroker broker = new PaperBroker(quoteEngine, ticker);
+        PaperBroker broker = new PaperBroker(quoteEngine, ticker, PaperBrokerCommission.PARADEX_COMMISSION);
         quoteEngine.subscribeLevel1(ticker, broker);
         broker.connect();
 

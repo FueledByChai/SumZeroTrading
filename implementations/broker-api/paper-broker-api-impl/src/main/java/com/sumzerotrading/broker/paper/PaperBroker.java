@@ -123,9 +123,11 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
     private final long timeWindowMillis = 6000; // 6 seconds
     private final double dislocationMultiplier = 7.5; // Multiplier for dislocation threshold
 
-    public PaperBroker(QuoteEngine quoteEngine, Ticker ticker) {
+    public PaperBroker(QuoteEngine quoteEngine, Ticker ticker, PaperBrokerCommission commission) {
         this.quoteEngine = quoteEngine;
         this.ticker = ticker;
+        this.makerFee = commission.getMakerFeeBps() / 10000.0; // Convert bps to decimal
+        this.takerFee = commission.getTakerFeeBps() / 10000.0; // Convert bps to decimal
     }
 
     private static class SpreadEntry {
@@ -141,7 +143,8 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
     protected void startAccountUpdateTask() {
         logger.warn("PaperBroker @PostConstruct startAccountUpdateTask called: {}", System.identityHashCode(this));
         // Read starting balance from file
-        String balanceFilePath = "paperbroker-startingbalance.txt";
+        String balanceFilePath = ticker.getSymbol() + "-" + ticker.getExchange().getExchangeName()
+                + "-paperbroker-startingbalance.txt";
         File balanceFile = new File(balanceFilePath);
         if (balanceFile.exists()) {
             try {
@@ -155,7 +158,7 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
             }
         }
 
-        csvFilePath = generateCsvFilename(ticker.getSymbol());
+        csvFilePath = generateCsvFilename(ticker.getSymbol(), ticker.getExchange().getExchangeName());
         asset = ticker.getSymbol();
         brokerStatus.setAsset(asset);
         brokerStatus.setOpenOrders(openOrders.values()); // Set the open orders in the broker status
@@ -712,7 +715,7 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
 
     }
 
-    protected String generateCsvFilename(String symbol) {
+    protected String generateCsvFilename(String symbol, String exchange) {
         // Get the current date and time
         ZonedDateTime now = getCurrentTime();
 
@@ -721,13 +724,13 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
         String timestamp = now.format(formatter);
 
         // Construct the filename
-        return String.format("%s-%s-Trades.csv", timestamp, symbol);
+        return String.format("%s-%s-%s-Trades.csv", timestamp, symbol, exchange);
     }
 
     protected void delay() {
         // Simulate network delay or processing time
         try {
-            Thread.sleep(500); // 1 second delay
+            Thread.sleep(250 + (long) (Math.random() * 500));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt(); // Restore interrupted status
             System.err.println("Delay interrupted: " + e.getMessage());
