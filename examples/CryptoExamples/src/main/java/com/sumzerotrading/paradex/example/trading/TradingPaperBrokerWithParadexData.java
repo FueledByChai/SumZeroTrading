@@ -24,7 +24,7 @@ public class TradingPaperBrokerWithParadexData {
         ParadexQuoteEngine quoteEngine = new ParadexQuoteEngine();
         quoteEngine.startEngine();
 
-        PaperBroker broker = new PaperBroker(quoteEngine, ticker, PaperBrokerCommission.PARADEX_COMMISSION);
+        PaperBroker broker = new PaperBroker(quoteEngine, ticker, PaperBrokerCommission.PARADEX_COMMISSION, 10000.0);
         quoteEngine.subscribeLevel1(ticker, broker);
         broker.connect();
 

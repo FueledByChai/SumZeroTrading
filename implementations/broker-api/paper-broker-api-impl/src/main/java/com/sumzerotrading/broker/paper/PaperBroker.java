@@ -123,11 +123,14 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
     private final long timeWindowMillis = 6000; // 6 seconds
     private final double dislocationMultiplier = 7.5; // Multiplier for dislocation threshold
 
-    public PaperBroker(QuoteEngine quoteEngine, Ticker ticker, PaperBrokerCommission commission) {
+    public PaperBroker(QuoteEngine quoteEngine, Ticker ticker, PaperBrokerCommission commission,
+            double startingBalance) {
         this.quoteEngine = quoteEngine;
         this.ticker = ticker;
         this.makerFee = commission.getMakerFeeBps() / 10000.0; // Convert bps to decimal
         this.takerFee = commission.getTakerFeeBps() / 10000.0; // Convert bps to decimal
+        this.startingAccountBalance = startingBalance;
+        this.currentAccountBalance = startingBalance;
     }
 
     private static class SpreadEntry {
