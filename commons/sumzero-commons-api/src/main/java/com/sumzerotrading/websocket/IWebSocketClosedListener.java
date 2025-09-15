@@ -1,4 +1,4 @@
-package com.sumzerotrading.paradex.common.api;
+package com.sumzerotrading.websocket;
 
 public interface IWebSocketClosedListener {
 

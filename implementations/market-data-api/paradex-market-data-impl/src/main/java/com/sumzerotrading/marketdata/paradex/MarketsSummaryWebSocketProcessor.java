@@ -11,8 +11,8 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sumzerotrading.paradex.common.api.IWebSocketClosedListener;
-import com.sumzerotrading.paradex.common.api.IWebSocketProcessor;
+import com.sumzerotrading.websocket.IWebSocketClosedListener;
+import com.sumzerotrading.websocket.IWebSocketProcessor;
 
 public class MarketsSummaryWebSocketProcessor implements IWebSocketProcessor {
 

@@ -1,6 +1,10 @@
 package com.sumzerotrading.marketdata;
 
 import java.math.BigDecimal;
+import java.time.ZonedDateTime;
+import java.util.List;
+
+import com.sumzerotrading.marketdata.OrderBook.PriceLevel;
 
 public interface IOrderBook {
 
@@ -47,5 +51,27 @@ public interface IOrderBook {
     void addOrderBookUpdateListener(OrderBookUpdateListener listener);
 
     void removeOrderBookUpdateListener(OrderBookUpdateListener listener);
+
+    /**
+     * Atomically updates the order book from a complete snapshot. This method
+     * ensures readers never see inconsistent state during updates.
+     * 
+     * @param bids      List of bid entries (price, size pairs)
+     * @param asks      List of ask entries (price, size pairs)
+     * @param timestamp The timestamp for this update
+     */
+    void updateFromSnapshot(List<PriceLevel> bids, List<PriceLevel> asks, ZonedDateTime timestamp);
+
+    /**
+     * Convenience method for updating from raw price/size arrays.
+     * 
+     * @param bidPrices Array of bid prices
+     * @param bidSizes  Array of bid sizes (must be same length as bidPrices)
+     * @param askPrices Array of ask prices
+     * @param askSizes  Array of ask sizes (must be same length as askPrices)
+     * @param timestamp The timestamp for this update
+     */
+    void updateFromSnapshot(BigDecimal[] bidPrices, Double[] bidSizes, BigDecimal[] askPrices, Double[] askSizes,
+            ZonedDateTime timestamp);
 
 }

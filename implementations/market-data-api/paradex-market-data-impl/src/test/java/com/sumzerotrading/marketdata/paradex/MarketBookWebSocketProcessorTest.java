@@ -12,7 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.sumzerotrading.paradex.common.api.IWebSocketClosedListener;
+import com.sumzerotrading.websocket.IWebSocketClosedListener;
 
 @ExtendWith(MockitoExtension.class)
 class MarketBookWebSocketProcessorTest {

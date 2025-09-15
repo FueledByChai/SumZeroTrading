@@ -14,6 +14,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.sumzerotrading.websocket.IWebSocketProcessor;
+
 @ExtendWith(MockitoExtension.class)
 class ParadexWebSocketClientTest {
 

@@ -45,6 +45,7 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     <module>interactive-brokers-integration-tests</module>
     <module>bitmex-common-api</module>
     <module>paradex-common-api</module>
+    <module>hyperliquid-common-api</module>
   </modules>
   
 </project>

@@ -8,6 +8,8 @@ import java.net.Proxy;
 
 import org.junit.jupiter.api.Test;
 
+import com.sumzerotrading.websocket.ProxyConfig;
+
 class ProxyConfigTest {
 
     @Test

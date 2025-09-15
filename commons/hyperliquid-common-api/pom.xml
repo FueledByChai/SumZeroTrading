@@ -6,7 +6,7 @@
         <artifactId>sumzero-commons</artifactId>
         <version>0.2.0-SNAPSHOT</version>
     </parent>
-    <artifactId>paradex-common-api</artifactId>
+    <artifactId>hyperliquid-common-api</artifactId>
     <version>0.2.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 

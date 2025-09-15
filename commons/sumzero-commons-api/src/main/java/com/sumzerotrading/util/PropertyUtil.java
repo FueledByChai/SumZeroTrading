@@ -7,7 +7,9 @@ package com.sumzerotrading.util;
 
 import java.time.LocalTime;
 import java.util.Properties;
-import org.apache.log4j.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -15,7 +17,7 @@ import org.apache.log4j.Logger;
  */
 public class PropertyUtil {
 
-    protected Logger logger = Logger.getLogger(PropertyUtil.class);
+    protected Logger logger = LoggerFactory.getLogger(PropertyUtil.class);
     protected Properties props;
 
     public PropertyUtil(Properties props) {
@@ -26,19 +28,18 @@ public class PropertyUtil {
         return Integer.parseInt(props.getProperty(propName));
     }
 
-    
     public int readInt(String propName, int defaultValue) {
         String propValue = "";
         try {
             propValue = props.getProperty(propName);
             return Integer.parseInt(propValue);
         } catch (Exception ex) {
-            logger.error("Unable to read property: " + propName + " with value: " + propValue + ", using default value");
+            logger.error(
+                    "Unable to read property: " + propName + " with value: " + propValue + ", using default value");
             return defaultValue;
         }
     }
 
-    
     public double readDouble(String propName) {
         return Double.parseDouble(props.getProperty(propName));
     }
@@ -49,7 +50,8 @@ public class PropertyUtil {
             propValue = props.getProperty(propName);
             return Double.parseDouble(propValue);
         } catch (Exception ex) {
-            logger.error("Unable to read property: " + propName + " with value: " + propValue + ", using default value");
+            logger.error(
+                    "Unable to read property: " + propName + " with value: " + propValue + ", using default value");
             return defaultValue;
         }
     }
@@ -61,24 +63,26 @@ public class PropertyUtil {
     public boolean readBoolean(String propName, boolean defaultValue) {
         String propValue = props.getProperty(propName);
         if (propValue == null || propValue.length() == 0) {
-            logger.error("Unable to read property: " + propName + " with value: " + propValue + ", using default value");
+            logger.error(
+                    "Unable to read property: " + propName + " with value: " + propValue + ", using default value");
             return defaultValue;
         } else {
             return Boolean.parseBoolean(propValue);
         }
     }
-    
+
     public LocalTime readLocalTime(String propName) {
         return LocalTime.parse(props.getProperty(propName));
     }
-    
-    public LocalTime readLocalTime( String propName, LocalTime defaultValue ) {
+
+    public LocalTime readLocalTime(String propName, LocalTime defaultValue) {
         String propValue = "";
         try {
             propValue = props.getProperty(propName);
             return LocalTime.parse(propValue);
-        } catch( Exception ex ) {
-            logger.error("Unable to read property: " + propName + " with value: " + propValue + ", using default value");
+        } catch (Exception ex) {
+            logger.error(
+                    "Unable to read property: " + propName + " with value: " + propValue + ", using default value");
             return defaultValue;
         }
     }

@@ -1,23 +1,25 @@
-package com.sumzerotrading.paradex.common.api;
+package com.sumzerotrading.hyperliquid.websocket;
 
 import org.java_websocket.handshake.ServerHandshake;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.sumzerotrading.websocket.AbstractWebSocketClient;
 import com.sumzerotrading.websocket.IWebSocketProcessor;
 
-public class ParadexWebSocketClient extends AbstractWebSocketClient {
+public class HyperliquidWebSocketClient extends AbstractWebSocketClient {
 
     protected String jwtToken = null;
+    protected String coin = null;
 
-    public ParadexWebSocketClient(String serverUri, String channel, IWebSocketProcessor processor) throws Exception {
+    public HyperliquidWebSocketClient(String serverUri, String channel, String coin, IWebSocketProcessor processor)
+            throws Exception {
         super(serverUri, channel, processor);
+        this.coin = coin;
     }
 
-    public ParadexWebSocketClient(String serverUri, String channel, IWebSocketProcessor processor, String jwtToken)
-            throws Exception {
-        this(serverUri, channel, processor);
+    public HyperliquidWebSocketClient(String serverUri, String channel, String coin, IWebSocketProcessor processor,
+            String jwtToken) throws Exception {
+        this(serverUri, channel, coin, processor);
         this.jwtToken = jwtToken;
     }
 
@@ -47,10 +49,10 @@ public class ParadexWebSocketClient extends AbstractWebSocketClient {
         JsonObject subscribeJson = new JsonObject();
         subscribeJson.addProperty("jsonrpc", "2.0");
         subscribeJson.addProperty("method", "subscribe");
-        JsonElement params = new JsonObject();
-        params.getAsJsonObject().addProperty("channel", channel);
-        subscribeJson.add("params", params);
-        subscribeJson.addProperty("id", 1);
+        JsonObject subscription = new JsonObject();
+        subscription.addProperty("type", channel);
+        subscription.addProperty("coin", coin);
+        subscribeJson.add("subscription", subscription);
 
         logger.info("Subscribing to channel: " + subscribeJson.toString());
 

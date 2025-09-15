@@ -14,9 +14,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.sumzerotrading.paradex.common.api.IWebSocketClosedListener;
 import com.sumzerotrading.paradex.common.api.order.OrderType;
 import com.sumzerotrading.paradex.common.api.order.Side;
+import com.sumzerotrading.websocket.IWebSocketClosedListener;
 
 /**
  * JUnit 5/Mockito test class for OrderStatusWebSocketProcessor Tests WebSocket

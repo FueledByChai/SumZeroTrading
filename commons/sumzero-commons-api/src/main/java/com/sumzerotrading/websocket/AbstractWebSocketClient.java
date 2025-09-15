@@ -1,4 +1,4 @@
-package com.sumzerotrading.paradex.common.api;
+package com.sumzerotrading.websocket;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -7,8 +7,6 @@ import java.util.List;
 import org.java_websocket.client.WebSocketClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
 
 public abstract class AbstractWebSocketClient extends WebSocketClient {
 

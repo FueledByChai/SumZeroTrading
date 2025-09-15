@@ -3,6 +3,7 @@ package com.sumzerotrading.marketdata;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,12 +22,13 @@ import com.sumzerotrading.data.Ticker;
 public class OrderBook implements IOrderBook {
 
     protected static final Logger logger = LoggerFactory.getLogger(OrderBook.class);
-    protected final OrderBookSide buySide;
-    protected final OrderBookSide sellSide;
-    protected boolean initialized = false;
+    // Volatile references for lock-free reads with copy-on-write semantics
+    protected volatile OrderBookSide buySide;
+    protected volatile OrderBookSide sellSide;
+    protected volatile boolean initialized = false;
     protected BigDecimal tickSize;
-    protected BigDecimal bestBid = BigDecimal.ZERO; // Best bid price
-    protected BigDecimal bestAsk = BigDecimal.ZERO; // Best ask price
+    protected volatile BigDecimal bestBid = BigDecimal.ZERO; // Best bid price
+    protected volatile BigDecimal bestAsk = BigDecimal.ZERO; // Best ask price
     protected final List<OrderBookUpdateListener> orderbookUpdateListeners = new CopyOnWriteArrayList<>();
     protected Ticker ticker;
     protected double obiLambda = 0.75; // Default lambda for OBI calculation
@@ -66,9 +68,16 @@ public class OrderBook implements IOrderBook {
 
     @Override
     public void clearOrderBook() {
-        buySide.clear();
-        sellSide.clear();
-        initialized = false;
+        // Create new empty sides atomically
+        OrderBookSide newBuySide = new OrderBookSide(true);
+        OrderBookSide newSellSide = new OrderBookSide(false);
+
+        // Atomic swap
+        this.buySide = newBuySide;
+        this.sellSide = newSellSide;
+        this.bestBid = BigDecimal.ZERO;
+        this.bestAsk = BigDecimal.ZERO;
+        this.initialized = false;
     }
 
     /**
@@ -89,6 +98,102 @@ public class OrderBook implements IOrderBook {
                 listenerExecutor.shutdownNow();
                 Thread.currentThread().interrupt();
             }
+        }
+    }
+
+    /**
+     * Atomically updates the order book from a complete snapshot. This method
+     * builds the new order book state off to the side and then atomically swaps it
+     * in, ensuring readers never see inconsistent state.
+     * 
+     * @param bids      List of bid entries (price, size pairs)
+     * @param asks      List of ask entries (price, size pairs)
+     * @param timestamp The timestamp for this update
+     */
+    public void updateFromSnapshot(List<PriceLevel> bids, List<PriceLevel> asks, ZonedDateTime timestamp) {
+        // Build new state off to the side
+        OrderBookSide newBuySide = new OrderBookSide(true);
+        OrderBookSide newSellSide = new OrderBookSide(false);
+
+        // Populate the new sides
+        for (PriceLevel bid : bids) {
+            newBuySide.insertDirectly(bid.getPrice(), bid.getSize());
+        }
+        for (PriceLevel ask : asks) {
+            newSellSide.insertDirectly(ask.getPrice(), ask.getSize());
+        }
+
+        // Calculate new best prices
+        BigDecimal newBestBid = newBuySide.getBestPrice(tickSize);
+        BigDecimal newBestAsk = newSellSide.getBestPrice(tickSize);
+
+        // Store old values for change detection
+        BigDecimal oldBestBid = this.bestBid;
+        BigDecimal oldBestAsk = this.bestAsk;
+        boolean wasInitialized = this.initialized;
+
+        // Atomic swap of all state
+        this.buySide = newBuySide;
+        this.sellSide = newSellSide;
+        this.bestBid = newBestBid != null ? newBestBid : BigDecimal.ZERO;
+        this.bestAsk = newBestAsk != null ? newBestAsk : BigDecimal.ZERO;
+        this.initialized = true;
+
+        // Notify listeners of changes after the atomic swap
+        if (wasInitialized) {
+            // Only notify if previously initialized to avoid spurious initial events
+            if (newBestBid != null && !newBestBid.equals(oldBestBid)) {
+                notifyOrderBookUpdateListenersNewBid(newBestBid, timestamp);
+            }
+            if (newBestAsk != null && !newBestAsk.equals(oldBestAsk)) {
+                notifyOrderBookUpdateListenersNewAsk(newBestAsk, timestamp);
+            }
+        }
+    }
+
+    /**
+     * Convenience method for updating from raw price/size arrays.
+     * 
+     * @param bidPrices Array of bid prices
+     * @param bidSizes  Array of bid sizes (must be same length as bidPrices)
+     * @param askPrices Array of ask prices
+     * @param askSizes  Array of ask sizes (must be same length as askPrices)
+     * @param timestamp The timestamp for this update
+     */
+    public void updateFromSnapshot(BigDecimal[] bidPrices, Double[] bidSizes, BigDecimal[] askPrices, Double[] askSizes,
+            ZonedDateTime timestamp) {
+        List<PriceLevel> bids = new ArrayList<>();
+        List<PriceLevel> asks = new ArrayList<>();
+
+        for (int i = 0; i < bidPrices.length; i++) {
+            bids.add(new PriceLevel(bidPrices[i], bidSizes[i]));
+        }
+
+        for (int i = 0; i < askPrices.length; i++) {
+            asks.add(new PriceLevel(askPrices[i], askSizes[i]));
+        }
+
+        updateFromSnapshot(bids, asks, timestamp);
+    }
+
+    /**
+     * Simple class to represent a price/size level for snapshot updates
+     */
+    public static class PriceLevel {
+        private final BigDecimal price;
+        private final Double size;
+
+        public PriceLevel(BigDecimal price, Double size) {
+            this.price = price;
+            this.size = size;
+        }
+
+        public BigDecimal getPrice() {
+            return price;
+        }
+
+        public Double getSize() {
+            return size;
         }
     }
 
@@ -270,6 +375,10 @@ public class OrderBook implements IOrderBook {
     }
 
     protected void notifyOrderBookUpdateListenersNewBid(BigDecimal bestBid, ZonedDateTime timestamp) {
+        if (!initialized) {
+            // Don't notify listeners of best bid updates until after the initial snapshot
+            return;
+        }
         // CopyOnWriteArrayList provides thread-safe iteration without
         // ConcurrentModificationException
         // The iteration is performed on a snapshot of the list at the time the iterator
@@ -286,6 +395,10 @@ public class OrderBook implements IOrderBook {
     }
 
     protected void notifyOrderBookUpdateListenersNewAsk(BigDecimal bestAsk, ZonedDateTime timestamp) {
+        if (!initialized) {
+            // Don't notify listeners of best ask updates until after the initial snapshot
+            return;
+        }
         // CopyOnWriteArrayList provides thread-safe iteration without
         // ConcurrentModificationException
         // The iteration is performed on a snapshot of the list at the time the iterator
@@ -329,6 +442,14 @@ public class OrderBook implements IOrderBook {
         public void insert(BigDecimal price, Double size, ZonedDateTime timestamp) {
             orders.put(price, size);
             updateBestPrice(timestamp);
+        }
+
+        /**
+         * Insert an order directly without triggering best price updates. Used for bulk
+         * operations like snapshot loading.
+         */
+        public void insertDirectly(BigDecimal price, Double size) {
+            orders.put(price, size);
         }
 
         public void update(BigDecimal price, Double size, ZonedDateTime timestamp) {

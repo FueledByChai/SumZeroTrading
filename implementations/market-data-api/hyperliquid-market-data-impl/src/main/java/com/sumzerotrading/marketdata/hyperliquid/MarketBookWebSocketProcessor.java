@@ -1,21 +1,25 @@
-package com.sumzerotrading.marketdata.paradex;
+package com.sumzerotrading.marketdata.hyperliquid;
 
 import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.Map;
 
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.sumzerotrading.marketdata.IOrderBook;
 import com.sumzerotrading.websocket.IWebSocketClosedListener;
 import com.sumzerotrading.websocket.IWebSocketProcessor;
 
 public class MarketBookWebSocketProcessor implements IWebSocketProcessor {
 
     protected static final Logger logger = LoggerFactory.getLogger(MarketBookWebSocketProcessor.class);
-    protected final IParadexOrderBook orderBook;
+    protected final IOrderBook orderBook;
     protected IWebSocketClosedListener listener;
 
-    public MarketBookWebSocketProcessor(IParadexOrderBook orderBook, IWebSocketClosedListener listener) {
+    public MarketBookWebSocketProcessor(IOrderBook orderBook, IWebSocketClosedListener listener) {
         this.orderBook = orderBook;
         this.listener = listener;
     }
@@ -67,11 +71,6 @@ public class MarketBookWebSocketProcessor implements IWebSocketProcessor {
                             java.time.ZoneId.of("GMT"));
                 }
 
-                if ("s".equals(updateType)) {
-                    orderBook.handleSnapshot(data.toMap(), timestamp);
-                } else {
-                    orderBook.applyDelta(data.toMap(), timestamp);
-                }
             } else {
                 logger.warn("Unknown message type: " + method);
             }
@@ -80,6 +79,19 @@ public class MarketBookWebSocketProcessor implements IWebSocketProcessor {
             logger.error(e.getMessage(), e);
         }
 
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    static class OrderBookResponse {
+        private List<List<Map<String, String>>> levels;
+
+        public List<List<Map<String, String>>> getLevels() {
+            return levels;
+        }
+
+        public void setLevels(List<List<Map<String, String>>> levels) {
+            this.levels = levels;
+        }
     }
 
 }
