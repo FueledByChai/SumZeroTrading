@@ -1,20 +1,13 @@
 package com.sumzerotrading.hyperliquid.websocket;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,19 +17,14 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.TypeAdapter;
-import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import com.sumzerotrading.broker.Position;
-import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.Exchange;
 import com.sumzerotrading.data.InstrumentDescriptor;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.SumZeroException;
-
-import com.swmansion.starknet.data.TypedData;
-import com.swmansion.starknet.data.types.Felt;
-import com.swmansion.starknet.signer.StarkCurveSigner;
+import com.sumzerotrading.data.Ticker;
 
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -93,13 +81,17 @@ public class HyperliquidRestApi implements IHyperliquidRestApi {
 
     @Override
     public InstrumentDescriptor[] getAllInstrumentsForType(InstrumentType instrumentType) {
+        if (instrumentType != InstrumentType.PERPETUAL_FUTURES) {
+            throw new IllegalArgumentException("Only perpetual futures are supported at this time.");
+        }
         return executeWithRetry(() -> {
-            String path = "/markets";
+            String path = "/info";
             String url = baseUrl + path;
             HttpUrl.Builder urlBuilder = HttpUrl.parse(url).newBuilder();
             String newUrl = urlBuilder.build().toString();
+            RequestBody body = RequestBody.create("{\"type\":\"meta\"}", MediaType.parse("application/json"));
 
-            Request request = new Request.Builder().url(newUrl).get().build();
+            Request request = new Request.Builder().url(newUrl).post(body).build();
             logger.info("Request: " + request);
 
             try (Response response = client.newCall(request).execute()) {
@@ -121,31 +113,13 @@ public class HyperliquidRestApi implements IHyperliquidRestApi {
 
     @Override
     public InstrumentDescriptor getInstrumentDescriptor(String symbol) {
-        return executeWithRetry(() -> {
-            String path = "/markets";
-            String url = baseUrl + path;
-            HttpUrl.Builder urlBuilder = HttpUrl.parse(url).newBuilder();
-            urlBuilder.addQueryParameter("market", symbol);
-            String newUrl = urlBuilder.build().toString();
-
-            Request request = new Request.Builder().url(newUrl).get().build();
-            logger.info("Request: " + request);
-
-            try (Response response = client.newCall(request).execute()) {
-                if (!response.isSuccessful()) {
-                    logger.error("Error response: " + response.body().string());
-                    throw new IOException("Unexpected code " + response);
-                }
-
-                String responseBody = response.body().string();
-                logger.info("Response output: " + responseBody);
-                return parseInstrumentDescriptor(responseBody);
-
-            } catch (IOException e) {
-                logger.error(e.getMessage(), e);
-                throw new RuntimeException(e);
+        InstrumentDescriptor[] allDescriptors = getAllInstrumentsForType(InstrumentType.PERPETUAL_FUTURES);
+        for (InstrumentDescriptor descriptor : allDescriptors) {
+            if (descriptor.getExchangeSymbol().equals(symbol)) {
+                return descriptor;
             }
-        }, 3, 500);
+        }
+        throw new IllegalArgumentException("Instrument with symbol '" + symbol + "' not found.");
     }
 
     protected void executeWithRetry(RetryableAction action, int maxRetries, long retryDelayMillis) {
@@ -203,122 +177,92 @@ public class HyperliquidRestApi implements IHyperliquidRestApi {
         return publicApiOnly;
     }
 
-    protected InstrumentDescriptor parseInstrumentDescriptor(String responseBody) {
-        try {
-            JsonObject root = JsonParser.parseString(responseBody).getAsJsonObject();
-            JsonArray results = root.getAsJsonArray("results");
-
-            if (results == null || results.size() == 0) {
-                logger.warn("No results found in instrument descriptor response");
-                return null;
-            }
-
-            // Parse the first instrument from the results array
-            JsonObject instrumentObj = results.get(0).getAsJsonObject();
-
-            // Validate that this is a perpetual futures instrument
-            String assetKind = null;
-            if (instrumentObj.has("asset_kind") && !instrumentObj.get("asset_kind").isJsonNull()) {
-                assetKind = instrumentObj.get("asset_kind").getAsString();
-            }
-
-            if (!"PERP".equals(assetKind)) {
-                String symbol = instrumentObj.has("symbol") ? instrumentObj.get("symbol").getAsString() : "unknown";
-                logger.error("Expected PERP asset_kind for instrument '{}', but found '{}'", symbol, assetKind);
-                throw new SumZeroException("Invalid asset_kind '" + assetKind + "' for instrument '" + symbol
-                        + "'. Expected 'PERP' for perpetual futures.");
-            }
-
-            // Extract required fields for InstrumentDescriptor
-            String symbol = instrumentObj.get("symbol").getAsString();
-            String baseCurrency = instrumentObj.get("base_currency").getAsString();
-            String quoteCurrency = instrumentObj.get("quote_currency").getAsString();
-
-            // Create common symbol (without exchange-specific suffix)
-            String commonSymbol = symbol.split("-")[0];
-            String exchangeSymbol = symbol;
-
-            // Parse tick size and order size increment from the JSON
-            BigDecimal priceTickSize = instrumentObj.get("price_tick_size").getAsBigDecimal();
-            BigDecimal orderSizeIncrement = instrumentObj.get("order_size_increment").getAsBigDecimal();
-
-            // Parse min_notional and funding_period_hours
-            int minNotionalOrderSize = instrumentObj.get("min_notional").getAsInt();
-            int fundingPeriodHours = instrumentObj.get("funding_period_hours").getAsInt();
-
-            // Create and return the InstrumentDescriptor
-            return new InstrumentDescriptor(InstrumentType.PERPETUAL_FUTURES, Exchange.PARADEX, commonSymbol,
-                    exchangeSymbol, baseCurrency, quoteCurrency, orderSizeIncrement, priceTickSize,
-                    minNotionalOrderSize, BigDecimal.ZERO, fundingPeriodHours, BigDecimal.ONE);
-
-        } catch (Exception e) {
-            logger.error("Error parsing instrument descriptor: " + e.getMessage(), e);
-            throw new SumZeroException(e);
-        }
-    }
-
     protected InstrumentDescriptor[] parseInstrumentDescriptors(InstrumentType instrumentType, String responseBody) {
         try {
             JsonObject root = JsonParser.parseString(responseBody).getAsJsonObject();
-            JsonArray results = null;
+            JsonArray universe = null;
 
-            // Handle the case where results might be null or not an array
-            if (root.has("results") && !root.get("results").isJsonNull()) {
-                results = root.getAsJsonArray("results");
+            // Handle the new Hyperliquid universe format
+            if (root.has("universe") && !root.get("universe").isJsonNull()) {
+                universe = root.getAsJsonArray("universe");
             }
 
-            if (results == null || results.size() == 0) {
-                logger.warn("No results found in instrument descriptors response");
+            if (universe == null || universe.size() == 0) {
+                logger.warn("No universe found in instrument descriptors response");
                 return new InstrumentDescriptor[0];
             }
 
             List<InstrumentDescriptor> descriptors = new ArrayList<>();
 
-            // Parse each instrument from the results array
-            for (int i = 0; i < results.size(); i++) {
-                JsonObject instrumentObj = results.get(i).getAsJsonObject();
+            // Parse each instrument from the universe array
+            for (int i = 0; i < universe.size(); i++) {
+                JsonObject instrumentObj = universe.get(i).getAsJsonObject();
 
-                // Validate asset_kind matches the expected instrument type
-                String assetKind = null;
-                if (instrumentObj.has("asset_kind") && !instrumentObj.get("asset_kind").isJsonNull()) {
-                    assetKind = instrumentObj.get("asset_kind").getAsString();
-                }
-
-                if (assetKind == null || !isValidAssetKindForInstrumentType(assetKind, instrumentType)) {
-                    logger.warn("Skipping instrument with asset_kind '{}' as it doesn't match expected type '{}'",
-                            assetKind, instrumentType);
+                // Skip delisted instruments (those with marginTableId != null)
+                boolean isDelisted = instrumentObj.has("isDelisted") && !instrumentObj.get("isDelisted").isJsonNull();
+                if (isDelisted) {
+                    logger.info("Skipping delisted instrument: {}",
+                            instrumentObj.has("name") ? instrumentObj.get("name").getAsString() : "unknown");
                     continue;
                 }
 
                 // Extract required fields for InstrumentDescriptor
-                String symbol = instrumentObj.get("symbol").getAsString();
-                String baseCurrency = instrumentObj.get("base_currency").getAsString();
-                String quoteCurrency = instrumentObj.get("quote_currency").getAsString();
+                String name = instrumentObj.get("name").getAsString();
+                int szDecimals = instrumentObj.get("szDecimals").getAsInt();
+                int maxLeverage = instrumentObj.get("maxLeverage").getAsInt();
+                // Remove unused variables
+                // int marginTableId = instrumentObj.get("marginTableId").getAsInt();
 
-                // Create common symbol (without exchange-specific suffix)
-                String commonSymbol = symbol.split("-")[0];
-                String exchangeSymbol = symbol;
+                // Check if it's only isolated margin (not currently used but available)
+                // boolean onlyIsolated = instrumentObj.has("onlyIsolated") &&
+                // !instrumentObj.get("onlyIsolated").isJsonNull() &&
+                // instrumentObj.get("onlyIsolated").getAsBoolean();
 
-                // Parse tick size and order size increment from the JSON
-                BigDecimal priceTickSize = instrumentObj.get("price_tick_size").getAsBigDecimal();
-                BigDecimal orderSizeIncrement = instrumentObj.get("order_size_increment").getAsBigDecimal();
+                // Create symbols - Hyperliquid uses simple name format
+                String commonSymbol = name;
+                String exchangeSymbol = name;
 
-                // Parse min_notional and funding_period_hours
-                int minNotionalOrderSize = instrumentObj.get("min_notional").getAsInt();
-                int fundingPeriodHours = instrumentObj.get("funding_period_hours").getAsInt();
+                // For crypto perpetuals, assume USD as quote currency
+                String baseCurrency = name;
+                String quoteCurrency = "USD";
 
-                // Create the InstrumentDescriptor with the provided instrument type
-                InstrumentDescriptor descriptor = new InstrumentDescriptor(instrumentType, Exchange.PARADEX,
+                // Calculate price tick size and order size increment from szDecimals
+                // szDecimals represents the number of decimal places for size
+                BigDecimal orderSizeIncrement = BigDecimal.ONE.divide(BigDecimal.TEN.pow(szDecimals));
+
+                // For price tick size: priceTickSize = 10^-(6-szDecimals) = 10^(szDecimals-6)
+                int priceDecimals = 6 - szDecimals;
+                BigDecimal priceTickSize = BigDecimal.ONE.divide(BigDecimal.TEN.pow(priceDecimals));
+
+                // Set minimum notional - $10 on Hyperliquid
+                int minNotionalOrderSize = 10;
+
+                // Hyperliquid uses 8-hour funding periods (3 times per day)
+                int fundingPeriodHours = 8;
+
+                // Create the InstrumentDescriptor for Hyperliquid
+                InstrumentDescriptor descriptor = new InstrumentDescriptor(instrumentType, Exchange.HYPERLIQUID, // Changed
+                                                                                                                 // from
+                                                                                                                 // PARADEX
+                                                                                                                 // to
+                                                                                                                 // HYPERLIQUID
                         commonSymbol, exchangeSymbol, baseCurrency, quoteCurrency, orderSizeIncrement, priceTickSize,
-                        minNotionalOrderSize, BigDecimal.ZERO, fundingPeriodHours, BigDecimal.ONE);
+                        minNotionalOrderSize, null, // no settlement price for perpetuals
+                        fundingPeriodHours, BigDecimal.ONE, maxLeverage);
+
+                // Note: Additional Hyperliquid-specific properties like szDecimals,
+                // marginTableId,
+                // and onlyIsolated are available in the JSON but not stored in the descriptor
+                // for simplicity. They can be accessed by re-parsing if needed.
 
                 descriptors.add(descriptor);
             }
 
+            logger.info("Parsed {} active instruments from Hyperliquid universe", descriptors.size());
             return descriptors.toArray(new InstrumentDescriptor[0]);
 
         } catch (Exception e) {
-            logger.error("Error parsing instrument descriptors: " + e.getMessage(), e);
+            logger.error("Error parsing Hyperliquid instrument descriptors: " + e.getMessage(), e);
             throw new SumZeroException(e);
         }
     }
@@ -371,7 +315,12 @@ public class HyperliquidRestApi implements IHyperliquidRestApi {
                 logger.info("Can't parse average_entry_price_usd: " + e.getMessage());
             }
 
-            Position position = new Position(HyperliquidTickerBuilder.getTicker(tickerString));
+            // Create a basic ticker for the position
+            Ticker ticker = new Ticker(tickerString);
+            ticker.setExchange(Exchange.HYPERLIQUID);
+            ticker.setInstrumentType(InstrumentType.PERPETUAL_FUTURES);
+
+            Position position = new Position(ticker);
             position.setSize(new BigDecimal(inventory));
             position.setLiquidationPrice(new BigDecimal(liquidationPrice));
             position.setAverageCost(new BigDecimal(cost_usd));

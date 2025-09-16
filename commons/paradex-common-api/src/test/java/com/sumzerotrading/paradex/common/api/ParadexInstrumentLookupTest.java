@@ -288,17 +288,20 @@ class ParadexInstrumentLookupTest {
     // Helper methods to create test data
     private InstrumentDescriptor createBitcoinDescriptor() {
         return new InstrumentDescriptor(InstrumentType.PERPETUAL_FUTURES, Exchange.PARADEX, "BTC", "BTC-USD-PERP",
-                "BTC", "USD", new BigDecimal("0.00001"), new BigDecimal("0.1"), 100, BigDecimal.ONE, 8, BigDecimal.ONE);
+                "BTC", "USD", new BigDecimal("0.00001"), new BigDecimal("0.1"), 100, BigDecimal.ONE, 8, BigDecimal.ONE,
+                1);
     }
 
     private InstrumentDescriptor createEthereumDescriptor() {
         return new InstrumentDescriptor(InstrumentType.PERPETUAL_FUTURES, Exchange.PARADEX, "ETH", "ETH-USD-PERP",
-                "ETH", "USD", new BigDecimal("0.0001"), new BigDecimal("0.01"), 50, BigDecimal.ONE, 8, BigDecimal.ONE);
+                "ETH", "USD", new BigDecimal("0.0001"), new BigDecimal("0.01"), 50, BigDecimal.ONE, 8, BigDecimal.ONE,
+                1);
     }
 
     private InstrumentDescriptor createDogeDescriptor() {
         return new InstrumentDescriptor(InstrumentType.PERPETUAL_FUTURES, Exchange.PARADEX, "DOGE", "DOGE-USD-PERP",
-                "DOGE", "USD", new BigDecimal("1.0"), new BigDecimal("0.00001"), 10, BigDecimal.ONE, 4, BigDecimal.ONE);
+                "DOGE", "USD", new BigDecimal("1.0"), new BigDecimal("0.00001"), 10, BigDecimal.ONE, 4, BigDecimal.ONE,
+                1);
     }
 
     /**

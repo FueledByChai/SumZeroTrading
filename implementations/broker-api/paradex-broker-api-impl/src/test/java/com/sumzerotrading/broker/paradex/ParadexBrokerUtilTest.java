@@ -20,8 +20,8 @@ import com.sumzerotrading.broker.order.OrderStatus;
 import com.sumzerotrading.broker.order.OrderStatus.Status;
 import com.sumzerotrading.data.SumZeroException;
 import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.paradex.common.IParadexTickerRegistry;
 import com.sumzerotrading.paradex.common.ParadexTickerRegistry;
+import com.sumzerotrading.util.ITickerRegistry;
 
 /**
  * JUnit 5/Mockito test class for ParadexBrokerUtil Tests the two main static
@@ -36,7 +36,7 @@ public class ParadexBrokerUtilTest {
     @Mock
     private Ticker mockTicker;
 
-    private IParadexTickerRegistry originalTickerRegistry;
+    private ITickerRegistry originalTickerRegistry;
 
     @BeforeEach
     public void setUp() {

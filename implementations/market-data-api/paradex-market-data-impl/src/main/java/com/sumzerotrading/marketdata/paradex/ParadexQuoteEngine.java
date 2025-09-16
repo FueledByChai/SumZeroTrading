@@ -23,8 +23,8 @@ import com.sumzerotrading.marketdata.OrderFlow;
 import com.sumzerotrading.marketdata.OrderFlowListener;
 import com.sumzerotrading.marketdata.QuoteEngine;
 import com.sumzerotrading.marketdata.QuoteType;
-import com.sumzerotrading.paradex.common.IParadexTickerRegistry;
 import com.sumzerotrading.paradex.common.ParadexTickerRegistry;
+import com.sumzerotrading.util.ITickerRegistry;
 
 public class ParadexQuoteEngine extends QuoteEngine
         implements OrderBookUpdateListener, TradesUpdateListener, MarketsSummaryUpdateListener {
@@ -34,7 +34,7 @@ public class ParadexQuoteEngine extends QuoteEngine
     protected Map<Ticker, MarketsSummaryWebSocketClient> marketsSummaryClients = new HashMap<>();
 
     protected boolean started = false;
-    protected IParadexTickerRegistry tickerRegistry;
+    protected ITickerRegistry tickerRegistry;
 
     public ParadexQuoteEngine() {
         tickerRegistry = ParadexTickerRegistry.getInstance();

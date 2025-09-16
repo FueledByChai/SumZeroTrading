@@ -168,9 +168,9 @@ public class MarketBookWebSocketProcessorTest {
 
         // Order book should be initialized but with no best prices
         assertTrue("Order book should be initialized", orderBook.isInitialized());
-        assertNull("Best bid should be null with empty levels", orderBook.getBestBid());
-        assertNull("Best ask should be null with empty levels", orderBook.getBestAsk());
-        assertNull("Midpoint should be null with empty levels", orderBook.getMidpoint());
+        assertEquals("Best bid should be zero with empty levels", BigDecimal.ZERO, orderBook.getBestBid());
+        assertEquals("Best ask should be zero with empty levels", BigDecimal.ZERO, orderBook.getBestAsk());
+        assertEquals("Midpoint should be zero with empty levels", BigDecimal.ZERO, orderBook.getMidpoint());
     }
 
     @Test

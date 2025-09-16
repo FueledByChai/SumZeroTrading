@@ -15,6 +15,11 @@
             <artifactId>paradex-market-data-impl</artifactId>
             <version>${project.version}</version>
         </dependency>
+                <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>hyperliquid-market-data-impl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>paradex-historical-data-api-impl</artifactId>

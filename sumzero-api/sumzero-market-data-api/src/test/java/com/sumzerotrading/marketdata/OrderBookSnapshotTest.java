@@ -16,6 +16,7 @@ import static org.junit.Assert.*;
 
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.marketdata.OrderBook.PriceLevel;
+import com.sumzerotrading.marketdata.OrderBook.BidAskMidpoint;
 
 public class OrderBookSnapshotTest {
 
@@ -93,17 +94,24 @@ public class OrderBookSnapshotTest {
             try {
                 startLatch.await();
                 while (!Thread.currentThread().isInterrupted()) {
-                    BigDecimal bid = orderBook.getBestBid();
-                    BigDecimal ask = orderBook.getBestAsk();
-                    BigDecimal midpoint = orderBook.getMidpoint();
+                    BidAskMidpoint snapshot = orderBook.getBidAskMidpoint();
+                    BigDecimal bid = snapshot.bid;
+                    BigDecimal ask = snapshot.ask;
+                    BigDecimal midpoint = snapshot.midpoint;
 
                     totalReads.incrementAndGet();
 
                     // Check consistency: midpoint should always be between bid and ask
-                    if (bid != null && ask != null && midpoint != null) {
+                    // Now that we return BigDecimal.ZERO instead of null, we need to check for
+                    // meaningful values
+                    if (bid.compareTo(BigDecimal.ZERO) > 0 && ask.compareTo(BigDecimal.ZERO) > 0 && midpoint != null) {
                         if (bid.compareTo(midpoint) <= 0 && midpoint.compareTo(ask) <= 0) {
                             consistentReads.incrementAndGet();
                         }
+                    } else if (bid.equals(BigDecimal.ZERO) && ask.equals(BigDecimal.ZERO)
+                            && midpoint.equals(BigDecimal.ZERO)) {
+                        // Empty order book case - this is also consistent
+                        consistentReads.incrementAndGet();
                     }
 
                     if (finishLatch.getCount() == 0)
@@ -144,8 +152,8 @@ public class OrderBookSnapshotTest {
 
     @Test
     public void testListenerNotifications() throws InterruptedException {
-        CountDownLatch bidLatch = new CountDownLatch(1);
-        CountDownLatch askLatch = new CountDownLatch(1);
+        CountDownLatch bidLatch = new CountDownLatch(2); // Expecting notifications for both updates
+        CountDownLatch askLatch = new CountDownLatch(2); // Expecting notifications for both updates
         AtomicReference<BigDecimal> receivedBid = new AtomicReference<>();
         AtomicReference<BigDecimal> receivedAsk = new AtomicReference<>();
 
@@ -170,24 +178,25 @@ public class OrderBookSnapshotTest {
 
         orderBook.addOrderBookUpdateListener(listener);
 
-        // First snapshot to initialize
+        // First snapshot to initialize - should now trigger notifications
         List<PriceLevel> bids1 = new ArrayList<>();
         List<PriceLevel> asks1 = new ArrayList<>();
         bids1.add(new PriceLevel(new BigDecimal("100.00"), 1000.0));
         asks1.add(new PriceLevel(new BigDecimal("100.01"), 1000.0));
         orderBook.updateFromSnapshot(bids1, asks1, timestamp);
 
-        // Second snapshot with different prices should trigger notifications
+        // Second snapshot with different prices should trigger additional notifications
         List<PriceLevel> bids2 = new ArrayList<>();
         List<PriceLevel> asks2 = new ArrayList<>();
         bids2.add(new PriceLevel(new BigDecimal("101.00"), 1000.0));
         asks2.add(new PriceLevel(new BigDecimal("101.01"), 1000.0));
         orderBook.updateFromSnapshot(bids2, asks2, timestamp);
 
-        // Wait for notifications
-        assertTrue("Should receive bid notification", bidLatch.await(1, TimeUnit.SECONDS));
-        assertTrue("Should receive ask notification", askLatch.await(1, TimeUnit.SECONDS));
+        // Wait for notifications - should receive notifications for both updates
+        assertTrue("Should receive bid notifications", bidLatch.await(1, TimeUnit.SECONDS));
+        assertTrue("Should receive ask notifications", askLatch.await(1, TimeUnit.SECONDS));
 
+        // The received values should be the latest (second update)
         assertEquals(new BigDecimal("101.00"), receivedBid.get());
         assertEquals(new BigDecimal("101.01"), receivedAsk.get());
 

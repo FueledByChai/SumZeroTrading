@@ -5,7 +5,7 @@ import com.sumzerotrading.data.InstrumentDescriptor;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
 
-public class HyperliquidInstrumenetLookup implements IInstrumentLookup {
+public class HyperliquidInstrumentLookup implements IInstrumentLookup {
 
     IHyperliquidRestApi api = HyperliquidApiFactory.getPublicApi();
 

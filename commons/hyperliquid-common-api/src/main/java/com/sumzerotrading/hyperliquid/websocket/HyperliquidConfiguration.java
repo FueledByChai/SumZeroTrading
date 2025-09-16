@@ -19,23 +19,22 @@ public class HyperliquidConfiguration {
     private static final Object lock = new Object();
 
     // Configuration keys
-    public static final String PARADEX_REST_URL = "paradex.rest.url";
-    public static final String PARADEX_WS_URL = "paradex.ws.url";
-    public static final String PARADEX_ACCOUNT_ADDRESS = "paradex.account.address";
-    public static final String PARADEX_PRIVATE_KEY = "paradex.private.key";
-    public static final String PARADEX_ENVIRONMENT = "paradex.environment";
-    public static final String PARADEX_CHAIN_ID = "paradex.chain.id";
-    public static final String PARADEX_JWT_REFRESH_SECONDS = "paradex.jwt.refresh.seconds";
+    public static final String HYPERLIQUID_REST_URL = "hyperliquid.rest.url";
+    public static final String HYPERLIQUID_WS_URL = "hyperliquid.ws.url";
+    public static final String HYPERLIQUID_ACCOUNT_ADDRESS = "hyperliquid.account.address";
+    public static final String HYPERLIQUID_PRIVATE_KEY = "hyperliquid.private.key";
+    public static final String HYPERLIQUID_ENVIRONMENT = "hyperliquid.environment";
+    public static final String HYPERLIQUID_CHAIN_ID = "hyperliquid.chain.id";
+    public static final String HYPERLIQUID_JWT_REFRESH_SECONDS = "hyperliquid.jwt.refresh.seconds";
 
     // Default values
     // private static final String DEFAULT_ENVIRONMENT = "testnet";
     private static final String DEFAULT_ENVIRONMENT = "prod";
-    private static final String DEFAULT_TESTNET_REST_URL = "https://api.testnet.paradex.trade/v1";
-    private static final String DEFAULT_TESTNET_WS_URL = "wss://ws.testnet.paradex.trade/v1";
-    private static final String DEFAULT_PROD_REST_URL = "https://api.prod.paradex.trade/v1";
-    private static final String DEFAULT_PROD_WS_URL = "wss://ws.prod.paradex.trade/v1";
-    private static final String DEFAULT_TESTNET_CHAIN_ID = "7693264728749915528729180568779831130134670232771119425";
-    private static final String DEFAULT_PROD_CHAIN_ID = "8458834024819506728615521019831122032732688838300957472069977523540";
+    private static final String DEFAULT_TESTNET_REST_URL = "https://api.testnet.hyperliquid.xyz";
+    private static final String DEFAULT_TESTNET_WS_URL = "wss://ws.testnet.hyperliquid.xyz/ws";
+    private static final String DEFAULT_PROD_REST_URL = "https://api.hyperliquid.xyz";
+    private static final String DEFAULT_PROD_WS_URL = "wss://ws.prod.hyperliquid.xyz/ws";
+
     private static final int DEFAULT_JWT_REFRESH_SECONDS = 60;
 
     private final Properties properties;
@@ -86,16 +85,16 @@ public class HyperliquidConfiguration {
         loadFromSystemProperties();
 
         // Determine environment and set defaults
-        String env = properties.getProperty(PARADEX_ENVIRONMENT, DEFAULT_ENVIRONMENT);
+        String env = properties.getProperty(HYPERLIQUID_ENVIRONMENT, DEFAULT_ENVIRONMENT);
         setEnvironmentDefaults(env);
 
-        logger.info("Paradex configuration loaded for environment: {}", env);
+        logger.info("Hyperliquid configuration loaded for environment: {}", env);
         return env;
     }
 
     private void loadFromPropertiesFile() {
         // Try external properties file first
-        String configFile = System.getProperty("paradex.config.file", "paradex.properties");
+        String configFile = System.getProperty("hyperliquid.config.file", "hyperliquid.properties");
         try (InputStream is = new FileInputStream(configFile)) {
             properties.load(is);
             logger.info("Loaded configuration from file: {}", configFile);
@@ -105,25 +104,25 @@ public class HyperliquidConfiguration {
         }
 
         // Try classpath resource
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream("paradex.properties")) {
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream("hyperliquid.properties")) {
             if (is != null) {
                 properties.load(is);
-                logger.info("Loaded configuration from classpath: paradex.properties");
+                logger.info("Loaded configuration from classpath: hyperliquid.properties");
             }
         } catch (IOException e) {
-            logger.debug("Could not load paradex.properties from classpath", e);
+            logger.debug("Could not load hyperliquid.properties from classpath", e);
         }
     }
 
     private void loadFromEnvironmentVariables() {
         // Convert property keys to environment variable format
-        setIfPresent(PARADEX_REST_URL, System.getenv("PARADEX_REST_URL"));
-        setIfPresent(PARADEX_WS_URL, System.getenv("PARADEX_WS_URL"));
-        setIfPresent(PARADEX_ACCOUNT_ADDRESS, System.getenv("PARADEX_ACCOUNT_ADDRESS"));
-        setIfPresent(PARADEX_PRIVATE_KEY, System.getenv("PARADEX_PRIVATE_KEY"));
-        setIfPresent(PARADEX_ENVIRONMENT, System.getenv("PARADEX_ENVIRONMENT"));
-        setIfPresent(PARADEX_CHAIN_ID, System.getenv("PARADEX_CHAIN_ID"));
-        setIfPresent(PARADEX_JWT_REFRESH_SECONDS, System.getenv("PARADEX_JWT_REFRESH_SECONDS"));
+        setIfPresent(HYPERLIQUID_REST_URL, System.getenv("HYPERLIQUID_REST_URL"));
+        setIfPresent(HYPERLIQUID_WS_URL, System.getenv("HYPERLIQUID_WS_URL"));
+        setIfPresent(HYPERLIQUID_ACCOUNT_ADDRESS, System.getenv("HYPERLIQUID_ACCOUNT_ADDRESS"));
+        setIfPresent(HYPERLIQUID_PRIVATE_KEY, System.getenv("HYPERLIQUID_PRIVATE_KEY"));
+        setIfPresent(HYPERLIQUID_ENVIRONMENT, System.getenv("HYPERLIQUID_ENVIRONMENT"));
+        setIfPresent(HYPERLIQUID_CHAIN_ID, System.getenv("HYPERLIQUID_CHAIN_ID"));
+        setIfPresent(HYPERLIQUID_JWT_REFRESH_SECONDS, System.getenv("HYPERLIQUID_JWT_REFRESH_SECONDS"));
     }
 
     private void loadFromSystemProperties() {
@@ -144,38 +143,35 @@ public class HyperliquidConfiguration {
         boolean isProduction = "prod".equalsIgnoreCase(env) || "production".equalsIgnoreCase(env);
 
         // Set default URLs if not specified
-        if (!properties.containsKey(PARADEX_REST_URL)) {
-            properties.setProperty(PARADEX_REST_URL, isProduction ? DEFAULT_PROD_REST_URL : DEFAULT_TESTNET_REST_URL);
+        if (!properties.containsKey(HYPERLIQUID_REST_URL)) {
+            properties.setProperty(HYPERLIQUID_REST_URL,
+                    isProduction ? DEFAULT_PROD_REST_URL : DEFAULT_TESTNET_REST_URL);
         }
 
-        if (!properties.containsKey(PARADEX_WS_URL)) {
-            properties.setProperty(PARADEX_WS_URL, isProduction ? DEFAULT_PROD_WS_URL : DEFAULT_TESTNET_WS_URL);
+        if (!properties.containsKey(HYPERLIQUID_WS_URL)) {
+            properties.setProperty(HYPERLIQUID_WS_URL, isProduction ? DEFAULT_PROD_WS_URL : DEFAULT_TESTNET_WS_URL);
         }
 
-        if (!properties.containsKey(PARADEX_CHAIN_ID)) {
-            properties.setProperty(PARADEX_CHAIN_ID, isProduction ? DEFAULT_PROD_CHAIN_ID : DEFAULT_TESTNET_CHAIN_ID);
-        }
-
-        if (!properties.containsKey(PARADEX_JWT_REFRESH_SECONDS)) {
-            properties.setProperty(PARADEX_JWT_REFRESH_SECONDS, String.valueOf(DEFAULT_JWT_REFRESH_SECONDS));
+        if (!properties.containsKey(HYPERLIQUID_JWT_REFRESH_SECONDS)) {
+            properties.setProperty(HYPERLIQUID_JWT_REFRESH_SECONDS, String.valueOf(DEFAULT_JWT_REFRESH_SECONDS));
         }
     }
 
     // Getter methods
     public String getRestUrl() {
-        return properties.getProperty(PARADEX_REST_URL);
+        return properties.getProperty(HYPERLIQUID_REST_URL);
     }
 
     public String getWebSocketUrl() {
-        return properties.getProperty(PARADEX_WS_URL);
+        return properties.getProperty(HYPERLIQUID_WS_URL);
     }
 
     public String getAccountAddress() {
-        return properties.getProperty(PARADEX_ACCOUNT_ADDRESS);
+        return properties.getProperty(HYPERLIQUID_ACCOUNT_ADDRESS);
     }
 
     public String getPrivateKey() {
-        return properties.getProperty(PARADEX_PRIVATE_KEY);
+        return properties.getProperty(HYPERLIQUID_PRIVATE_KEY);
     }
 
     public String getEnvironment() {
@@ -183,12 +179,12 @@ public class HyperliquidConfiguration {
     }
 
     public String getChainId() {
-        return properties.getProperty(PARADEX_CHAIN_ID);
+        return properties.getProperty(HYPERLIQUID_CHAIN_ID);
     }
 
     public int getJwtRefreshSeconds() {
         return Integer.parseInt(
-                properties.getProperty(PARADEX_JWT_REFRESH_SECONDS, String.valueOf(DEFAULT_JWT_REFRESH_SECONDS)));
+                properties.getProperty(HYPERLIQUID_JWT_REFRESH_SECONDS, String.valueOf(DEFAULT_JWT_REFRESH_SECONDS)));
     }
 
     public boolean isProductionEnvironment() {

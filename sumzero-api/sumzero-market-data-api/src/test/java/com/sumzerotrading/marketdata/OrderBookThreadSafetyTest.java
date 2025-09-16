@@ -2,6 +2,8 @@ package com.sumzerotrading.marketdata;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -12,6 +14,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.marketdata.OrderBook.PriceLevel;
 
 /**
  * Test class to verify thread safety of OrderBook listener management
@@ -145,10 +148,16 @@ public class OrderBookThreadSafetyTest {
         ExecutorService executor = Executors.newFixedThreadPool(4);
 
         for (int i = 0; i < numUpdates; i++) {
-            final BigDecimal price = new BigDecimal("100." + String.format("%03d", i % 1000));
+            final BigDecimal bidPrice = new BigDecimal("100." + String.format("%03d", i % 1000));
+            final BigDecimal askPrice = bidPrice.add(new BigDecimal("0.01"));
             executor.submit(() -> {
                 try {
-                    orderBook.buySide.insert(price, 10.0, ZonedDateTime.now());
+                    // Use snapshot update instead of direct side manipulation
+                    List<PriceLevel> bids = new ArrayList<>();
+                    List<PriceLevel> asks = new ArrayList<>();
+                    bids.add(new PriceLevel(bidPrice, 10.0));
+                    asks.add(new PriceLevel(askPrice, 10.0));
+                    orderBook.updateFromSnapshot(bids, asks, ZonedDateTime.now());
                 } catch (Exception e) {
                     exceptionCount.incrementAndGet();
                     e.printStackTrace();

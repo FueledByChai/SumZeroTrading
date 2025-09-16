@@ -110,7 +110,7 @@ public class OrderBook implements IOrderBook {
      * @param asks      List of ask entries (price, size pairs)
      * @param timestamp The timestamp for this update
      */
-    public void updateFromSnapshot(List<PriceLevel> bids, List<PriceLevel> asks, ZonedDateTime timestamp) {
+    public synchronized void updateFromSnapshot(List<PriceLevel> bids, List<PriceLevel> asks, ZonedDateTime timestamp) {
         // Build new state off to the side
         OrderBookSide newBuySide = new OrderBookSide(true);
         OrderBookSide newSellSide = new OrderBookSide(false);
@@ -135,17 +135,27 @@ public class OrderBook implements IOrderBook {
         // Atomic swap of all state
         this.buySide = newBuySide;
         this.sellSide = newSellSide;
-        this.bestBid = newBestBid != null ? newBestBid : BigDecimal.ZERO;
-        this.bestAsk = newBestAsk != null ? newBestAsk : BigDecimal.ZERO;
+        this.bestBid = newBestBid;
+        this.bestAsk = newBestAsk;
         this.initialized = true;
 
         // Notify listeners of changes after the atomic swap
+        // Send notifications if there were actual changes or if this is the first
+        // meaningful update
         if (wasInitialized) {
-            // Only notify if previously initialized to avoid spurious initial events
-            if (newBestBid != null && !newBestBid.equals(oldBestBid)) {
+            // For already initialized order books, notify only on changes
+            if (!newBestBid.equals(oldBestBid)) {
                 notifyOrderBookUpdateListenersNewBid(newBestBid, timestamp);
             }
-            if (newBestAsk != null && !newBestAsk.equals(oldBestAsk)) {
+            if (!newBestAsk.equals(oldBestAsk)) {
+                notifyOrderBookUpdateListenersNewAsk(newBestAsk, timestamp);
+            }
+        } else {
+            // For first initialization, notify if we have meaningful prices (not zero)
+            if (newBestBid.compareTo(BigDecimal.ZERO) > 0) {
+                notifyOrderBookUpdateListenersNewBid(newBestBid, timestamp);
+            }
+            if (newBestAsk.compareTo(BigDecimal.ZERO) > 0) {
                 notifyOrderBookUpdateListenersNewAsk(newBestAsk, timestamp);
             }
         }
@@ -208,7 +218,7 @@ public class OrderBook implements IOrderBook {
     }
 
     @Override
-    public BigDecimal getBestBid(BigDecimal tickSize) {
+    public synchronized BigDecimal getBestBid(BigDecimal tickSize) {
         return buySide.getBestPrice(tickSize);
     }
 
@@ -218,7 +228,7 @@ public class OrderBook implements IOrderBook {
     }
 
     @Override
-    public BigDecimal getBestAsk(BigDecimal tickSize) {
+    public synchronized BigDecimal getBestAsk(BigDecimal tickSize) {
         return sellSide.getBestPrice(tickSize);
     }
 
@@ -228,15 +238,50 @@ public class OrderBook implements IOrderBook {
     }
 
     @Override
-    public BigDecimal getMidpoint(BigDecimal tickSize) {
+    public synchronized BigDecimal getMidpoint(BigDecimal tickSize) {
         BigDecimal bestBid = getBestBid(tickSize);
         BigDecimal bestAsk = getBestAsk(tickSize);
 
-        if (bestBid == null || bestAsk == null) {
-            return null;
+        // If order book is empty (both bid and ask are 0), return 0
+        if (bestBid.equals(BigDecimal.ZERO) && bestAsk.equals(BigDecimal.ZERO)) {
+            return BigDecimal.ZERO;
         }
 
         return bestBid.add(bestAsk).divide(BigDecimal.valueOf(2));
+    }
+
+    /**
+     * Returns a consistent snapshot of bid, ask, and midpoint values. This method
+     * ensures all three values are from the same snapshot.
+     */
+    public synchronized BidAskMidpoint getBidAskMidpoint() {
+        return getBidAskMidpoint(tickSize);
+    }
+
+    /**
+     * Returns a consistent snapshot of bid, ask, and midpoint values with specified
+     * tick size. This method ensures all three values are from the same snapshot.
+     */
+    public synchronized BidAskMidpoint getBidAskMidpoint(BigDecimal tickSize) {
+        BigDecimal bid = getBestBid(tickSize);
+        BigDecimal ask = getBestAsk(tickSize);
+        BigDecimal midpoint = getMidpoint(tickSize);
+        return new BidAskMidpoint(bid, ask, midpoint);
+    }
+
+    /**
+     * Data class to hold bid, ask, and midpoint values from a consistent snapshot.
+     */
+    public static class BidAskMidpoint {
+        public final BigDecimal bid;
+        public final BigDecimal ask;
+        public final BigDecimal midpoint;
+
+        public BidAskMidpoint(BigDecimal bid, BigDecimal ask, BigDecimal midpoint) {
+            this.bid = bid;
+            this.ask = ask;
+            this.midpoint = midpoint;
+        }
     }
 
     @Override
@@ -481,7 +526,7 @@ public class OrderBook implements IOrderBook {
         public BigDecimal getBestPrice(BigDecimal tickSize) {
             Map<BigDecimal, Double> aggregatedOrders = aggregateOrders(tickSize);
             return aggregatedOrders.keySet().stream().sorted(descending ? (price1, price2) -> price2.compareTo(price1)
-                    : (price1, price2) -> price1.compareTo(price2)).findFirst().orElse(null);
+                    : (price1, price2) -> price1.compareTo(price2)).findFirst().orElse(BigDecimal.ZERO);
         }
 
         public double calculateWeightedVolume(double midPrice, double lambda, BigDecimal tickSize) {
@@ -514,7 +559,7 @@ public class OrderBook implements IOrderBook {
             BigDecimal bestPrice = orders.keySet().stream()
                     .sorted(descending ? (price1, price2) -> price2.compareTo(price1)
                             : (price1, price2) -> price1.compareTo(price2))
-                    .findFirst().orElse(null);
+                    .findFirst().orElse(BigDecimal.ZERO);
 
             if (descending) {
                 // Update best bid

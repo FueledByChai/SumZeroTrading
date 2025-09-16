@@ -1,4 +1,4 @@
-package com.sumzerotrading.paradex.common.api;
+package com.sumzerotrading.hyperliquid.websocket;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,8 +53,8 @@ public class HyperliquidApiFactory {
 
                     if (!config.hasPrivateKeyConfiguration()) {
                         throw new IllegalStateException("Private key configuration not available. Please set "
-                                + HyperliquidConfiguration.PARADEX_ACCOUNT_ADDRESS + " and "
-                                + HyperliquidConfiguration.PARADEX_PRIVATE_KEY + " properties.");
+                                + HyperliquidConfiguration.HYPERLIQUID_ACCOUNT_ADDRESS + " and "
+                                + HyperliquidConfiguration.HYPERLIQUID_PRIVATE_KEY + " properties.");
                     }
 
                     privateApiInstance = new HyperliquidRestApi(config.getRestUrl(), config.getAccountAddress(),

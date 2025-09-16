@@ -21,36 +21,25 @@ package com.sumzerotrading.paradex.example.market.data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sumzerotrading.data.InstrumentDescriptor;
-import com.sumzerotrading.data.InstrumentType;
-import com.sumzerotrading.paradex.common.ParadexTickerRegistry;
-import com.sumzerotrading.paradex.common.api.ParadexInstrumentLookup;
+import com.sumzerotrading.hyperliquid.websocket.HyperliquidTickerRegistry;
 import com.sumzerotrading.util.ITickerRegistry;
 
-public class ParadexInstrumentLookupExample {
+public class HyperliquidLookupExample {
 
-    protected static final Logger logger = LoggerFactory.getLogger(ParadexInstrumentLookupExample.class);
-    private InstrumentDescriptor descriptor;
+    protected static final Logger logger = LoggerFactory.getLogger(HyperliquidLookupExample.class);
 
     public void start() {
 
-        ParadexInstrumentLookup lookup = new ParadexInstrumentLookup();
-
-        descriptor = lookup.lookupByCommonSymbol("BTC");
-
-        logger.info(descriptor.toString());
-
-        java.util.Arrays.stream(lookup.getAllInstrumentsForType(InstrumentType.PERPETUAL_FUTURES)).forEach((d) -> {
-            logger.info(d.toString());
-        });
-
-        ITickerRegistry registry = ParadexTickerRegistry.getInstance();
+        ITickerRegistry registry = HyperliquidTickerRegistry.getInstance();
         logger.info(registry.lookupByCommonSymbol("BTC").toString());
-        logger.info(registry.lookupByBrokerSymbol("BTC-USD-PERP").toString());
+
+        logger.info(registry.lookupByCommonSymbol("ETH").toString());
+
+        logger.info(registry.lookupByCommonSymbol("SOL").toString());
 
     }
 
     public static void main(String[] args) {
-        new ParadexInstrumentLookupExample().start();
+        new HyperliquidLookupExample().start();
     }
 }
