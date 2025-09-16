@@ -1,15 +1,18 @@
 package com.sumzerotrading.marketdata.hyperliquid;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.sumzerotrading.marketdata.IOrderBook;
+import com.sumzerotrading.marketdata.OrderBook.PriceLevel;
 import com.sumzerotrading.websocket.IWebSocketClosedListener;
 import com.sumzerotrading.websocket.IWebSocketProcessor;
 
@@ -26,72 +29,97 @@ public class MarketBookWebSocketProcessor implements IWebSocketProcessor {
 
     @Override
     public void connectionClosed(int code, String reason, boolean remote) {
-        logger.info("Disconnected from Paradex WebSocket: " + reason);
+        logger.info("Disconnected from Hyperliquid WebSocket: {} (code: {}, remote: {})", reason, code, remote);
         listener.connectionClosed();
-
     }
 
     @Override
     public void connectionError(Exception error) {
-        logger.error(error.getMessage(), error);
+        logger.error("Hyperliquid WebSocket connection error: {}", error.getMessage(), error);
         listener.connectionClosed();
     }
 
     @Override
     public void connectionEstablished() {
-        // TODO Auto-generated method stub
-
+        logger.info("Hyperliquid WebSocket connection established");
     }
 
     @Override
     public void connectionOpened() {
-        // TODO Auto-generated method stub
+        logger.info("Hyperliquid WebSocket connection opened");
+    }
 
+    /**
+     * Get the order book being updated by this processor. This provides thread-safe
+     * access to the latest order book state.
+     * 
+     * @return The order book instance
+     */
+    public IOrderBook getOrderBook() {
+        return orderBook;
+    }
+
+    /**
+     * Check if the order book has been initialized with at least one snapshot.
+     * 
+     * @return true if order book is initialized, false otherwise
+     */
+    public boolean isOrderBookInitialized() {
+        return orderBook.isInitialized();
     }
 
     @Override
     public void messageReceived(String message) {
         try {
             JSONObject jsonObject = new JSONObject(message);
-            if (!jsonObject.has("method")) {
+
+            // Check if this is an L2 book update
+            if (!jsonObject.has("channel") || !"l2Book".equals(jsonObject.getString("channel"))) {
+                logger.debug("Ignoring non-l2Book message: {}", message);
                 return;
             }
-            String method = jsonObject.getString("method");
 
-            if ("subscription".equals(method)) {
-                JSONObject params = jsonObject.getJSONObject("params");
-                JSONObject data = params.getJSONObject("data");
-                String updateType = data.getString("update_type");
-                long timestampMillis = data.getLong("last_updated_at");
-                ZonedDateTime timestamp = ZonedDateTime.now(java.time.ZoneId.of("GMT")); // Default to now if not
-                                                                                         // provided
+            JSONObject data = jsonObject.getJSONObject("data");
+            String coin = data.getString("coin");
+            long timestampMillis = data.getLong("time");
+            JSONArray levelsArray = data.getJSONArray("levels");
 
-                if (timestampMillis > 0) {
-                    timestamp = ZonedDateTime.ofInstant(java.time.Instant.ofEpochMilli(timestampMillis),
-                            java.time.ZoneId.of("GMT"));
+            // Convert timestamp to ZonedDateTime
+            ZonedDateTime timestamp = ZonedDateTime.ofInstant(java.time.Instant.ofEpochMilli(timestampMillis),
+                    ZoneId.of("GMT"));
+
+            // Parse the levels - first array is bids, second is asks
+            List<PriceLevel> bids = new ArrayList<>();
+            List<PriceLevel> asks = new ArrayList<>();
+
+            if (levelsArray.length() >= 1) {
+                JSONArray bidsArray = levelsArray.getJSONArray(0);
+                for (int i = 0; i < bidsArray.length(); i++) {
+                    JSONObject bidLevel = bidsArray.getJSONObject(i);
+                    BigDecimal price = new BigDecimal(bidLevel.getString("px"));
+                    Double size = Double.parseDouble(bidLevel.getString("sz"));
+                    bids.add(new PriceLevel(price, size));
                 }
-
-            } else {
-                logger.warn("Unknown message type: " + method);
             }
+
+            if (levelsArray.length() >= 2) {
+                JSONArray asksArray = levelsArray.getJSONArray(1);
+                for (int i = 0; i < asksArray.length(); i++) {
+                    JSONObject askLevel = asksArray.getJSONObject(i);
+                    BigDecimal price = new BigDecimal(askLevel.getString("px"));
+                    Double size = Double.parseDouble(askLevel.getString("sz"));
+                    asks.add(new PriceLevel(price, size));
+                }
+            }
+
+            // Update the order book atomically using the new snapshot method
+            orderBook.updateFromSnapshot(bids, asks, timestamp);
+
+            logger.debug("Updated order book for {} with {} bids and {} asks at {}", coin, bids.size(), asks.size(),
+                    timestamp);
+
         } catch (Exception e) {
-            logger.error("Error processing message: " + message, e);
-            logger.error(e.getMessage(), e);
-        }
-
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    static class OrderBookResponse {
-        private List<List<Map<String, String>>> levels;
-
-        public List<List<Map<String, String>>> getLevels() {
-            return levels;
-        }
-
-        public void setLevels(List<List<Map<String, String>>> levels) {
-            this.levels = levels;
+            logger.error("Error processing Hyperliquid L2 book message: {}", message, e);
         }
     }
-
 }

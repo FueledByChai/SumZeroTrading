@@ -1,8 +1,8 @@
-package com.sumzerotrading.paradex.common;
+package com.sumzerotrading.util;
 
 import com.sumzerotrading.data.Ticker;
 
-public interface IParadexTickerRegistry {
+public interface ITickerRegistry {
 
     Ticker lookupByBrokerSymbol(String tickerString);
 

@@ -1,4 +1,4 @@
-package com.sumzerotrading.paradex.common;
+package com.sumzerotrading.hyperliquid.websocket;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -7,28 +7,25 @@ import com.sumzerotrading.data.ITickerBuilder;
 import com.sumzerotrading.data.InstrumentDescriptor;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.paradex.ParadexTickerBuilder;
-import com.sumzerotrading.paradex.common.api.IParadexRestApi;
-import com.sumzerotrading.paradex.common.api.ParadexApiFactory;
 import com.sumzerotrading.util.ITickerRegistry;
 
-public class ParadexTickerRegistry implements ITickerBuilder, ITickerRegistry {
+public class HyperliquidTickerRegistry implements ITickerBuilder, ITickerRegistry {
 
     protected static ITickerRegistry instace;
     protected Map<String, Ticker> tickerMap = new HashMap<>();
     protected Map<String, Ticker> commonSymbolMap = new HashMap<>();
     protected Map<InstrumentDescriptor, Ticker> descriptorMap = new HashMap<>();
-    protected IParadexRestApi restApi = ParadexApiFactory.getPublicApi();
-    protected ITickerBuilder tickerBuilder = new ParadexTickerBuilder();
+    protected IHyperliquidRestApi restApi = HyperliquidApiFactory.getPublicApi();
+    protected ITickerBuilder tickerBuilder = new HyperliquidTickerBuilder();
 
     public static ITickerRegistry getInstance() {
         if (instace == null) {
-            instace = new ParadexTickerRegistry();
+            instace = new HyperliquidTickerRegistry();
         }
         return instace;
     }
 
-    protected ParadexTickerRegistry() {
+    protected HyperliquidTickerRegistry() {
         try {
             for (InstrumentDescriptor descriptor : restApi.getAllInstrumentsForType(InstrumentType.PERPETUAL_FUTURES)) {
                 buildTicker(descriptor);

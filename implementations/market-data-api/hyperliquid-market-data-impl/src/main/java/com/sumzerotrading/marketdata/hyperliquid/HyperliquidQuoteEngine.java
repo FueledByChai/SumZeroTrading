@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.marketdata.Level1Quote;
 import com.sumzerotrading.marketdata.Level1QuoteListener;
+import com.sumzerotrading.marketdata.OrderBookUpdateListener;
 import com.sumzerotrading.marketdata.QuoteEngine;
 import com.sumzerotrading.marketdata.QuoteType;
 
@@ -35,7 +36,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class HyperliquidQuoteEngine extends QuoteEngine implements Runnable {
+public class HyperliquidQuoteEngine extends QuoteEngine implements OrderBookUpdateListener {
 
     protected static Logger logger = LoggerFactory.getLogger(HyperliquidQuoteEngine.class);
 
@@ -45,7 +46,6 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements Runnable {
 
     protected volatile boolean started = false;
     protected boolean threadCompleted = false;
-    protected Thread thread = new Thread(this);
     private final OkHttpClient httpClient;
     private final ObjectMapper objectMapper;
     private ScheduledExecutorService fundingRateExecutor;
@@ -114,7 +114,6 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements Runnable {
             startFundingRateUpdates();
         }
 
-        thread.start();
     }
 
     @Override
@@ -222,18 +221,25 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements Runnable {
     }
 
     @Override
-    public void run() {
-        while (started) {
+    public void bestAskUpdated(Ticker ticker, BigDecimal bestAsk, ZonedDateTime timeStamp) {
+        Level1Quote quote = new Level1Quote(ticker, timeStamp);
+        quote.addQuote(QuoteType.ASK, ticker.formatPrice(bestAsk));
+        super.fireLevel1Quote(quote);
 
-            try {
-                getQuotes();
-                Thread.sleep(sleepTimeMS);
-            } catch (Exception ex) {
-                logger.error(ex.getMessage(), ex);
-            }
-        }
+    }
 
-        threadCompleted = true;
+    @Override
+    public void bestBidUpdated(Ticker ticker, BigDecimal bestBid, ZonedDateTime timeStamp) {
+        Level1Quote quote = new Level1Quote(ticker, timeStamp);
+        quote.addQuote(QuoteType.BID, ticker.formatPrice(bestBid));
+        super.fireLevel1Quote(quote);
+    }
+
+    @Override
+    public void orderBookImbalanceUpdated(Ticker ticker, BigDecimal imbalance, ZonedDateTime timeStamp) {
+        Level1Quote quote = new Level1Quote(ticker, timeStamp);
+        quote.addQuote(QuoteType.ORDER_BOOK_IMBALANCE, ticker.formatPrice(imbalance));
+        super.fireLevel1Quote(quote);
     }
 
     protected void getQuotes() {

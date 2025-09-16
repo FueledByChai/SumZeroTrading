@@ -27,6 +27,11 @@
             <artifactId>sumzero-market-data-api</artifactId>
             <version>${project.version}</version>
         </dependency>
+          <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>hyperliquid-common-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>        
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
