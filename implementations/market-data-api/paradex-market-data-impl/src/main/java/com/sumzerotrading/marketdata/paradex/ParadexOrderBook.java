@@ -41,6 +41,7 @@ public class ParadexOrderBook extends OrderBook implements IParadexOrderBook {
         initialized = true;
         double obi = calculateWeightedOrderBookImbalance(obiLambda);
         super.notifyOrderBookUpdateListenersImbalance(BigDecimal.valueOf(obi), timestamp);
+        super.notifyOrderBookUpdateListenersNewOrderBookSnapshot(timestamp);
     }
 
     @Override
@@ -86,6 +87,7 @@ public class ParadexOrderBook extends OrderBook implements IParadexOrderBook {
         }
         double obi = calculateWeightedOrderBookImbalance(obiLambda);
         super.notifyOrderBookUpdateListenersImbalance(BigDecimal.valueOf(obi), timestamp);
+        super.notifyOrderBookUpdateListenersNewOrderBookSnapshot(timestamp);
     }
 
 }

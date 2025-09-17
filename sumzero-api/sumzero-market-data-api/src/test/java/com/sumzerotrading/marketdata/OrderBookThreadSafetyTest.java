@@ -37,7 +37,7 @@ public class OrderBookThreadSafetyTest {
         // Create test listener
         OrderBookUpdateListener testListener = new OrderBookUpdateListener() {
             @Override
-            public void bestBidUpdated(Ticker ticker, BigDecimal bestBid, ZonedDateTime timestamp) {
+            public void bestBidUpdated(Ticker ticker, BigDecimal bestBid, Double size, ZonedDateTime timestamp) {
                 // Simulate some processing time
                 try {
                     Thread.sleep(1);
@@ -47,7 +47,7 @@ public class OrderBookThreadSafetyTest {
             }
 
             @Override
-            public void bestAskUpdated(Ticker ticker, BigDecimal bestAsk, ZonedDateTime timestamp) {
+            public void bestAskUpdated(Ticker ticker, BigDecimal bestAsk, Double size, ZonedDateTime timestamp) {
                 // Simulate some processing time
                 try {
                     Thread.sleep(1);
@@ -58,6 +58,16 @@ public class OrderBookThreadSafetyTest {
 
             @Override
             public void orderBookImbalanceUpdated(Ticker ticker, BigDecimal imbalance, ZonedDateTime timestamp) {
+                // Simulate some processing time
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+
+            @Override
+            public void orderBookUpdated(Ticker ticker, IOrderBook book, ZonedDateTime timestamp) {
                 // Simulate some processing time
                 try {
                     Thread.sleep(1);
@@ -124,17 +134,22 @@ public class OrderBookThreadSafetyTest {
         // Add a simple test listener
         OrderBookUpdateListener listener = new OrderBookUpdateListener() {
             @Override
-            public void bestBidUpdated(Ticker ticker, BigDecimal bestBid, ZonedDateTime timestamp) {
+            public void bestBidUpdated(Ticker ticker, BigDecimal bestBid, Double size, ZonedDateTime timestamp) {
                 notificationCount.incrementAndGet();
             }
 
             @Override
-            public void bestAskUpdated(Ticker ticker, BigDecimal bestAsk, ZonedDateTime timestamp) {
+            public void bestAskUpdated(Ticker ticker, BigDecimal bestAsk, Double size, ZonedDateTime timestamp) {
                 notificationCount.incrementAndGet();
             }
 
             @Override
             public void orderBookImbalanceUpdated(Ticker ticker, BigDecimal imbalance, ZonedDateTime timestamp) {
+                notificationCount.incrementAndGet();
+            }
+
+            @Override
+            public void orderBookUpdated(Ticker ticker, IOrderBook book, ZonedDateTime timestamp) {
                 notificationCount.incrementAndGet();
             }
         };

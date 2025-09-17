@@ -33,7 +33,7 @@ public class HyperliquidConfiguration {
     private static final String DEFAULT_TESTNET_REST_URL = "https://api.testnet.hyperliquid.xyz";
     private static final String DEFAULT_TESTNET_WS_URL = "wss://ws.testnet.hyperliquid.xyz/ws";
     private static final String DEFAULT_PROD_REST_URL = "https://api.hyperliquid.xyz";
-    private static final String DEFAULT_PROD_WS_URL = "wss://ws.prod.hyperliquid.xyz/ws";
+    private static final String DEFAULT_PROD_WS_URL = "wss://api.hyperliquid.xyz/ws";
 
     private static final int DEFAULT_JWT_REFRESH_SECONDS = 60;
 

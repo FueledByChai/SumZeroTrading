@@ -1,8 +1,6 @@
 package com.sumzerotrading.marketdata.hyperliquid;
 
-import java.io.IOException;
 import java.math.BigDecimal;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
@@ -12,8 +10,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-// removed unused ThreadPoolExecutor import
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,8 +20,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.marketdata.IOrderBook;
 import com.sumzerotrading.marketdata.Level1Quote;
 import com.sumzerotrading.marketdata.Level1QuoteListener;
+import com.sumzerotrading.marketdata.Level2Quote;
+import com.sumzerotrading.marketdata.Level2QuoteListener;
 import com.sumzerotrading.marketdata.OrderBookUpdateListener;
 import com.sumzerotrading.marketdata.QuoteEngine;
 import com.sumzerotrading.marketdata.QuoteType;
@@ -69,27 +68,6 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements OrderBookUpda
         });
     }
 
-    public OrderBookResponse getOrderBook(String coin) {
-        // Create the JSON body for the request
-        String jsonRequest = String.format("{\"type\":\"l2Book\", \"coin\":\"%s\"}", coin);
-
-        RequestBody requestBody = RequestBody.create(jsonRequest, MediaType.parse("application/json"));
-        Request request = new Request.Builder().url(BASE_URL).post(requestBody)
-                .addHeader("Content-Type", "application/json").build();
-
-        try (Response response = httpClient.newCall(request).execute()) {
-            if (!response.isSuccessful()) {
-                throw new RuntimeException("Unexpected response code: " + response.code());
-            }
-
-            // Parse the JSON response
-            String jsonResponse = response.body().string();
-            return objectMapper.readValue(jsonResponse, OrderBookResponse.class);
-        } catch (IOException e) {
-            throw new RuntimeException("Error fetching l2Book for coin: " + coin, e);
-        }
-    }
-
     @Override
     public Date getServerTime() {
         // TODO Auto-generated method stub
@@ -111,7 +89,7 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements OrderBookUpda
 
         // Start the funding rate update scheduler if funding rates are enabled
         if (includeFundingRate) {
-            startFundingRateUpdates();
+            // startFundingRateUpdates();
         }
 
     }
@@ -141,7 +119,7 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements OrderBookUpda
     @Override
     public void stopEngine() {
         started = false;
-        stopFundingRateUpdates();
+        // stopFundingRateUpdates();
     }
 
     @Override
@@ -153,61 +131,62 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements OrderBookUpda
      * Starts periodic funding rate refreshes using a background scheduler.
      * Delegates to a helper that sets up a fixed-rate timer every N seconds.
      */
-    private synchronized void startFundingRateUpdates() {
-        if (!includeFundingRate) {
-            return;
-        }
-        // (Re)create the scheduler if needed
-        if (fundingRateExecutor == null || fundingRateExecutor.isShutdown()) {
-            fundingRateExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
-                Thread t = new Thread(r, "hyperliquid-funding-rate-updater");
-                t.setDaemon(true);
-                return t;
-            });
-        }
-        startFundingRateTimer();
-    }
+    // private synchronized void startFundingRateUpdates() {
+    // if (!includeFundingRate) {
+    // return;
+    // }
+    // // (Re)create the scheduler if needed
+    // if (fundingRateExecutor == null || fundingRateExecutor.isShutdown()) {
+    // fundingRateExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
+    // Thread t = new Thread(r, "hyperliquid-funding-rate-updater");
+    // t.setDaemon(true);
+    // return t;
+    // });
+    // }
+    // startFundingRateTimer();
+    // }
 
     /**
      * Schedules a fixed-rate task to fetch all funding rates and cache them.
      * Default cadence is every 5 seconds (configurable via property).
      */
-    private void startFundingRateTimer() {
-        // Avoid multiple schedules if already active
-        // We rely on single-thread executor; scheduleAtFixedRate can be called multiple
-        // times
-        // but here we only set up one repeating task when the engine starts.
-        fundingRateExecutor.scheduleAtFixedRate(() -> {
-            try {
-                Map<String, FundingData> latest = getAllFundingRates();
-                allFundingRates = latest; // volatile ensures visibility
-                if (latest != null) {
-                    logger.debug("Funding rates updated ({} assets)", latest.size());
-                }
-            } catch (Exception e) {
-                logger.error("Error refreshing funding rates", e);
-            }
-        }, 0, fundingRateUpdateIntervalSeconds, TimeUnit.SECONDS);
-    }
+    // private void startFundingRateTimer() {
+    // // Avoid multiple schedules if already active
+    // // We rely on single-thread executor; scheduleAtFixedRate can be called
+    // multiple
+    // // times
+    // // but here we only set up one repeating task when the engine starts.
+    // fundingRateExecutor.scheduleAtFixedRate(() -> {
+    // try {
+    // Map<String, FundingData> latest = getAllFundingRates();
+    // allFundingRates = latest; // volatile ensures visibility
+    // if (latest != null) {
+    // logger.debug("Funding rates updated ({} assets)", latest.size());
+    // }
+    // } catch (Exception e) {
+    // logger.error("Error refreshing funding rates", e);
+    // }
+    // }, 0, fundingRateUpdateIntervalSeconds, TimeUnit.SECONDS);
+    // }
 
     /**
      * Stops the funding rate scheduler gracefully.
      */
-    private synchronized void stopFundingRateUpdates() {
-        if (fundingRateExecutor != null) {
-            fundingRateExecutor.shutdown();
-            try {
-                if (!fundingRateExecutor.awaitTermination(2, TimeUnit.SECONDS)) {
-                    fundingRateExecutor.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                fundingRateExecutor.shutdownNow();
-                Thread.currentThread().interrupt();
-            } finally {
-                fundingRateExecutor = null;
-            }
-        }
-    }
+    // private synchronized void stopFundingRateUpdates() {
+    // if (fundingRateExecutor != null) {
+    // fundingRateExecutor.shutdown();
+    // try {
+    // if (!fundingRateExecutor.awaitTermination(2, TimeUnit.SECONDS)) {
+    // fundingRateExecutor.shutdownNow();
+    // }
+    // } catch (InterruptedException e) {
+    // fundingRateExecutor.shutdownNow();
+    // Thread.currentThread().interrupt();
+    // } finally {
+    // fundingRateExecutor = null;
+    // }
+    // }
+    // }
 
     @Override
     public void subscribeLevel1(Ticker ticker, Level1QuoteListener listener) {
@@ -216,22 +195,35 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements OrderBookUpda
 
     @Override
     public void unsubscribeLevel1(Ticker ticker, Level1QuoteListener listener) {
-        urlStrings.remove(BASE_URL + ticker.getSymbol());
         super.unsubscribeLevel1(ticker, listener);
     }
 
     @Override
-    public void bestAskUpdated(Ticker ticker, BigDecimal bestAsk, ZonedDateTime timeStamp) {
+    public void subscribeMarketDepth(Ticker ticker, Level2QuoteListener listener) {
+        super.subscribeMarketDepth(ticker, listener);
+        OrderBookRegistry.getInstance().getOrderBook(ticker).addOrderBookUpdateListener(this);
+    }
+
+    @Override
+    public void unsubscribeMarketDepth(Ticker ticker, Level2QuoteListener listener) {
+        // TODO Auto-generated method stub
+        super.unsubscribeMarketDepth(ticker, listener);
+    }
+
+    @Override
+    public void bestAskUpdated(Ticker ticker, BigDecimal bestAsk, Double askSize, ZonedDateTime timeStamp) {
         Level1Quote quote = new Level1Quote(ticker, timeStamp);
         quote.addQuote(QuoteType.ASK, ticker.formatPrice(bestAsk));
+        quote.addQuote(QuoteType.ASK_SIZE, BigDecimal.valueOf(askSize));
         super.fireLevel1Quote(quote);
 
     }
 
     @Override
-    public void bestBidUpdated(Ticker ticker, BigDecimal bestBid, ZonedDateTime timeStamp) {
+    public void bestBidUpdated(Ticker ticker, BigDecimal bestBid, Double bidSize, ZonedDateTime timeStamp) {
         Level1Quote quote = new Level1Quote(ticker, timeStamp);
         quote.addQuote(QuoteType.BID, ticker.formatPrice(bestBid));
+        quote.addQuote(QuoteType.BID_SIZE, BigDecimal.valueOf(bidSize));
         super.fireLevel1Quote(quote);
     }
 
@@ -242,52 +234,10 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements OrderBookUpda
         super.fireLevel1Quote(quote);
     }
 
-    protected void getQuotes() {
-        // Removed the funding rate fetching from this method since it's now handled
-        // separately
-        for (Ticker ticker : level1ListenerMap.keySet()) {
-            try {
-                if (!level1ListenerMap.get(ticker).isEmpty()) {
-                    orderBook = getOrderBook(ticker.getSymbol());
-                    List<Map<String, String>> bids = orderBook.getLevels().get(0);
-                    List<Map<String, String>> asks = orderBook.getLevels().size() > 1 ? orderBook.getLevels().get(1)
-                            : List.of();
-
-                    String bidPriceString = bids.get(0).get("px");
-                    String bidSizeString = bids.get(0).get("sz");
-
-                    String askPriceString = asks.get(0).get("px");
-                    String askSizeString = asks.get(0).get("sz");
-
-                    HashMap<QuoteType, BigDecimal> quoteMap = new HashMap<>();
-                    quoteMap.put(QuoteType.ASK, new BigDecimal(askPriceString));
-                    quoteMap.put(QuoteType.ASK_SIZE, new BigDecimal(askSizeString));
-                    quoteMap.put(QuoteType.BID, new BigDecimal(bidPriceString));
-                    quoteMap.put(QuoteType.BID_SIZE, new BigDecimal(bidSizeString));
-
-                    // Use the cached funding rates if available (updated by separate thread)
-                    if (includeFundingRate && allFundingRates != null) {
-                        FundingData fundingData = allFundingRates.get(ticker.getSymbol());
-                        if (fundingData != null) {
-                            String fundingString = fundingData.funding;
-                            Double annualFunding = Double.parseDouble(fundingString) * 24.0 * 365.0 * 100.0;
-                            Double hourlyFundingBps = Double.parseDouble(fundingString) * 100.0;
-                            quoteMap.put(QuoteType.FUNDING_RATE_APR, new BigDecimal(annualFunding));
-                            quoteMap.put(QuoteType.FUNDING_RATE_HOURLY_BPS, new BigDecimal(hourlyFundingBps));
-                        } else {
-                            logger.debug("No funding data available for ticker: {}", ticker.getSymbol());
-                        }
-                    }
-
-                    Level1Quote quote = new Level1Quote(ticker, ZonedDateTime.now(ZoneId.of("GMT")), quoteMap);
-                    fireLevel1Quote(quote);
-                }
-            } catch (Exception ex) {
-                logger.error("Hyperliquid Quote Engine Caught an exception, but will continue:  " + ex.getMessage(),
-                        ex);
-            }
-        }
-
+    @Override
+    public void orderBookUpdated(Ticker ticker, IOrderBook book, ZonedDateTime timeStamp) {
+        Level2Quote quote = new Level2Quote(ticker, book, timeStamp);
+        super.fireMarketDepthQuote(quote);
     }
 
     public Map<String, FundingData> getAllFundingRates() throws Exception {

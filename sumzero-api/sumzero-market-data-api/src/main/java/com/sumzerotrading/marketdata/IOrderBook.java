@@ -7,18 +7,48 @@ import java.util.List;
 import com.sumzerotrading.marketdata.OrderBook.PriceLevel;
 
 public interface IOrderBook {
+    /**
+     * Simple pair class for price and size.
+     */
+    public static class BidSizePair {
+        public final BigDecimal price;
+        public final Double size;
+
+        public BidSizePair(BigDecimal price, Double size) {
+            this.price = price;
+            this.size = size;
+        }
+
+        public BigDecimal getPrice() {
+            return price;
+        }
+
+        public Double getSize() {
+            return size;
+        }
+    }
+
+    /**
+     * Returns both the best bid price and its size as a pair.
+     */
+    BidSizePair getBestBidWithSize();
+
+    /**
+     * Returns both the best ask price and its size as a pair.
+     */
+    BidSizePair getBestAskWithSize();
 
     void clearOrderBook();
 
     boolean isInitialized();
 
-    BigDecimal getBestBid();
+    BidSizePair getBestBid();
 
-    BigDecimal getBestBid(BigDecimal tickSize);
+    BidSizePair getBestBid(BigDecimal tickSize);
 
-    BigDecimal getBestAsk();
+    BidSizePair getBestAsk();
 
-    BigDecimal getBestAsk(BigDecimal tickSize);
+    BidSizePair getBestAsk(BigDecimal tickSize);
 
     BigDecimal getMidpoint();
 

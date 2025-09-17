@@ -20,6 +20,17 @@ import org.slf4j.LoggerFactory;
 import com.sumzerotrading.data.Ticker;
 
 public class OrderBook implements IOrderBook {
+    @Override
+    public BidSizePair getBestBidWithSize() {
+        BidSizePair pair = getBestBid();
+        return pair;
+    }
+
+    @Override
+    public BidSizePair getBestAskWithSize() {
+        BidSizePair pair = getBestAsk();
+        return pair;
+    }
 
     protected static final Logger logger = LoggerFactory.getLogger(OrderBook.class);
     // Volatile references for lock-free reads with copy-on-write semantics
@@ -29,6 +40,8 @@ public class OrderBook implements IOrderBook {
     protected BigDecimal tickSize;
     protected volatile BigDecimal bestBid = BigDecimal.ZERO; // Best bid price
     protected volatile BigDecimal bestAsk = BigDecimal.ZERO; // Best ask price
+    protected volatile Double bestBidSize = 0.0; // Best bid size
+    protected volatile Double bestAskSize = 0.0; // Best ask size
     protected final List<OrderBookUpdateListener> orderbookUpdateListeners = new CopyOnWriteArrayList<>();
     protected Ticker ticker;
     protected double obiLambda = 0.75; // Default lambda for OBI calculation
@@ -126,10 +139,14 @@ public class OrderBook implements IOrderBook {
         // Calculate new best prices
         BigDecimal newBestBid = newBuySide.getBestPrice(tickSize);
         BigDecimal newBestAsk = newSellSide.getBestPrice(tickSize);
+        Double newBestBidSize = newBuySide.getSizeAtPrice(newBestBid);
+        Double newBestAskSize = newSellSide.getSizeAtPrice(newBestAsk);
 
         // Store old values for change detection
         BigDecimal oldBestBid = this.bestBid;
         BigDecimal oldBestAsk = this.bestAsk;
+        Double oldBestBidSize = this.bestBidSize;
+        Double oldBestAskSize = this.bestAskSize;
         boolean wasInitialized = this.initialized;
 
         // Atomic swap of all state
@@ -144,21 +161,23 @@ public class OrderBook implements IOrderBook {
         // meaningful update
         if (wasInitialized) {
             // For already initialized order books, notify only on changes
-            if (!newBestBid.equals(oldBestBid)) {
-                notifyOrderBookUpdateListenersNewBid(newBestBid, timestamp);
+            if (!newBestBid.equals(oldBestBid) || !newBestBidSize.equals(oldBestBidSize)) {
+                notifyOrderBookUpdateListenersNewBid(newBestBid, newBestBidSize, timestamp);
             }
-            if (!newBestAsk.equals(oldBestAsk)) {
-                notifyOrderBookUpdateListenersNewAsk(newBestAsk, timestamp);
+            if (!newBestAsk.equals(oldBestAsk) || !newBestAskSize.equals(oldBestAskSize)) {
+                notifyOrderBookUpdateListenersNewAsk(newBestAsk, newBestAskSize, timestamp);
             }
         } else {
             // For first initialization, notify if we have meaningful prices (not zero)
             if (newBestBid.compareTo(BigDecimal.ZERO) > 0) {
-                notifyOrderBookUpdateListenersNewBid(newBestBid, timestamp);
+                notifyOrderBookUpdateListenersNewBid(newBestBid, newBestBidSize, timestamp);
             }
             if (newBestAsk.compareTo(BigDecimal.ZERO) > 0) {
-                notifyOrderBookUpdateListenersNewAsk(newBestAsk, timestamp);
+                notifyOrderBookUpdateListenersNewAsk(newBestAsk, newBestAskSize, timestamp);
             }
         }
+
+        notifyOrderBookUpdateListenersNewOrderBookSnapshot(timestamp);
     }
 
     /**
@@ -213,23 +232,27 @@ public class OrderBook implements IOrderBook {
     }
 
     @Override
-    public BigDecimal getBestBid() {
+    public BidSizePair getBestBid() {
         return getBestBid(tickSize);
     }
 
     @Override
-    public synchronized BigDecimal getBestBid(BigDecimal tickSize) {
-        return buySide.getBestPrice(tickSize);
+    public synchronized BidSizePair getBestBid(BigDecimal tickSize) {
+        BigDecimal price = buySide.getBestPrice(tickSize);
+        Double size = buySide.getSizeAtPrice(price);
+        return new BidSizePair(price, size);
     }
 
     @Override
-    public BigDecimal getBestAsk() {
+    public BidSizePair getBestAsk() {
         return getBestAsk(tickSize);
     }
 
     @Override
-    public synchronized BigDecimal getBestAsk(BigDecimal tickSize) {
-        return sellSide.getBestPrice(tickSize);
+    public synchronized BidSizePair getBestAsk(BigDecimal tickSize) {
+        BigDecimal price = sellSide.getBestPrice(tickSize);
+        Double size = sellSide.getSizeAtPrice(price);
+        return new BidSizePair(price, size);
     }
 
     @Override
@@ -239,8 +262,10 @@ public class OrderBook implements IOrderBook {
 
     @Override
     public synchronized BigDecimal getMidpoint(BigDecimal tickSize) {
-        BigDecimal bestBid = getBestBid(tickSize);
-        BigDecimal bestAsk = getBestAsk(tickSize);
+        BidSizePair bestBidPair = getBestBid(tickSize);
+        BidSizePair bestAskPair = getBestAsk(tickSize);
+        BigDecimal bestBid = bestBidPair.price;
+        BigDecimal bestAsk = bestAskPair.price;
 
         // If order book is empty (both bid and ask are 0), return 0
         if (bestBid.equals(BigDecimal.ZERO) && bestAsk.equals(BigDecimal.ZERO)) {
@@ -263,10 +288,10 @@ public class OrderBook implements IOrderBook {
      * tick size. This method ensures all three values are from the same snapshot.
      */
     public synchronized BidAskMidpoint getBidAskMidpoint(BigDecimal tickSize) {
-        BigDecimal bid = getBestBid(tickSize);
-        BigDecimal ask = getBestAsk(tickSize);
+        BidSizePair bidPair = getBestBid(tickSize);
+        BidSizePair askPair = getBestAsk(tickSize);
         BigDecimal midpoint = getMidpoint(tickSize);
-        return new BidAskMidpoint(bid, ask, midpoint);
+        return new BidAskMidpoint(bidPair.price, askPair.price, midpoint);
     }
 
     /**
@@ -419,7 +444,7 @@ public class OrderBook implements IOrderBook {
         orderbookUpdateListeners.remove(listener);
     }
 
-    protected void notifyOrderBookUpdateListenersNewBid(BigDecimal bestBid, ZonedDateTime timestamp) {
+    protected void notifyOrderBookUpdateListenersNewBid(BigDecimal bestBid, Double size, ZonedDateTime timestamp) {
         if (!initialized) {
             // Don't notify listeners of best bid updates until after the initial snapshot
             return;
@@ -431,7 +456,7 @@ public class OrderBook implements IOrderBook {
         for (OrderBookUpdateListener listener : orderbookUpdateListeners) {
             listenerExecutor.submit(() -> {
                 try {
-                    listener.bestBidUpdated(ticker, bestBid, timestamp);
+                    listener.bestBidUpdated(ticker, bestBid, size, timestamp);
                 } catch (Throwable t) {
                     logger.error("Listener threw exception for {}: {}", ticker, t.getMessage(), t);
                 }
@@ -439,7 +464,7 @@ public class OrderBook implements IOrderBook {
         }
     }
 
-    protected void notifyOrderBookUpdateListenersNewAsk(BigDecimal bestAsk, ZonedDateTime timestamp) {
+    protected void notifyOrderBookUpdateListenersNewAsk(BigDecimal bestAsk, Double size, ZonedDateTime timestamp) {
         if (!initialized) {
             // Don't notify listeners of best ask updates until after the initial snapshot
             return;
@@ -451,7 +476,7 @@ public class OrderBook implements IOrderBook {
         for (OrderBookUpdateListener listener : orderbookUpdateListeners) {
             listenerExecutor.submit(() -> {
                 try {
-                    listener.bestAskUpdated(ticker, bestAsk, timestamp);
+                    listener.bestAskUpdated(ticker, bestAsk, size, timestamp);
                 } catch (Throwable t) {
                     logger.error("Listener threw exception for {}: {}", ticker, t.getMessage(), t);
                 }
@@ -475,7 +500,64 @@ public class OrderBook implements IOrderBook {
         }
     }
 
+    /**
+     * Notifies listeners with a snapshot (clone) of the current order book state.
+     * This ensures listeners receive a consistent, immutable view for each event.
+     */
+    protected void notifyOrderBookUpdateListenersNewOrderBookSnapshot(ZonedDateTime timestamp) {
+        IOrderBook snapshot = this.cloneOrderBook();
+        for (OrderBookUpdateListener listener : orderbookUpdateListeners) {
+            listenerExecutor.submit(() -> {
+                try {
+                    listener.orderBookUpdated(ticker, snapshot, timestamp);
+                } catch (Throwable t) {
+                    logger.error("Listener threw exception for {}: {}", ticker, t.getMessage(), t);
+                }
+            });
+        }
+    }
+
+    /**
+     * Creates a deep clone of the current OrderBook for safe event notification.
+     * Only public API state is copied; listeners and executors are not cloned.
+     */
+    public synchronized IOrderBook cloneOrderBook() {
+        OrderBook clone = new OrderBook(this.ticker, this.tickSize);
+        // Clone buy side
+        for (Map.Entry<BigDecimal, Double> entry : this.buySide.orders.entrySet()) {
+            clone.buySide.insertDirectly(entry.getKey(), entry.getValue());
+        }
+        // Clone sell side
+        for (Map.Entry<BigDecimal, Double> entry : this.sellSide.orders.entrySet()) {
+            clone.sellSide.insertDirectly(entry.getKey(), entry.getValue());
+        }
+        clone.bestBid = this.bestBid;
+        clone.bestAsk = this.bestAsk;
+        clone.bestBidSize = this.bestBidSize;
+        clone.bestAskSize = this.bestAskSize;
+        clone.initialized = this.initialized;
+        return clone;
+    }
+
+    @Override
+    public String toString() {
+        return "OrderBook [buySide=" + buySide + ", sellSide=" + sellSide + ", ticker=" + ticker + "]";
+    }
+
     protected class OrderBookSide {
+        public BigDecimal getBestPrice(BigDecimal tickSize) {
+            Map<BigDecimal, Double> aggregatedOrders = aggregateOrders(tickSize);
+            return aggregatedOrders.keySet().stream().sorted(descending ? (price1, price2) -> price2.compareTo(price1)
+                    : (price1, price2) -> price1.compareTo(price2)).findFirst().orElse(BigDecimal.ZERO);
+        }
+
+        public Double getSizeAtPrice(BigDecimal price) {
+            // Aggregate orders by tick size and return the size for the given price
+            BigDecimal tickSize = OrderBook.this.tickSize;
+            Map<BigDecimal, Double> aggregatedOrders = aggregateOrders(tickSize);
+            return aggregatedOrders.getOrDefault(price, 0.0);
+        }
+
         private final ConcurrentHashMap<BigDecimal, Double> orders;
         private final boolean descending;
 
@@ -486,7 +568,7 @@ public class OrderBook implements IOrderBook {
 
         public void insert(BigDecimal price, Double size, ZonedDateTime timestamp) {
             orders.put(price, size);
-            updateBestPrice(timestamp);
+            updateBestPriceAndSize(timestamp);
         }
 
         /**
@@ -499,12 +581,12 @@ public class OrderBook implements IOrderBook {
 
         public void update(BigDecimal price, Double size, ZonedDateTime timestamp) {
             orders.put(price, size);
-            updateBestPrice(timestamp);
+            updateBestPriceAndSize(timestamp);
         }
 
         public void remove(BigDecimal price, ZonedDateTime timestamp) {
             orders.remove(price);
-            updateBestPrice(timestamp);
+            updateBestPriceAndSize(timestamp);
         }
 
         public void clear() {
@@ -523,10 +605,14 @@ public class OrderBook implements IOrderBook {
             }
         }
 
-        public BigDecimal getBestPrice(BigDecimal tickSize) {
+        public BigDecimal[] getBestPriceAndSize(BigDecimal tickSize) {
             Map<BigDecimal, Double> aggregatedOrders = aggregateOrders(tickSize);
-            return aggregatedOrders.keySet().stream().sorted(descending ? (price1, price2) -> price2.compareTo(price1)
-                    : (price1, price2) -> price1.compareTo(price2)).findFirst().orElse(BigDecimal.ZERO);
+            BigDecimal bestPrice = aggregatedOrders.keySet().stream()
+                    .sorted(descending ? (price1, price2) -> price2.compareTo(price1)
+                            : (price1, price2) -> price1.compareTo(price2))
+                    .findFirst().orElse(BigDecimal.ZERO);
+            Double bestSize = aggregatedOrders.getOrDefault(bestPrice, 0.0);
+            return new BigDecimal[] { bestPrice, BigDecimal.valueOf(bestSize) };
         }
 
         public double calculateWeightedVolume(double midPrice, double lambda, BigDecimal tickSize) {
@@ -555,31 +641,55 @@ public class OrderBook implements IOrderBook {
             }, Map.Entry::getValue, Double::sum, ConcurrentHashMap::new));
         }
 
-        protected void updateBestPrice(ZonedDateTime timestamp) {
+        protected void updateBestPriceAndSize(ZonedDateTime timestamp) {
             BigDecimal bestPrice = orders.keySet().stream()
                     .sorted(descending ? (price1, price2) -> price2.compareTo(price1)
                             : (price1, price2) -> price1.compareTo(price2))
                     .findFirst().orElse(BigDecimal.ZERO);
+            Double bestSize = orders.getOrDefault(bestPrice, 0.0);
 
             if (descending) {
                 // Update best bid
                 synchronized (OrderBook.this) {
                     if (!bestPrice.equals(bestBid)) {
                         logger.debug("Best Bid updated from {} to {}", bestBid, bestPrice);
-                        notifyOrderBookUpdateListenersNewBid(bestPrice, timestamp);
+                        notifyOrderBookUpdateListenersNewBid(bestPrice, bestSize, timestamp);
                     }
                     bestBid = bestPrice;
+                    bestBidSize = bestSize;
                 }
             } else {
                 // Update best ask
                 synchronized (OrderBook.this) {
                     if (!bestPrice.equals(bestAsk)) {
                         logger.debug("Best Ask updated from {} to {}", bestAsk, bestPrice);
-                        notifyOrderBookUpdateListenersNewAsk(bestPrice, timestamp);
+                        notifyOrderBookUpdateListenersNewAsk(bestPrice, bestSize, timestamp);
                     }
                     bestAsk = bestPrice;
+                    bestAskSize = bestSize;
                 }
             }
         }
+
+        @Override
+        public String toString() {
+            // Sort entries by price: ascending for buy side, descending for sell side
+            List<Map.Entry<BigDecimal, Double>> sortedEntries = orders.entrySet().stream()
+                    .sorted(descending ? (e1, e2) -> e2.getKey().compareTo(e1.getKey())
+                            : (e1, e2) -> e1.getKey().compareTo(e2.getKey()))
+                    .collect(Collectors.toList());
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("OrderBookSide [");
+            for (Map.Entry<BigDecimal, Double> entry : sortedEntries) {
+                sb.append("{Price: ").append(entry.getKey()).append(", Size: ").append(entry.getValue()).append("}, ");
+            }
+            if (!sortedEntries.isEmpty()) {
+                sb.setLength(sb.length() - 2); // Remove trailing comma and space
+            }
+            sb.append("]");
+            return sb.toString();
+        }
+
     }
 }

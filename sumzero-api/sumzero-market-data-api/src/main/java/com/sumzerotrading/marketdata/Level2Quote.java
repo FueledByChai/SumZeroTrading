@@ -20,55 +20,40 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 package com.sumzerotrading.marketdata;
 
-import com.sumzerotrading.data.Ticker;
 import java.time.ZonedDateTime;
-import java.util.Objects;
 
-public class Level2Quote extends AbstractQuote implements ILevel2Quote {
+import com.sumzerotrading.data.Ticker;
 
-    protected IMarketDepthBook book;
+public class Level2Quote implements ILevel2Quote {
 
-    public Level2Quote(Ticker ticker, ZonedDateTime timeStamp) {
-        super(ticker, timeStamp);
-    }
+    protected IOrderBook book;
+    protected Ticker ticker;
+    protected ZonedDateTime timeStamp;
 
-    public Level2Quote(Ticker ticker, QuoteType type, ZonedDateTime timeStamp, IMarketDepthBook book) {
-        super(ticker, timeStamp);
+    public Level2Quote(Ticker ticker, IOrderBook book, ZonedDateTime timeStamp) {
+        this.ticker = ticker;
         this.book = book;
+        this.timeStamp = timeStamp;
     }
 
-    public IMarketDepthBook getMarketDepthBook() {
+    @Override
+    public Ticker getTicker() {
+        return ticker;
+    }
+
+    @Override
+    public IOrderBook getOrderBook() {
         return book;
     }
 
     @Override
-    public int hashCode() {
-        int hash = 3;
-        hash = 59 * hash + Objects.hashCode(this.book);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final Level2Quote other = (Level2Quote) obj;
-        if (!Objects.equals(this.book, other.book)) {
-            return false;
-        }
-        return true;
+    public ZonedDateTime getTimeStamp() {
+        return timeStamp;
     }
 
     @Override
     public String toString() {
-        return "Level2Quote{" + "book=" + book + '}';
+        return "Level2Quote [book=" + book + ", ticker=" + ticker + ", timeStamp=" + timeStamp + "]";
     }
 
 }

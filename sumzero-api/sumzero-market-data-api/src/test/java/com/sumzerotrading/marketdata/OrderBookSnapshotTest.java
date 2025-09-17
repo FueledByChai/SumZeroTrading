@@ -51,8 +51,8 @@ public class OrderBookSnapshotTest {
 
         // Assert
         assertTrue(orderBook.isInitialized());
-        assertEquals(new BigDecimal("100.50"), orderBook.getBestBid());
-        assertEquals(new BigDecimal("100.51"), orderBook.getBestAsk());
+        assertEquals(new BigDecimal("100.50"), orderBook.getBestBid().price);
+        assertEquals(new BigDecimal("100.51"), orderBook.getBestAsk().price);
         assertEquals(new BigDecimal("100.505"), orderBook.getMidpoint());
     }
 
@@ -69,8 +69,8 @@ public class OrderBookSnapshotTest {
 
         // Assert
         assertTrue(orderBook.isInitialized());
-        assertEquals(new BigDecimal("99.95"), orderBook.getBestBid());
-        assertEquals(new BigDecimal("99.96"), orderBook.getBestAsk());
+        assertEquals(new BigDecimal("99.95"), orderBook.getBestBid().price);
+        assertEquals(new BigDecimal("99.96"), orderBook.getBestAsk().price);
         assertEquals(new BigDecimal("99.955"), orderBook.getMidpoint());
     }
 
@@ -159,19 +159,24 @@ public class OrderBookSnapshotTest {
 
         OrderBookUpdateListener listener = new OrderBookUpdateListener() {
             @Override
-            public void bestBidUpdated(Ticker ticker, BigDecimal bestBid, ZonedDateTime timeStamp) {
+            public void bestBidUpdated(Ticker ticker, BigDecimal bestBid, Double size, ZonedDateTime timeStamp) {
                 receivedBid.set(bestBid);
                 bidLatch.countDown();
             }
 
             @Override
-            public void bestAskUpdated(Ticker ticker, BigDecimal bestAsk, ZonedDateTime timeStamp) {
+            public void bestAskUpdated(Ticker ticker, BigDecimal bestAsk, Double size, ZonedDateTime timeStamp) {
                 receivedAsk.set(bestAsk);
                 askLatch.countDown();
             }
 
             @Override
             public void orderBookImbalanceUpdated(Ticker ticker, BigDecimal imbalance, ZonedDateTime timeStamp) {
+                // Not tested here
+            }
+
+            @Override
+            public void orderBookUpdated(Ticker ticker, IOrderBook book, ZonedDateTime timeStamp) {
                 // Not tested here
             }
         };
@@ -220,7 +225,7 @@ public class OrderBookSnapshotTest {
         orderBook.clearOrderBook();
 
         assertFalse(orderBook.isInitialized());
-        assertEquals(BigDecimal.ZERO, orderBook.getBestBid());
-        assertEquals(BigDecimal.ZERO, orderBook.getBestAsk());
+        assertEquals(BigDecimal.ZERO, orderBook.getBestBid().price);
+        assertEquals(BigDecimal.ZERO, orderBook.getBestAsk().price);
     }
 }

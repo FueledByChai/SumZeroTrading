@@ -1,5 +1,9 @@
 package com.sumzerotrading.marketdata.hyperliquid;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.concurrent.CountDownLatch;
@@ -8,9 +12,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.marketdata.IOrderBook;
 import com.sumzerotrading.marketdata.OrderBook;
 import com.sumzerotrading.marketdata.OrderBookUpdateListener;
 import com.sumzerotrading.websocket.IWebSocketClosedListener;
@@ -88,19 +92,24 @@ public class MarketBookWebSocketProcessorTest {
 
         OrderBookUpdateListener listener = new OrderBookUpdateListener() {
             @Override
-            public void bestBidUpdated(Ticker ticker, BigDecimal bestBid, ZonedDateTime timeStamp) {
+            public void bestBidUpdated(Ticker ticker, BigDecimal bestBid, Double size, ZonedDateTime timeStamp) {
                 receivedBid.set(bestBid);
                 updateLatch.countDown();
             }
 
             @Override
-            public void bestAskUpdated(Ticker ticker, BigDecimal bestAsk, ZonedDateTime timeStamp) {
+            public void bestAskUpdated(Ticker ticker, BigDecimal bestAsk, Double size, ZonedDateTime timeStamp) {
                 receivedAsk.set(bestAsk);
                 updateLatch.countDown();
             }
 
             @Override
             public void orderBookImbalanceUpdated(Ticker ticker, BigDecimal imbalance, ZonedDateTime timeStamp) {
+                // Not tested here
+            }
+
+            @Override
+            public void orderBookUpdated(Ticker ticker, IOrderBook book, ZonedDateTime timeStamp) {
                 // Not tested here
             }
         };
@@ -114,8 +123,8 @@ public class MarketBookWebSocketProcessorTest {
         assertTrue("Order book should be initialized", orderBook.isInitialized());
 
         // Check best prices
-        assertEquals("Best bid should be highest bid price", new BigDecimal("243.49"), orderBook.getBestBid());
-        assertEquals("Best ask should be lowest ask price", new BigDecimal("243.50"), orderBook.getBestAsk());
+        assertEquals("Best bid should be highest bid price", new BigDecimal("243.49"), orderBook.getBestBid().price);
+        assertEquals("Best ask should be lowest ask price", new BigDecimal("243.50"), orderBook.getBestAsk().price);
 
         // Check midpoint
         BigDecimal expectedMidpoint = new BigDecimal("243.49").add(new BigDecimal("243.50"))
@@ -168,8 +177,8 @@ public class MarketBookWebSocketProcessorTest {
 
         // Order book should be initialized but with no best prices
         assertTrue("Order book should be initialized", orderBook.isInitialized());
-        assertEquals("Best bid should be zero with empty levels", BigDecimal.ZERO, orderBook.getBestBid());
-        assertEquals("Best ask should be zero with empty levels", BigDecimal.ZERO, orderBook.getBestAsk());
+        assertEquals("Best bid should be zero with empty levels", BigDecimal.ZERO, orderBook.getBestBid().getPrice());
+        assertEquals("Best ask should be zero with empty levels", BigDecimal.ZERO, orderBook.getBestAsk().getPrice());
         assertEquals("Midpoint should be zero with empty levels", BigDecimal.ZERO, orderBook.getMidpoint());
     }
 

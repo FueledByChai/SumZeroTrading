@@ -7,13 +7,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.hyperliquid.websocket.HyperliquidConfiguration;
 import com.sumzerotrading.hyperliquid.websocket.HyperliquidWebSocketClient;
 
 public class OrderBookRegistry {
     protected static final Logger logger = LoggerFactory.getLogger(OrderBookRegistry.class);
     protected static OrderBookRegistry instance = null;
     protected Map<Ticker, HyperliquidOrderBook> orderBooks = new HashMap<>();
-    protected String wsUrl = "wss://ws.api.prod.paradex.trade/v1";
+    protected HyperliquidConfiguration config = HyperliquidConfiguration.getInstance();
+    protected String wsUrl = config.getWebSocketUrl();
 
     public static OrderBookRegistry getInstance() {
         if (instance == null) {

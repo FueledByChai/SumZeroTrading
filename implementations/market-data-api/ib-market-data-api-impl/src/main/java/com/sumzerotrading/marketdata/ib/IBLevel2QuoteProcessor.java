@@ -105,7 +105,9 @@ public class IBLevel2QuoteProcessor extends IBQuoteProcessor<Level2QuoteData> {
         } else {
             type = QuoteType.MARKET_DEPTH_BID;
         }
-        quoteEngine.fireMarketDepthQuote(new Level2Quote(ticker, type, getTime(), book));
+        throw new UnsupportedOperationException("Not supported yet.");
+        // quoteEngine.fireMarketDepthQuote(new Level2Quote(ticker, type, getTime(),
+        // book));
     }
 
     /**

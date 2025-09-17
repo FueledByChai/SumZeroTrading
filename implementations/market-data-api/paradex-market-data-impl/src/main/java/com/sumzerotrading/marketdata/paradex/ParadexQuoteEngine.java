@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.marketdata.ILevel1Quote;
+import com.sumzerotrading.marketdata.IOrderBook;
 import com.sumzerotrading.marketdata.Level1Quote;
 import com.sumzerotrading.marketdata.Level1QuoteListener;
 import com.sumzerotrading.marketdata.Level2Quote;
@@ -109,7 +110,7 @@ public class ParadexQuoteEngine extends QuoteEngine
     }
 
     @Override
-    public void bestBidUpdated(Ticker ticker, BigDecimal bestBid, ZonedDateTime timestamp) {
+    public void bestBidUpdated(Ticker ticker, BigDecimal bestBid, Double bidSize, ZonedDateTime timestamp) {
         Level1Quote quote = new Level1Quote(ticker, timestamp);
         quote.addQuote(QuoteType.BID, ticker.formatPrice(bestBid));
         super.fireLevel1Quote(quote);
@@ -117,7 +118,7 @@ public class ParadexQuoteEngine extends QuoteEngine
     }
 
     @Override
-    public void bestAskUpdated(Ticker ticker, BigDecimal bestAsk, ZonedDateTime timestamp) {
+    public void bestAskUpdated(Ticker ticker, BigDecimal bestAsk, Double askSize, ZonedDateTime timestamp) {
         Level1Quote quote = new Level1Quote(ticker, timestamp);
         quote.addQuote(QuoteType.ASK, ticker.formatPrice(bestAsk));
         super.fireLevel1Quote(quote);
@@ -126,8 +127,14 @@ public class ParadexQuoteEngine extends QuoteEngine
 
     @Override
     public void orderBookImbalanceUpdated(Ticker ticker, BigDecimal imbalance, ZonedDateTime timestamp) {
-        Level2Quote quote = new Level2Quote(ticker, timestamp);
-        quote.addQuote(QuoteType.ORDER_BOOK_IMBALANCE, imbalance);
+        // Level2Quote quote = new Level2Quote(ticker, timestamp);
+        // quote.addQuote(QuoteType.ORDER_BOOK_IMBALANCE, imbalance);
+        // super.fireMarketDepthQuote(quote);
+    }
+
+    @Override
+    public void orderBookUpdated(Ticker ticker, IOrderBook book, ZonedDateTime timestamp) {
+        Level2Quote quote = new Level2Quote(ticker, book, timestamp);
         super.fireMarketDepthQuote(quote);
     }
 
