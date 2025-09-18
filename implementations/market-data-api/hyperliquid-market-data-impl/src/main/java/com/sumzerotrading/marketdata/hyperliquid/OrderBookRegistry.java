@@ -38,7 +38,7 @@ public class OrderBookRegistry {
         try {
             logger.info("Starting order book WebSocket client");
             HyperliquidWebSocketClient orderBookWSClient = new HyperliquidWebSocketClient(wsUrl, "l2Book",
-                    ticker.getSymbol(), new MarketBookWebSocketProcessor(orderBook, () -> {
+                    ticker.getSymbol(), new OrderBookWebSocketProcessor(orderBook, () -> {
                         logger.info("Order book WebSocket closed, trying to restart...");
                         startMarketBookWSClient(ticker, orderBook);
                     }));

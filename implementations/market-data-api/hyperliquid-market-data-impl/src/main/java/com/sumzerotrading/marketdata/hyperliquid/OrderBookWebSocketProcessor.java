@@ -5,6 +5,10 @@ import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -16,13 +20,23 @@ import com.sumzerotrading.marketdata.OrderBook.PriceLevel;
 import com.sumzerotrading.websocket.IWebSocketClosedListener;
 import com.sumzerotrading.websocket.IWebSocketProcessor;
 
-public class MarketBookWebSocketProcessor implements IWebSocketProcessor {
+public class OrderBookWebSocketProcessor implements IWebSocketProcessor {
 
-    protected static final Logger logger = LoggerFactory.getLogger(MarketBookWebSocketProcessor.class);
+    protected static final Logger logger = LoggerFactory.getLogger(OrderBookWebSocketProcessor.class);
     protected final IOrderBook orderBook;
     protected IWebSocketClosedListener listener;
 
-    public MarketBookWebSocketProcessor(IOrderBook orderBook, IWebSocketClosedListener listener) {
+    // Thread pool for processing order book updates asynchronously
+    protected final ExecutorService orderBookUpdateExecutor = Executors.newCachedThreadPool(new ThreadFactory() {
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(r, "OrderBook-update-" + System.nanoTime());
+            t.setDaemon(true);
+            return t;
+        }
+    });
+
+    public OrderBookWebSocketProcessor(IOrderBook orderBook, IWebSocketClosedListener listener) {
         this.orderBook = orderBook;
         this.listener = listener;
     }
@@ -112,14 +126,41 @@ public class MarketBookWebSocketProcessor implements IWebSocketProcessor {
                 }
             }
 
-            // Update the order book atomically using the new snapshot method
-            orderBook.updateFromSnapshot(bids, asks, timestamp);
-
-            logger.debug("Updated order book for {} with {} bids and {} asks at {}", coin, bids.size(), asks.size(),
-                    timestamp);
+            // Update the order book atomically using the new snapshot method in a separate
+            // thread
+            orderBookUpdateExecutor.submit(() -> {
+                try {
+                    orderBook.updateFromSnapshot(bids, asks, timestamp);
+                    logger.debug("Updated order book for {} with {} bids and {} asks at {}", coin, bids.size(),
+                            asks.size(), timestamp);
+                } catch (Exception e) {
+                    logger.error("Error updating order book for {}: {}", coin, e.getMessage(), e);
+                }
+            });
 
         } catch (Exception e) {
             logger.error("Error processing Hyperliquid L2 book message: {}", message, e);
+        }
+    }
+
+    /**
+     * Shutdown the executor service and cleanup resources. This should be called
+     * when the processor is no longer needed to prevent resource leaks.
+     */
+    public void shutdown() {
+        if (orderBookUpdateExecutor != null && !orderBookUpdateExecutor.isShutdown()) {
+            orderBookUpdateExecutor.shutdown();
+            try {
+                // Wait for existing tasks to complete
+                if (!orderBookUpdateExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+                    // Force shutdown if tasks don't complete within timeout
+                    orderBookUpdateExecutor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                // Force shutdown if interrupted
+                orderBookUpdateExecutor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
         }
     }
 }

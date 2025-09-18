@@ -4,38 +4,27 @@ import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.hyperliquid.websocket.HyperliquidConfiguration;
+import com.sumzerotrading.hyperliquid.websocket.HyperliquidWebSocketClient;
 import com.sumzerotrading.marketdata.IOrderBook;
 import com.sumzerotrading.marketdata.Level1Quote;
 import com.sumzerotrading.marketdata.Level1QuoteListener;
 import com.sumzerotrading.marketdata.Level2Quote;
 import com.sumzerotrading.marketdata.Level2QuoteListener;
 import com.sumzerotrading.marketdata.OrderBookUpdateListener;
+import com.sumzerotrading.marketdata.OrderFlow;
+import com.sumzerotrading.marketdata.OrderFlowListener;
 import com.sumzerotrading.marketdata.QuoteEngine;
 import com.sumzerotrading.marketdata.QuoteType;
 
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-
-public class HyperliquidQuoteEngine extends QuoteEngine implements OrderBookUpdateListener {
+public class HyperliquidQuoteEngine extends QuoteEngine implements OrderBookUpdateListener, IBBOWebSocketListener,
+        IVolumeAndFundingWebsocketListener, IOrderflowUpdateListener {
 
     protected static Logger logger = LoggerFactory.getLogger(HyperliquidQuoteEngine.class);
 
@@ -45,27 +34,16 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements OrderBookUpda
 
     protected volatile boolean started = false;
     protected boolean threadCompleted = false;
-    private final OkHttpClient httpClient;
-    private final ObjectMapper objectMapper;
-    private ScheduledExecutorService fundingRateExecutor;
 
     protected int sleepTimeMS = 500;
     protected int fundingRateUpdateIntervalSeconds = 5;
     protected ArrayList<String> urlStrings = new ArrayList<>();
-    private OrderBookResponse orderBook;
-    protected volatile Map<String, FundingData> allFundingRates;
-    private static final String BASE_URL = "https://api.hyperliquid.xyz/info";
+
+    protected String wsUrl;
     protected boolean includeFundingRate = true;
 
     public HyperliquidQuoteEngine() {
-        this.httpClient = new OkHttpClient();
-        this.objectMapper = new ObjectMapper();
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        this.fundingRateExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread t = new Thread(r, "hyperliquid-funding-rate-updater");
-            t.setDaemon(true);
-            return t;
-        });
+        wsUrl = HyperliquidConfiguration.getInstance().getWebSocketUrl();
     }
 
     @Override
@@ -87,27 +65,10 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements OrderBookUpda
         logger.info("starting engine with " + sleepTimeMS + " ms interval");
         started = true;
 
-        // Start the funding rate update scheduler if funding rates are enabled
-        if (includeFundingRate) {
-            // startFundingRateUpdates();
-        }
-
     }
 
     @Override
     public void startEngine(Properties props) {
-        String sleepTimeString = props.getProperty(SLEEP_TIME_PROPERTY_KEY);
-        if (sleepTimeString != null) {
-            sleepTimeMS = Integer.parseInt(sleepTimeString);
-        }
-        String includeFundingRatesString = props.getProperty(INCLUDE_FUNDING_RATE_PROPERTY_KEY);
-        if (includeFundingRatesString != null) {
-            includeFundingRate = Boolean.parseBoolean(includeFundingRatesString);
-        }
-        String fundingRateIntervalString = props.getProperty(FUNDING_RATE_UPDATE_INTERVAL_PROPERTY_KEY);
-        if (fundingRateIntervalString != null) {
-            fundingRateUpdateIntervalSeconds = Integer.parseInt(fundingRateIntervalString);
-        }
         startEngine();
     }
 
@@ -127,69 +88,12 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements OrderBookUpda
         logger.error("useDelayedData() Not supported for hyperliquid market data");
     }
 
-    /**
-     * Starts periodic funding rate refreshes using a background scheduler.
-     * Delegates to a helper that sets up a fixed-rate timer every N seconds.
-     */
-    // private synchronized void startFundingRateUpdates() {
-    // if (!includeFundingRate) {
-    // return;
-    // }
-    // // (Re)create the scheduler if needed
-    // if (fundingRateExecutor == null || fundingRateExecutor.isShutdown()) {
-    // fundingRateExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
-    // Thread t = new Thread(r, "hyperliquid-funding-rate-updater");
-    // t.setDaemon(true);
-    // return t;
-    // });
-    // }
-    // startFundingRateTimer();
-    // }
-
-    /**
-     * Schedules a fixed-rate task to fetch all funding rates and cache them.
-     * Default cadence is every 5 seconds (configurable via property).
-     */
-    // private void startFundingRateTimer() {
-    // // Avoid multiple schedules if already active
-    // // We rely on single-thread executor; scheduleAtFixedRate can be called
-    // multiple
-    // // times
-    // // but here we only set up one repeating task when the engine starts.
-    // fundingRateExecutor.scheduleAtFixedRate(() -> {
-    // try {
-    // Map<String, FundingData> latest = getAllFundingRates();
-    // allFundingRates = latest; // volatile ensures visibility
-    // if (latest != null) {
-    // logger.debug("Funding rates updated ({} assets)", latest.size());
-    // }
-    // } catch (Exception e) {
-    // logger.error("Error refreshing funding rates", e);
-    // }
-    // }, 0, fundingRateUpdateIntervalSeconds, TimeUnit.SECONDS);
-    // }
-
-    /**
-     * Stops the funding rate scheduler gracefully.
-     */
-    // private synchronized void stopFundingRateUpdates() {
-    // if (fundingRateExecutor != null) {
-    // fundingRateExecutor.shutdown();
-    // try {
-    // if (!fundingRateExecutor.awaitTermination(2, TimeUnit.SECONDS)) {
-    // fundingRateExecutor.shutdownNow();
-    // }
-    // } catch (InterruptedException e) {
-    // fundingRateExecutor.shutdownNow();
-    // Thread.currentThread().interrupt();
-    // } finally {
-    // fundingRateExecutor = null;
-    // }
-    // }
-    // }
-
     @Override
     public void subscribeLevel1(Ticker ticker, Level1QuoteListener listener) {
+        if (!super.level1ListenerMap.containsKey(ticker)) {
+            startBBOWSClient(ticker);
+            startVolumeAndFundingWSClient(ticker);
+        }
         super.subscribeLevel1(ticker, listener);
     }
 
@@ -208,6 +112,20 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements OrderBookUpda
     public void unsubscribeMarketDepth(Ticker ticker, Level2QuoteListener listener) {
         // TODO Auto-generated method stub
         super.unsubscribeMarketDepth(ticker, listener);
+    }
+
+    @Override
+    public void subscribeOrderFlow(Ticker ticker, OrderFlowListener listener) {
+        if (!super.orderFlowListenerMap.containsKey(ticker)) {
+            // No order flow client yet for this ticker, so create one.
+            startTradesWSClient(ticker);
+        }
+        super.subscribeOrderFlow(ticker, listener);
+    }
+
+    @Override
+    public void unsubscribeOrderFlow(Ticker ticker, OrderFlowListener listener) {
+        super.unsubscribeOrderFlow(ticker, listener);
     }
 
     @Override
@@ -235,115 +153,97 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements OrderBookUpda
     }
 
     @Override
+    public void onBBOUpdate(Ticker ticker, BigDecimal bestBid, Double bidSize, BigDecimal bestAsk, Double askSize,
+            ZonedDateTime timeStamp) {
+        Level1Quote quote = new Level1Quote(ticker, timeStamp);
+        if (bestBid != null) {
+            quote.addQuote(QuoteType.BID, bestBid);
+            quote.addQuote(QuoteType.BID_SIZE, BigDecimal.valueOf(bidSize));
+        }
+        if (bestAsk != null) {
+            quote.addQuote(QuoteType.ASK, bestAsk);
+            quote.addQuote(QuoteType.ASK_SIZE, BigDecimal.valueOf(askSize));
+        }
+        super.fireLevel1Quote(quote);
+    }
+
+    @Override
+    public void volumeAndFundingUpdate(Ticker ticker, BigDecimal volume, BigDecimal volumeNotional,
+            BigDecimal fundingRate, BigDecimal markPrice, BigDecimal openInterest, ZonedDateTime timestamp) {
+        Level1Quote quote = new Level1Quote(ticker, timestamp);
+        quote.addQuote(QuoteType.VOLUME_NOTIONAL, volumeNotional);
+        quote.addQuote(QuoteType.VOLUME, volume);
+        quote.addQuote(QuoteType.FUNDING_RATE_APR, fundingRate.multiply(new BigDecimal(100.0 * 24 * 365)));
+        quote.addQuote(QuoteType.FUNDING_RATE_HOURLY_BPS, fundingRate.multiply(new BigDecimal(10000.0)));
+        quote.addQuote(QuoteType.MARK_PRICE, markPrice);
+        quote.addQuote(QuoteType.OPEN_INTEREST, openInterest);
+        quote.addQuote(QuoteType.OPEN_INTEREST_NOTIONAL, openInterest.multiply(markPrice));
+        super.fireLevel1Quote(quote);
+    }
+
+    @Override
+    public void onOrderflowUpdate(OrderFlow orderFlow) {
+        super.fireOrderFlow(orderFlow);
+    }
+
+    @Override
     public void orderBookUpdated(Ticker ticker, IOrderBook book, ZonedDateTime timeStamp) {
         Level2Quote quote = new Level2Quote(ticker, book, timeStamp);
         super.fireMarketDepthQuote(quote);
     }
 
-    public Map<String, FundingData> getAllFundingRates() throws Exception {
-        return parseResponse(fetchFundingRates());
-    }
+    protected void startBBOWSClient(Ticker ticker) {
+        try {
+            logger.info("Starting BBO WebSocket client");
+            BBOWebSocketProcessor processor = new BBOWebSocketProcessor(ticker, () -> {
+                logger.info("BBO WebSocket closed, trying to restart...");
+                startBBOWSClient(ticker);
+            });
+            processor.addBBOListener(this);
+            HyperliquidWebSocketClient bboWSClient = new HyperliquidWebSocketClient(wsUrl, "bbo", ticker.getSymbol(),
+                    processor);
+            bboWSClient.connect();
 
-    public String fetchFundingRates() throws Exception {
-        OkHttpClient client = new OkHttpClient();
-
-        // Define the JSON request body
-        String jsonBody = "{ \"type\": \"metaAndAssetCtxs\" }";
-
-        // Build the HTTP request
-        Request request = new Request.Builder().url(BASE_URL)
-                .post(RequestBody.create(jsonBody, MediaType.get("application/json"))).build();
-
-        // Execute the request
-        try (Response response = client.newCall(request).execute()) {
-            if (!response.isSuccessful()) {
-                throw new RuntimeException("Failed to fetch funding rates: " + response.code());
-            }
-            return response.body().string();
-        }
-    }
-
-    public Map<String, FundingData> parseResponse(String jsonResponse) throws Exception {
-        // Deserialize the response into two parts: Universe and FundingData
-        List<Object> response = objectMapper.readValue(jsonResponse, new TypeReference<List<Object>>() {
-        });
-
-        UniverseData universeData = objectMapper.convertValue(response.get(0), UniverseData.class);
-        List<FundingData> fundingDataList = objectMapper.convertValue(response.get(1),
-                objectMapper.getTypeFactory().constructCollectionType(List.class, FundingData.class));
-
-        // Map funding data by asset name
-        Map<String, FundingData> fundingRates = new HashMap<>();
-        for (int i = 0; i < fundingDataList.size(); i++) {
-            FundingData fundingData = fundingDataList.get(i);
-            fundingData.name = universeData.assets.get(i).name; // Assign name from universe data
-            fundingRates.put(fundingData.name, fundingData);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
         }
 
-        return fundingRates;
     }
 
-    // Classes for mapping JSON response
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    static class OrderBookResponse {
-        private List<List<Map<String, String>>> levels;
+    protected void startVolumeAndFundingWSClient(Ticker ticker) {
+        try {
+            logger.info("Starting Volume and Funding WebSocket client");
+            VolumeAndFundingWebSocketProcessor processor = new VolumeAndFundingWebSocketProcessor(ticker, () -> {
+                logger.info("Volume and Funding WebSocket closed, trying to restart...");
+                startVolumeAndFundingWSClient(ticker);
+            });
+            processor.add(this);
+            HyperliquidWebSocketClient volumeAndFundingWSClient = new HyperliquidWebSocketClient(wsUrl,
+                    "activeAssetCtx", ticker.getSymbol(), processor);
+            volumeAndFundingWSClient.connect();
 
-        public List<List<Map<String, String>>> getLevels() {
-            return levels;
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
         }
 
-        public void setLevels(List<List<Map<String, String>>> levels) {
-            this.levels = levels;
+    }
+
+    protected void startTradesWSClient(Ticker ticker) {
+        try {
+            logger.info("Starting Trades WebSocket client");
+            OrderFlowWebSocketProcessor processor = new OrderFlowWebSocketProcessor(ticker, () -> {
+                logger.info("Trades WebSocket closed, trying to restart...");
+                startTradesWSClient(ticker);
+            });
+            processor.addOrderFlowListener(this);
+            HyperliquidWebSocketClient tradesWSClient = new HyperliquidWebSocketClient(wsUrl, "trades",
+                    ticker.getSymbol(), processor);
+            tradesWSClient.connect();
+
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
         }
-    }
 
-    // Define UniverseData and FundingData classes for JSON parsing
-    public static class UniverseData {
-        @JsonProperty("universe")
-        public List<Asset> assets;
-    }
-
-    public static class Asset {
-        @JsonProperty("szDecimals")
-        public int szDecimals;
-        @JsonProperty("name")
-        public String name;
-        @JsonProperty("maxLeverage")
-        public int maxLeverage;
-    }
-
-    public static class FundingData {
-        @JsonProperty("funding")
-        public String funding;
-        @JsonProperty("openInterest")
-        public String openInterest;
-        @JsonProperty("prevDayPx")
-        public String prevDayPx;
-        @JsonProperty("dayNtlVlm")
-        public String dayNtlVlm;
-        @JsonProperty("premium")
-        public String premium;
-        @JsonProperty("oraclePx")
-        public String oraclePx;
-        @JsonProperty("markPx")
-        public String markPx;
-        @JsonProperty("midPx")
-        public String midPx;
-        @JsonProperty("impactPxs")
-        public List<String> impactPxs;
-        @JsonProperty("dayBaseVlm")
-        public String dayBaseVlm;
-
-        // Added to link funding data with asset name
-        public String name;
-    }
-
-    public void setSleepTimeMS(int seconds) {
-        this.sleepTimeMS = seconds;
-    }
-
-    public int getSleepTimeMS() {
-        return sleepTimeMS;
     }
 
 }

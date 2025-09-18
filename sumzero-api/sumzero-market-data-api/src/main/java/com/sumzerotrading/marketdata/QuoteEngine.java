@@ -68,7 +68,7 @@ public abstract class QuoteEngine implements IQuoteEngine {
             .synchronizedMap(new HashMap<Ticker, List<OrderFlowListener>>());
 
     public QuoteEngine() {
-        this(30); // Default to 30 threads
+        this(100); // Default to 100 threads
     }
 
     /**

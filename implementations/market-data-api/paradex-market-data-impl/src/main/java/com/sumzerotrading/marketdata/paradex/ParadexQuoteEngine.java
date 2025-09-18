@@ -94,8 +94,9 @@ public class ParadexQuoteEngine extends QuoteEngine
         if (marketsSummaryClient == null) {
             marketsSummaryClient = new MarketsSummaryWebSocketClient();
             marketsSummaryClients.put(ticker, marketsSummaryClient);
+            marketsSummaryClient.startMarketsSummaryWSClient(ticker, this);
         }
-        marketsSummaryClient.startMarketsSummaryWSClient(ticker, this);
+
     }
 
     @Override
@@ -105,8 +106,9 @@ public class ParadexQuoteEngine extends QuoteEngine
         if (tradesClient == null) {
             tradesClient = new TradesWebSocketClient();
             tradesClients.put(ticker, tradesClient);
+            tradesClient.startTradesWSClient(ticker, this);
         }
-        tradesClient.startTradesWSClient(ticker, this);
+
     }
 
     @Override

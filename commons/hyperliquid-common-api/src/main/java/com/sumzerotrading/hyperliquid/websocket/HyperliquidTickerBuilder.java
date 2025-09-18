@@ -18,7 +18,7 @@ public class HyperliquidTickerBuilder implements ITickerBuilder {
                     .setMinimumTickSize(descriptor.getPriceTickSize())
                     .setOrderSizeIncrement(descriptor.getOrderSizeIncrement())
                     .setPrimaryExchange(descriptor.getExchange()).setSymbol(descriptor.getExchangeSymbol())
-                    .setFundingRateInterval(descriptor.getFundingPeriodHours());
+                    .setFundingRateInterval(1);
 
             return ticker;
         } else {

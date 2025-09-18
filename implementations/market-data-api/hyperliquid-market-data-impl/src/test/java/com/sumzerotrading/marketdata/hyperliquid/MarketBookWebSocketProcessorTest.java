@@ -10,6 +10,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -21,7 +22,7 @@ import com.sumzerotrading.websocket.IWebSocketClosedListener;
 
 public class MarketBookWebSocketProcessorTest {
 
-    private MarketBookWebSocketProcessor processor;
+    private OrderBookWebSocketProcessor processor;
     private OrderBook orderBook;
     private Ticker ticker;
     private CountDownLatch connectionClosedLatch;
@@ -34,7 +35,17 @@ public class MarketBookWebSocketProcessorTest {
         connectionClosedLatch = new CountDownLatch(1);
 
         IWebSocketClosedListener closedListener = () -> connectionClosedLatch.countDown();
-        processor = new MarketBookWebSocketProcessor(orderBook, closedListener);
+        processor = new OrderBookWebSocketProcessor(orderBook, closedListener);
+    }
+
+    @After
+    public void tearDown() {
+        if (processor != null) {
+            processor.shutdown();
+        }
+        if (orderBook != null) {
+            orderBook.shutdown();
+        }
     }
 
     @Test
@@ -119,6 +130,9 @@ public class MarketBookWebSocketProcessorTest {
         // Process the message
         processor.messageReceived(message);
 
+        // Wait for async processing to complete
+        Thread.sleep(100);
+
         // Verify the order book was updated correctly
         assertTrue("Order book should be initialized", orderBook.isInitialized());
 
@@ -136,8 +150,6 @@ public class MarketBookWebSocketProcessorTest {
         assertTrue("Should receive update notifications", updateLatch.await(1, TimeUnit.SECONDS));
         assertEquals("Listener should receive correct best bid", new BigDecimal("243.49"), receivedBid.get());
         assertEquals("Listener should receive correct best ask", new BigDecimal("243.50"), receivedAsk.get());
-
-        orderBook.shutdown();
     }
 
     @Test
@@ -160,7 +172,7 @@ public class MarketBookWebSocketProcessorTest {
     }
 
     @Test
-    public void testHandleEmptyLevels() {
+    public void testHandleEmptyLevels() throws InterruptedException {
         String emptyLevelsMessage = """
                 {
                     "channel": "l2Book",
@@ -174,6 +186,9 @@ public class MarketBookWebSocketProcessorTest {
 
         // Process message with empty levels
         processor.messageReceived(emptyLevelsMessage);
+
+        // Wait for async processing to complete
+        Thread.sleep(100);
 
         // Order book should be initialized but with no best prices
         assertTrue("Order book should be initialized", orderBook.isInitialized());
@@ -192,7 +207,7 @@ public class MarketBookWebSocketProcessorTest {
         // Reset latch for error test
         connectionClosedLatch = new CountDownLatch(1);
         IWebSocketClosedListener closedListener = () -> connectionClosedLatch.countDown();
-        processor = new MarketBookWebSocketProcessor(orderBook, closedListener);
+        processor = new OrderBookWebSocketProcessor(orderBook, closedListener);
 
         // Test connection error
         processor.connectionError(new RuntimeException("Test error"));
