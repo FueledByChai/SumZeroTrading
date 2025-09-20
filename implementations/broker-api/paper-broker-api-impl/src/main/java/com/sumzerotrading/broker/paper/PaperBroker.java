@@ -48,11 +48,13 @@ import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.marketdata.ILevel1Quote;
 
 import com.sumzerotrading.marketdata.Level1QuoteListener;
+import com.sumzerotrading.marketdata.OrderFlow;
+import com.sumzerotrading.marketdata.OrderFlowListener;
 import com.sumzerotrading.marketdata.QuoteEngine;
 import com.sumzerotrading.marketdata.QuoteType;
 import com.sumzerotrading.time.TimeUpdatedListener;
 
-public class PaperBroker implements IBroker, Level1QuoteListener {
+public class PaperBroker implements IBroker, Level1QuoteListener, OrderFlowListener {
 
     protected Logger logger = LoggerFactory.getLogger(PaperBroker.class);
 
@@ -190,11 +192,12 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
             }
         }, 0, 1000); // Schedule with a delay of 0 and period of 1000ms (1 second)
         quoteEngine.subscribeLevel1(ticker, this); // Subscribe to level 1 quotes for the ticker
+        quoteEngine.subscribeOrderFlow(ticker, this); // Subscribe to order flow for the ticker
     }
 
     private void writeCurrentBalanceToFile(String filePath) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
-            writer.write(String.valueOf(currentAccountBalance));
+            writer.write(String.valueOf(getNetAccountValue()));
         } catch (IOException e) {
             logger.error("Failed to write current balance to file.", e);
         }
@@ -415,32 +418,38 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
         }
     }
 
-    public void askUpdated(BigDecimal newAsk) {
-        bestAskPrice = newAsk.doubleValue();
-        checkBidsFills(newAsk.doubleValue()); // Check for filled orders based on the new ask price
+    public void askUpdated(BigDecimal newAsk, boolean isTrade) {
+        if (!isTrade) {
+            bestAskPrice = newAsk.doubleValue();
+        }
+        checkBidsFills(newAsk.doubleValue(), isTrade); // Check for filled orders based on the new ask price
 
     }
 
-    public void bidUpdated(BigDecimal newBid) {
-        bestBidPrice = newBid.doubleValue();
-        checkAsksFills(newBid.doubleValue()); // Check for filled orders based on the new bid price
+    public void bidUpdated(BigDecimal newBid, boolean isTrade) {
+        if (!isTrade) {
+            bestBidPrice = newBid.doubleValue();
+        }
+        checkAsksFills(newBid.doubleValue(), isTrade); // Check for filled orders based on the new bid price
 
     }
 
-    protected List<OrderTicket> checkAsksFills(double bestBid) {
+    protected List<OrderTicket> checkAsksFills(double bestBid, boolean isTrade) {
         List<OrderTicket> filledOrders = new ArrayList<>();
         asksLock.lock(); // Lock the asks to ensure thread safety
         try {
-            bestBidPrice = bestBid; // Update the best ask price
-            midPrice = (bestBidPrice + bestAskPrice) / 2.0; // Update the mid price
+            if (!isTrade) {
+                bestBidPrice = bestBid; // Update the best ask price
+                midPrice = (bestBidPrice + bestAskPrice) / 2.0; // Update the mid price
+            }
 
             for (Iterator<Map.Entry<String, OrderTicket>> it = openAsks.entrySet().iterator(); it.hasNext();) {
                 Map.Entry<String, OrderTicket> entry = it.next();
                 OrderTicket order = entry.getValue();
 
-                boolean filled = order.getLimitPrice().doubleValue() < bestBidPrice; // Check if the order can be filled
-                                                                                     // at
-                                                                                     // the best bid price
+                boolean filled = order.getLimitPrice().doubleValue() < bestBid; // Check if the order can be filled
+                                                                                // at
+                                                                                // the best bid price
 
                 if (filled) {
                     it.remove();
@@ -455,12 +464,14 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
         return filledOrders;
     }
 
-    protected List<OrderTicket> checkBidsFills(double askPrice) {
+    protected List<OrderTicket> checkBidsFills(double askPrice, boolean isTrade) {
         List<OrderTicket> filledOrders = new ArrayList<>();
         bidsLock.lock(); // Lock the bids to ensure thread safety
         try {
-            bestAskPrice = askPrice; // Update the best bid price
-            midPrice = (bestBidPrice + bestAskPrice) / 2.0; // Update the mid price
+            if (!isTrade) {
+                bestAskPrice = askPrice; // Update the best ask price
+                midPrice = (bestBidPrice + bestAskPrice) / 2.0; // Update the mid price
+            }
 
             for (Iterator<Map.Entry<String, OrderTicket>> it = openBids.entrySet().iterator(); it.hasNext();) {
                 Map.Entry<String, OrderTicket> entry = it.next();
@@ -733,7 +744,7 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
     protected void delay() {
         // Simulate network delay or processing time
         try {
-            Thread.sleep(250 + (long) (Math.random() * 500));
+            Thread.sleep(250 + (long) (Math.random() * 750));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt(); // Restore interrupted status
             System.err.println("Delay interrupted: " + e.getMessage());
@@ -886,12 +897,22 @@ public class PaperBroker implements IBroker, Level1QuoteListener {
         }
 
         if (quote.containsType(QuoteType.BID)) {
-            bidUpdated(quote.getValue(QuoteType.BID));
+            bidUpdated(quote.getValue(QuoteType.BID), false);
         }
 
         if (quote.containsType(QuoteType.ASK)) {
-            askUpdated(quote.getValue(QuoteType.ASK));
+            askUpdated(quote.getValue(QuoteType.ASK), false);
         }
+    }
+
+    @Override
+    public void orderflowReceived(OrderFlow orderflow) {
+        if (orderflow.getSide() == OrderFlow.Side.BUY) {
+            bidUpdated(orderflow.getPrice(), true);
+        } else if (orderflow.getSide() == OrderFlow.Side.SELL) {
+            askUpdated(orderflow.getPrice(), true);
+        }
+
     }
 
 }
