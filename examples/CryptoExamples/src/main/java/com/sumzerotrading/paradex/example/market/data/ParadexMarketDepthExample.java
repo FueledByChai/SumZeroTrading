@@ -36,7 +36,7 @@ public class ParadexMarketDepthExample {
         ParadexQuoteEngine quoteEngine = new ParadexQuoteEngine();
         quoteEngine.startEngine();
 
-        Ticker btcTicker = registry.lookupByCommonSymbol("BTC");
+        Ticker btcTicker = registry.lookupByCommonSymbol("ASTER");
 
         quoteEngine.subscribeMarketDepth(btcTicker, (orderBook) -> {
             logger.info("Order Book Update: " + orderBook);

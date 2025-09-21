@@ -915,4 +915,8 @@ public class PaperBroker implements IBroker, Level1QuoteListener, OrderFlowListe
 
     }
 
+    public IPaperBrokerStatus getBrokerStatus() {
+        return brokerStatus;
+    }
+
 }
