@@ -55,6 +55,7 @@ import com.sumzerotrading.paradex.common.api.ParadexApiFactory;
 import com.sumzerotrading.paradex.common.api.ParadexConfiguration;
 import com.sumzerotrading.paradex.common.api.ParadexWebSocketClient;
 import com.sumzerotrading.time.TimeUpdatedListener;
+import com.sumzerotrading.websocket.IWebSocketEventListener;
 
 /**
  * Supported Order types are: Market, Stop and Limit Supported order parameters
@@ -63,7 +64,7 @@ import com.sumzerotrading.time.TimeUpdatedListener;
  *
  * @author Rob Terpilowski
  */
-public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
+public class ParadexBroker implements IBroker, IWebSocketEventListener<IParadexOrderStatusUpdate> {
     protected static Logger logger = LoggerFactory.getLogger(ParadexBroker.class);
 
     protected static int contractRequestId = 1;
@@ -211,10 +212,11 @@ public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
     public void connect() {
         startAuthenticationScheduler();
         orderEventExecutor = Executors.newCachedThreadPool();
-        orderStatusProcessor = new OrderStatusWebSocketProcessor(this, () -> {
+        orderStatusProcessor = new OrderStatusWebSocketProcessor(() -> {
             logger.info("Order status WebSocket closed, trying to restart...");
             startOrderStatusWSClient();
         });
+        orderStatusProcessor.addEventListener(this);
         connected = true;
     }
 
@@ -300,7 +302,7 @@ public class ParadexBroker implements IBroker, ParadexOrderStatusListener {
     }
 
     @Override
-    public void orderStatusUpdated(IParadexOrderStatusUpdate orderStatus) {
+    public void onWebSocketEvent(IParadexOrderStatusUpdate orderStatus) {
         OrderStatus status = ParadexBrokerUtil.translateOrderStatus(orderStatus);
         OrderTicket order = tradeOrderMap.get(orderStatus.getOrderId());
         order.setCurrentStatus(status.getStatus());

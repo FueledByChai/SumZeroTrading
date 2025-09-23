@@ -343,7 +343,7 @@ public class ParadexBrokerTest {
 
     // ==================== Order Status Listener Tests ====================
 
-    // @Test
+    @Test
     public void testOrderStatusUpdated_DoesNotThrowException() {
         // Arrange - Mock ParadexBrokerUtil.translateOrderStatus to return a valid
         // OrderStatus
@@ -355,7 +355,7 @@ public class ParadexBrokerTest {
 
             // Act & Assert
             assertDoesNotThrow(() -> {
-                broker.orderStatusUpdated(mockOrderStatusUpdate);
+                broker.onWebSocketEvent(mockOrderStatusUpdate);
             });
         }
     }
@@ -389,7 +389,7 @@ public class ParadexBrokerTest {
                     .thenReturn(mockOrderStatus);
 
             // Act
-            broker.orderStatusUpdated(mockOrderStatusUpdate);
+            broker.onWebSocketEvent(mockOrderStatusUpdate);
 
             // Assert - Wait for the async call to complete
             assertTrue(latch.await(1, TimeUnit.SECONDS), "Listener should be called asynchronously");
@@ -572,7 +572,7 @@ public class ParadexBrokerTest {
 
             // Act & Assert - Should handle gracefully without throwing exception
             assertThrows(NullPointerException.class, () -> {
-                broker.orderStatusUpdated(mockOrderStatusUpdate);
+                broker.onWebSocketEvent(mockOrderStatusUpdate);
             });
         }
     }
@@ -594,7 +594,7 @@ public class ParadexBrokerTest {
                     .thenReturn(mockOrderStatus);
 
             // Act
-            broker.orderStatusUpdated(mockOrderStatusUpdate);
+            broker.onWebSocketEvent(mockOrderStatusUpdate);
 
             // Assert - Order should be removed from map for FILLED status
             assertFalse(broker.tradeOrderMap.containsKey(orderId));
@@ -620,7 +620,7 @@ public class ParadexBrokerTest {
                     .thenReturn(mockOrderStatus);
 
             // Act
-            broker.orderStatusUpdated(mockOrderStatusUpdate);
+            broker.onWebSocketEvent(mockOrderStatusUpdate);
 
             // Assert - Order should be removed from map for CANCELED status
             assertFalse(broker.tradeOrderMap.containsKey(orderId));
@@ -646,7 +646,7 @@ public class ParadexBrokerTest {
                     .thenReturn(mockOrderStatus);
 
             // Act
-            broker.orderStatusUpdated(mockOrderStatusUpdate);
+            broker.onWebSocketEvent(mockOrderStatusUpdate);
 
             // Assert - Order should remain in map for NEW status
             assertTrue(broker.tradeOrderMap.containsKey(orderId));
@@ -676,7 +676,7 @@ public class ParadexBrokerTest {
                     .thenReturn(mockOrderStatus);
 
             // Act
-            broker.orderStatusUpdated(mockOrderStatusUpdate);
+            broker.onWebSocketEvent(mockOrderStatusUpdate);
 
             // Assert - Listener should not be called because executor is shutdown
             verify(mockListener, never()).orderEvent(any(OrderEvent.class));
@@ -721,7 +721,7 @@ public class ParadexBrokerTest {
                     .thenReturn(mockOrderStatus);
 
             // Act
-            broker.orderStatusUpdated(mockOrderStatusUpdate);
+            broker.onWebSocketEvent(mockOrderStatusUpdate);
 
             // Assert - Both listeners should be called despite exception in first one
             assertTrue(exceptionLatch.await(1, TimeUnit.SECONDS), "Exception listener should be called");
@@ -973,7 +973,7 @@ public class ParadexBrokerTest {
                 new Thread(() -> {
                     try {
                         startLatch.await();
-                        broker.orderStatusUpdated(update);
+                        broker.onWebSocketEvent(update);
                     } catch (Exception e) {
                         // Expected for concurrent testing - some may fail due to status issues
                     } finally {

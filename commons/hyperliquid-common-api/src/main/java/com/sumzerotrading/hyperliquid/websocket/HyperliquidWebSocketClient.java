@@ -11,6 +11,11 @@ public class HyperliquidWebSocketClient extends AbstractWebSocketClient {
     protected String jwtToken = null;
     protected String coin = null;
 
+    public HyperliquidWebSocketClient(String serverUri, String channel, IWebSocketProcessor processor)
+            throws Exception {
+        super(serverUri, channel, processor);
+    }
+
     public HyperliquidWebSocketClient(String serverUri, String channel, String coin, IWebSocketProcessor processor)
             throws Exception {
         super(serverUri, channel, processor);
@@ -51,7 +56,9 @@ public class HyperliquidWebSocketClient extends AbstractWebSocketClient {
         subscribeJson.addProperty("method", "subscribe");
         JsonObject subscription = new JsonObject();
         subscription.addProperty("type", channel);
-        subscription.addProperty("coin", coin);
+        if (coin != null) {
+            subscription.addProperty("coin", coin);
+        }
         subscribeJson.add("subscription", subscription);
 
         logger.info("Subscribing to channel: " + subscribeJson.toString());

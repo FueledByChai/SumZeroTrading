@@ -1,46 +1,50 @@
 package com.sumzerotrading.broker.hyperliquid;
 
 import java.math.BigDecimal;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 
 import com.sumzerotrading.broker.order.OrderStatus;
 import com.sumzerotrading.broker.order.OrderStatus.Status;
 import com.sumzerotrading.data.SumZeroException;
-import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.paradex.common.ParadexTickerRegistry;
+import com.sumzerotrading.hyperliquid.websocket.HyperliquidTickerRegistry;
 import com.sumzerotrading.util.ITickerRegistry;
 
 public class ParadexBrokerUtil {
 
-    protected static ITickerRegistry tickerRegistry = ParadexTickerRegistry.getInstance();
+    protected static ITickerRegistry tickerRegistry = HyperliquidTickerRegistry.getInstance();
 
-    public static OrderStatus translateOrderStatus(IOrderStatusUpdate paradexStatus) {
+    public static OrderStatus translateOrderStatus(OrderStatus paradexStatus) {
 
-        Ticker ticker = tickerRegistry.lookupByBrokerSymbol(paradexStatus.getTickerString());
-        Status status = translateStatusCode(paradexStatus.getStatus(), paradexStatus.getCancelReason(),
-                paradexStatus.getOriginalSize(), paradexStatus.getRemainingSize());
-        OrderStatus orderStatus = null;
-        BigDecimal filledSize = paradexStatus.getOriginalSize().subtract(paradexStatus.getRemainingSize());
+        // Ticker ticker =
+        // tickerRegistry.lookupByBrokerSymbol(paradexStatus.getTickerString());
+        // Status status = translateStatusCode(paradexStatus.getStatus(),
+        // paradexStatus.getCancelReason(),
+        // paradexStatus.getOriginalSize(), paradexStatus.getRemainingSize());
+        // OrderStatus orderStatus = null;
+        // BigDecimal filledSize =
+        // paradexStatus.getOriginalSize().subtract(paradexStatus.getRemainingSize());
 
-        ZonedDateTime timestamp = paradexStatus.getTimestamp() == 0 ? ZonedDateTime.now()
-                : ZonedDateTime.ofInstant(java.time.Instant.ofEpochMilli(paradexStatus.getTimestamp()),
-                        ZoneId.of("UTC"));
+        // ZonedDateTime timestamp = paradexStatus.getTimestamp() == 0 ?
+        // ZonedDateTime.now()
+        // :
+        // ZonedDateTime.ofInstant(java.time.Instant.ofEpochMilli(paradexStatus.getTimestamp()),
+        // ZoneId.of("UTC"));
 
-        orderStatus = new OrderStatus(status, paradexStatus.getOrderId(), filledSize, paradexStatus.getRemainingSize(),
-                paradexStatus.getAverageFillPrice(), ticker, timestamp);
+        // orderStatus = new OrderStatus(status, paradexStatus.getOrderId(), filledSize,
+        // paradexStatus.getRemainingSize(),
+        // paradexStatus.getAverageFillPrice(), ticker, timestamp);
 
-        if (status == Status.CANCELED) {
-            if (paradexStatus.getCancelReason() == CancelReason.POST_ONLY_WOULD_CROSS) {
-                orderStatus.setCancelReason(OrderStatus.CancelReason.POST_ONLY_WOULD_CROSS);
-            } else if (paradexStatus.getCancelReason() == CancelReason.USER_CANCELED) {
-                orderStatus.setCancelReason(OrderStatus.CancelReason.USER_CANCELED);
-            } else {
-                orderStatus.setCancelReason(OrderStatus.CancelReason.NONE);
-            }
-        }
+        // if (status == Status.CANCELED) {
+        // if (paradexStatus.getCancelReason() == CancelReason.POST_ONLY_WOULD_CROSS) {
+        // orderStatus.setCancelReason(OrderStatus.CancelReason.POST_ONLY_WOULD_CROSS);
+        // } else if (paradexStatus.getCancelReason() == CancelReason.USER_CANCELED) {
+        // orderStatus.setCancelReason(OrderStatus.CancelReason.USER_CANCELED);
+        // } else {
+        // orderStatus.setCancelReason(OrderStatus.CancelReason.NONE);
+        // }
+        // }
 
-        return orderStatus;
+        // return orderStatus;
+        return null;
     }
 
     public static Status translateStatusCode(ParadexOrderStatus paradexStatus, CancelReason cancelReason,

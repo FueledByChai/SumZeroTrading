@@ -1,68 +1,24 @@
 package com.sumzerotrading.broker.paradex;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import com.sumzerotrading.websocket.AbstractWebSocketProcessor;
 import com.sumzerotrading.websocket.IWebSocketClosedListener;
-import com.sumzerotrading.websocket.IWebSocketProcessor;
 
-public class OrderStatusWebSocketProcessor implements IWebSocketProcessor {
-
-    protected static final Logger logger = LoggerFactory.getLogger(OrderStatusWebSocketProcessor.class);
-    protected List<ParadexOrderStatusListener> listeners = new ArrayList<>();
-    protected IWebSocketClosedListener closedListener;
+public class OrderStatusWebSocketProcessor extends AbstractWebSocketProcessor<IParadexOrderStatusUpdate> {
 
     public OrderStatusWebSocketProcessor(IWebSocketClosedListener closedListener) {
-        this.closedListener = closedListener;
-    }
-
-    public OrderStatusWebSocketProcessor(ParadexOrderStatusListener listener, IWebSocketClosedListener closedListener) {
-        listeners.add(listener);
-        this.closedListener = closedListener;
-    }
-
-    public void addListener(ParadexOrderStatusListener listener) {
-        listeners.add(listener);
+        super(closedListener);
     }
 
     @Override
-    public void connectionClosed(int code, String reason, boolean remote) {
-        logger.error(
-                "Disconnected from Paradex WebSocket: code: " + code + " reason: " + reason + " remote: " + remote);
-        closedListener.connectionClosed();
-
-    }
-
-    @Override
-    public void connectionError(Exception error) {
-        logger.error(error.getMessage(), error);
-        closedListener.connectionClosed();
-
-    }
-
-    @Override
-    public void connectionEstablished() {
-        logger.info("Connection Established to Paradex Order Status WebSocket");
-
-    }
-
-    @Override
-    public void connectionOpened() {
-        logger.info("Connection opened to Paradex Order Status WebSocket");
-
-    }
-
-    @Override
-    public void messageReceived(String message) {
+    protected IParadexOrderStatusUpdate parseMessage(String message) {
         try {
             JSONObject jsonObject = new JSONObject(message);
             if (!jsonObject.has("method")) {
-                return;
+                return null;
             }
             String method = jsonObject.getString("method");
 
@@ -86,26 +42,14 @@ public class OrderStatusWebSocketProcessor implements IWebSocketProcessor {
                 ParadoxOrderStatusUpdate orderStatus = new ParadoxOrderStatusUpdate(tickerString, orderId,
                         new BigDecimal(remainingSizeStr), new BigDecimal(originalSizeStr), status, cancelReason,
                         new BigDecimal(averageFillPriceStr), orderType, side, timestamp);
-
-                for (ParadexOrderStatusListener listener : listeners) {
-                    Thread thread = new Thread(() -> {
-                        try {
-                            listener.orderStatusUpdated(orderStatus);
-                        } catch (Exception e) {
-                            logger.error(e.getMessage(), e);
-                        }
-
-                    }, "OrderStatusWebSocketThread");
-                    thread.start();
-                }
-
+                return orderStatus;
             } else {
-                logger.warn("Unknown message type: " + method);
+                return null;
             }
         } catch (Exception e) {
-            logger.error("Error processing message: " + message, e);
+            logger.error("Error parsing message: " + message, e);
+            return null;
         }
-
     }
 
 }

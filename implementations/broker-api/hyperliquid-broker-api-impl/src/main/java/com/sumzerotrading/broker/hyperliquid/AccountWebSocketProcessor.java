@@ -3,79 +3,36 @@ package com.sumzerotrading.broker.hyperliquid;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sumzerotrading.websocket.AbstractWebSocketProcessor;
 import com.sumzerotrading.websocket.IWebSocketClosedListener;
-import com.sumzerotrading.websocket.IWebSocketProcessor;
 
-public class AccountWebSocketProcessor implements IWebSocketProcessor {
+public class AccountWebSocketProcessor extends AbstractWebSocketProcessor<IAccountUpdate> {
 
-    protected ExecutorService executorService = Executors.newFixedThreadPool(10);
-    protected static final Logger logger = LoggerFactory.getLogger(AccountWebSocketProcessor.class);
-    protected IWebSocketClosedListener websocketClosedListener;
-    protected List<IAccountUpdateListener> accountUpdateListeners = new ArrayList<>();
+    private static final Logger logger = LoggerFactory.getLogger(AccountWebSocketProcessor.class);
 
     public AccountWebSocketProcessor(IWebSocketClosedListener listener) {
-        this.websocketClosedListener = listener;
+        super(listener);
     }
 
     @Override
-    public void connectionClosed(int code, String reason, boolean remote) {
-        logger.info("Disconnected from Paradex Account WebSocket: " + reason);
-        websocketClosedListener.connectionClosed();
-
-    }
-
-    @Override
-    public void connectionError(Exception error) {
-        logger.error(error.getMessage(), error);
-        websocketClosedListener.connectionClosed();
-
-    }
-
-    @Override
-    public void connectionEstablished() {
-        logger.info("Connection Established to Paradex Account WebSocket");
-
-    }
-
-    @Override
-    public void connectionOpened() {
-        // TODO Auto-generated method stub
-
-    }
-
-    public void addAccountUpdateListener(IAccountUpdateListener accountUpdateListener) {
-        if (!accountUpdateListeners.contains(accountUpdateListener)) {
-            accountUpdateListeners.add(accountUpdateListener);
-        }
-    }
-
-    public void removeAccountUpdateListener(IAccountUpdateListener accountUpdateListener) {
-        accountUpdateListeners.remove(accountUpdateListener);
-    }
-
-    @Override
-    public void messageReceived(String message) {
+    protected IAccountUpdate parseMessage(String message) {
         try {
-            logger.debug("Received message from Paradex Account WebSocket: {}", message);
             JSONObject jsonObject = new JSONObject(message);
 
             // Check if this is a clearinghouseState message
             if (jsonObject.has("channel") && "clearinghouseState".equals(jsonObject.getString("channel"))) {
-                processClearinghouseState(jsonObject.getJSONObject("data"));
-                return;
+                return processClearinghouseState(jsonObject.getJSONObject("data"));
             }
 
             // Legacy message format handling
             if (!jsonObject.has("method")) {
-                return;
+                return null;
             }
             String method = jsonObject.getString("method");
 
@@ -89,17 +46,18 @@ public class AccountWebSocketProcessor implements IWebSocketProcessor {
                 accountInfo.setAccountValue(Double.parseDouble(accountValueString));
                 accountInfo.setMaintenanceMargin(Double.parseDouble(maintMarginString));
 
-                notifyListeners(accountInfo);
-
+                return accountInfo;
             } else {
                 logger.warn("Unknown message type: " + method);
+                return null;
             }
         } catch (Exception e) {
-            logger.error("Error processing message: " + message, e);
+            logger.error("Error parsing message: " + message, e);
+            return null;
         }
     }
 
-    private void processClearinghouseState(JSONObject data) {
+    private IAccountUpdate processClearinghouseState(JSONObject data) {
         try {
             JSONObject clearinghouseState = data.getJSONObject("clearinghouseState");
             JSONObject marginSummary = clearinghouseState.getJSONObject("marginSummary");
@@ -140,7 +98,7 @@ public class AccountWebSocketProcessor implements IWebSocketProcessor {
                         }
 
                         // Create position update
-                        IPositionUpdate positionUpdate = new ParadexPositionUpdate(ticker, size, entryPrice,
+                        IPositionUpdate positionUpdate = new HyperliquidPositionUpdate(ticker, size, entryPrice,
                                 unrealizedPnl, liquidationPrice, fundingSinceOpen);
                         positions.add(positionUpdate);
 
@@ -158,23 +116,11 @@ public class AccountWebSocketProcessor implements IWebSocketProcessor {
             logger.debug("Processed clearinghouse state - Account Value: {}, Maintenance Margin: {}, Positions: {}",
                     accountValue, maintenanceMargin, positions.size());
 
-            notifyListeners(accountInfo);
+            return accountInfo;
 
         } catch (Exception e) {
             logger.error("Error processing clearinghouse state", e);
-        }
-    }
-
-    private void notifyListeners(IAccountUpdate accountInfo) {
-        for (IAccountUpdateListener accountUpdateListener : accountUpdateListeners) {
-            executorService.execute(() -> {
-                try {
-                    // Ensure the listener is called in a thread-safe manner
-                    accountUpdateListener.accountUpdated(accountInfo);
-                } catch (Exception e) {
-                    logger.error(e.getMessage(), e);
-                }
-            });
+            return null;
         }
     }
 

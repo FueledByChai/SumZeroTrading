@@ -46,11 +46,15 @@ import com.sumzerotrading.broker.IBroker;
 import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderEventListener;
-import com.sumzerotrading.broker.order.OrderStatus;
 import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.ComboTicker;
 import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.hyperliquid.websocket.HyperliquidApiFactory;
+import com.sumzerotrading.hyperliquid.websocket.HyperliquidConfiguration;
+import com.sumzerotrading.hyperliquid.websocket.HyperliquidWebSocketClient;
+import com.sumzerotrading.hyperliquid.websocket.IHyperliquidRestApi;
 import com.sumzerotrading.time.TimeUpdatedListener;
+import com.sumzerotrading.websocket.IWebSocketEventListener;
 
 /**
  * Supported Order types are: Market, Stop and Limit Supported order parameters
@@ -59,20 +63,19 @@ import com.sumzerotrading.time.TimeUpdatedListener;
  *
  * @author Rob Terpilowski
  */
-public class HyperliquidBroker implements IBroker, OrderStatusListener {
+public class HyperliquidBroker implements IBroker, IWebSocketEventListener<IAccountUpdate> {
     protected static Logger logger = LoggerFactory.getLogger(HyperliquidBroker.class);
 
     protected static int contractRequestId = 1;
     protected static int executionRequestId = 1;
 
-    protected IParadexRestApi restApi;
+    protected IHyperliquidRestApi restApi;
     protected String jwtToken;
     protected int jwtRefreshInSeconds = 60;
     protected boolean connected = false;
 
     protected HyperliquidWebSocketClient accountInfoWSClient;
-    protected ParadexWebSocketClient orderStatusWSClient;
-    protected OrderStatusWebSocketProcessor orderStatusProcessor;
+    protected HyperliquidWebSocketClient orderStatusWSClient;
     protected AccountWebSocketProcessor accountWebSocketProcessor;
 
     protected Set<OrderTicket> currencyOrderList = new HashSet<>();
@@ -107,23 +110,24 @@ public class HyperliquidBroker implements IBroker, OrderStatusListener {
     /**
      * Default constructor - uses centralized configuration for API initialization.
      */
-    public ParadexBroker() {
+    public HyperliquidBroker() {
         // Initialize using centralized configuration
-        this.restApi = ParadexApiFactory.getPrivateApi();
+        this.restApi = HyperliquidApiFactory.getPrivateApi();
 
         // Get JWT refresh interval from configuration
-        ParadexConfiguration config = ParadexConfiguration.getInstance();
+        HyperliquidConfiguration config = HyperliquidConfiguration.getInstance();
         this.jwtRefreshInSeconds = config.getJwtRefreshSeconds();
 
-        logger.info("ParadexBroker initialized with configuration: {}", ParadexApiFactory.getConfigurationInfo());
+        logger.info("HyperliquidBroker initialized with configuration: {}",
+                HyperliquidApiFactory.getConfigurationInfo());
     }
 
     /**
      * Constructor for testing or custom configuration.
      * 
-     * @param restApi custom ParadexRestApi instance
+     * @param restApi custom HyperliquidRestApi instance
      */
-    public ParadexBroker(IParadexRestApi restApi) {
+    public HyperliquidBroker(IHyperliquidRestApi restApi) {
         this.restApi = restApi;
         this.jwtRefreshInSeconds = 60; // default
     }
@@ -131,7 +135,7 @@ public class HyperliquidBroker implements IBroker, OrderStatusListener {
     @Override
     public void cancelOrder(String id) {
         checkConnected();
-        restApi.cancelOrder(jwtToken, id);
+        // restApi.cancelOrder(jwtToken, id);
     }
 
     @Override
@@ -143,9 +147,9 @@ public class HyperliquidBroker implements IBroker, OrderStatusListener {
     @Override
     public void placeOrder(OrderTicket order) {
         checkConnected();
-        String orderId = restApi.placeOrder(jwtToken, order);
-        order.setOrderId(orderId);
-        tradeOrderMap.put(orderId, order);
+        // String orderId = restApi.placeOrder(jwtToken, order);
+        // order.setOrderId(orderId);
+        // tradeOrderMap.put(orderId, order);
     }
 
     @Override
@@ -205,18 +209,18 @@ public class HyperliquidBroker implements IBroker, OrderStatusListener {
 
     @Override
     public void connect() {
-        startAuthenticationScheduler();
+        // startAuthenticationScheduler();
         orderEventExecutor = Executors.newCachedThreadPool();
-        orderStatusProcessor = new OrderStatusWebSocketProcessor(this, () -> {
-            logger.info("Order status WebSocket closed, trying to restart...");
-            startOrderStatusWSClient();
-        });
+        // orderStatusProcessor = new OrderStatusWebSocketProcessor(this, () -> {
+        // logger.info("Order status WebSocket closed, trying to restart...");
+        // startOrderStatusWSClient();
+        // });
         connected = true;
     }
 
     @Override
     public void disconnect() {
-        stopAuthenticationScheduler();
+        // stopAuthenticationScheduler();
         stopOrderEventExecutor();
         connected = false;
     }
@@ -295,72 +299,76 @@ public class HyperliquidBroker implements IBroker, OrderStatusListener {
         // }
     }
 
-    @Override
-    public void orderStatusUpdated(IParadexOrderStatusUpdate orderStatus) {
-        OrderStatus status = ParadexBrokerUtil.translateOrderStatus(orderStatus);
-        OrderTicket order = tradeOrderMap.get(orderStatus.getOrderId());
-        order.setCurrentStatus(status.getStatus());
-        order.setFilledPrice(status.getFillPrice());
-        order.setFilledSize(status.getFilled());
-        // Can't set the order commission here, only on fill events.
+    // @Override
+    // public void orderStatusUpdated(IParadexOrderStatusUpdate orderStatus) {
+    // OrderStatus status = ParadexBrokerUtil.translateOrderStatus(orderStatus);
+    // OrderTicket order = tradeOrderMap.get(orderStatus.getOrderId());
+    // order.setCurrentStatus(status.getStatus());
+    // order.setFilledPrice(status.getFillPrice());
+    // order.setFilledSize(status.getFilled());
+    // // Can't set the order commission here, only on fill events.
 
-        OrderEvent event = new OrderEvent(order, status);
-        if (status.getStatus() == OrderStatus.Status.FILLED || status.getStatus() == OrderStatus.Status.CANCELED) {
-            tradeOrderMap.remove(orderStatus.getOrderId());
-        }
-        for (OrderEventListener listener : orderEventListeners) {
-            if (orderEventExecutor != null && !orderEventExecutor.isShutdown()) {
-                orderEventExecutor.submit(() -> {
-                    try {
-                        listener.orderEvent(event);
-                    } catch (Exception e) {
-                        logger.error("Error notifying order event listener", e);
-                    }
-                });
-            }
-        }
-    }
+    // OrderEvent event = new OrderEvent(order, status);
+    // if (status.getStatus() == OrderStatus.Status.FILLED || status.getStatus() ==
+    // OrderStatus.Status.CANCELED) {
+    // tradeOrderMap.remove(orderStatus.getOrderId());
+    // }
+    // for (OrderEventListener listener : orderEventListeners) {
+    // if (orderEventExecutor != null && !orderEventExecutor.isShutdown()) {
+    // orderEventExecutor.submit(() -> {
+    // try {
+    // listener.orderEvent(event);
+    // } catch (Exception e) {
+    // logger.error("Error notifying order event listener", e);
+    // }
+    // });
+    // }
+    // }
+    // }
 
-    private void startAuthenticationScheduler() {
-        if (authenticationScheduler == null || authenticationScheduler.isShutdown()) {
-            authenticationScheduler = Executors.newSingleThreadScheduledExecutor();
+    // private void startAuthenticationScheduler() {
+    // if (authenticationScheduler == null || authenticationScheduler.isShutdown())
+    // {
+    // authenticationScheduler = Executors.newSingleThreadScheduledExecutor();
 
-            // Authenticate immediately when starting
-            try {
-                logger.info("Initial JWT token authentication");
-                jwtToken = authenticate();
-            } catch (Exception e) {
-                logger.error("Failed to obtain initial JWT token", e);
-            }
+    // // Authenticate immediately when starting
+    // try {
+    // logger.info("Initial JWT token authentication");
+    // // jwtToken = authenticate();
+    // } catch (Exception e) {
+    // logger.error("Failed to obtain initial JWT token", e);
+    // }
 
-            // Schedule authentication every minute
-            authenticationScheduler.scheduleAtFixedRate(() -> {
-                try {
-                    logger.info("Refreshing JWT token");
-                    jwtToken = authenticate();
-                } catch (Exception e) {
-                    logger.error("Failed to refresh JWT token", e);
-                }
-            }, jwtRefreshInSeconds, jwtRefreshInSeconds, TimeUnit.SECONDS);
+    // // Schedule authentication every minute
+    // authenticationScheduler.scheduleAtFixedRate(() -> {
+    // try {
+    // logger.info("Refreshing JWT token");
+    // // jwtToken = authenticate();
+    // } catch (Exception e) {
+    // logger.error("Failed to refresh JWT token", e);
+    // }
+    // }, jwtRefreshInSeconds, jwtRefreshInSeconds, TimeUnit.SECONDS);
 
-            logger.info("Authentication scheduler started - will refresh JWT token every minute");
-        }
-    }
+    // logger.info("Authentication scheduler started - will refresh JWT token every
+    // minute");
+    // }
+    // }
 
-    private void stopAuthenticationScheduler() {
-        if (authenticationScheduler != null && !authenticationScheduler.isShutdown()) {
-            authenticationScheduler.shutdown();
-            try {
-                if (!authenticationScheduler.awaitTermination(5, TimeUnit.SECONDS)) {
-                    authenticationScheduler.shutdownNow();
-                }
-                logger.info("Authentication scheduler stopped");
-            } catch (InterruptedException e) {
-                authenticationScheduler.shutdownNow();
-                Thread.currentThread().interrupt();
-            }
-        }
-    }
+    // private void stopAuthenticationScheduler() {
+    // if (authenticationScheduler != null && !authenticationScheduler.isShutdown())
+    // {
+    // authenticationScheduler.shutdown();
+    // try {
+    // if (!authenticationScheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+    // authenticationScheduler.shutdownNow();
+    // }
+    // logger.info("Authentication scheduler stopped");
+    // } catch (InterruptedException e) {
+    // authenticationScheduler.shutdownNow();
+    // Thread.currentThread().interrupt();
+    // }
+    // }
+    // }
 
     private void stopOrderEventExecutor() {
         if (orderEventExecutor != null && !orderEventExecutor.isShutdown()) {
@@ -377,20 +385,39 @@ public class HyperliquidBroker implements IBroker, OrderStatusListener {
         }
     }
 
-    protected String authenticate() throws Exception {
-        jwtToken = restApi.getJwtToken();
-        logger.info("Obtained JWT Token");
-        return jwtToken;
-    }
+    // protected String authenticate() throws Exception {
+    // jwtToken = restApi.getJwtToken();
+    // logger.info("Obtained JWT Token");
+    // return jwtToken;
+    // }
 
-    public void startOrderStatusWSClient() {
-        logger.info("Starting order status WebSocket client");
-        String jwtToken = restApi.getJwtToken();
-        String wsUrl = ParadexApiFactory.getWebSocketUrl();
+    // public void startOrderStatusWSClient() {
+    // logger.info("Starting order status WebSocket client");
+    // String jwtToken = restApi.getJwtToken();
+    // String wsUrl = ParadexApiFactory.getWebSocketUrl();
+
+    // try {
+    // orderStatusWSClient = new ParadexWebSocketClient(wsUrl, "orders.ALL",
+    // orderStatusProcessor, jwtToken);
+    // orderStatusWSClient.connect();
+    // } catch (Exception e) {
+    // throw new IllegalStateException(e);
+    // }
+    // }
+
+    protected void startAccountInfoWSClient() {
+        logger.info("Starting account info WebSocket client");
+        String wsUrl = HyperliquidConfiguration.getInstance().getWebSocketUrl();
 
         try {
-            orderStatusWSClient = new ParadexWebSocketClient(wsUrl, "orders.ALL", orderStatusProcessor, jwtToken);
-            orderStatusWSClient.connect();
+            accountWebSocketProcessor = new AccountWebSocketProcessor(() -> {
+                logger.info("Account info WebSocket closed, trying to restart...");
+                startAccountInfoWSClient();
+            });
+            accountWebSocketProcessor.addEventListener(this);
+            accountInfoWSClient = new HyperliquidWebSocketClient(wsUrl, "account", accountWebSocketProcessor);
+
+            accountInfoWSClient.connect();
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
@@ -405,6 +432,12 @@ public class HyperliquidBroker implements IBroker, OrderStatusListener {
     @Override
     public void cancelAllOrders() {
         throw new UnsupportedOperationException("Cancel all orders not implemented yet");
+
+    }
+
+    @Override
+    public void onWebSocketEvent(IAccountUpdate event) {
+        // TODO Auto-generated method stub
 
     }
 
