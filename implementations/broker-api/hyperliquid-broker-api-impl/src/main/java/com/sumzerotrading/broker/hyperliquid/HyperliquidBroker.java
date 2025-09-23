@@ -17,43 +17,32 @@
  */
 package com.sumzerotrading.broker.hyperliquid;
 
-import java.text.SimpleDateFormat;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Timer;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sumzerotrading.broker.BrokerAccountInfoListener;
-import com.sumzerotrading.broker.BrokerError;
-import com.sumzerotrading.broker.BrokerErrorListener;
-import com.sumzerotrading.broker.IBroker;
+import com.sumzerotrading.broker.AbstractBasicBroker;
 import com.sumzerotrading.broker.Position;
+import com.sumzerotrading.broker.hyperliquid.translators.Translator;
 import com.sumzerotrading.broker.order.OrderEvent;
-import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.broker.order.OrderTicket;
-import com.sumzerotrading.data.ComboTicker;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.hyperliquid.websocket.HyperliquidApiFactory;
 import com.sumzerotrading.hyperliquid.websocket.HyperliquidConfiguration;
 import com.sumzerotrading.hyperliquid.websocket.HyperliquidWebSocketClient;
 import com.sumzerotrading.hyperliquid.websocket.IHyperliquidRestApi;
-import com.sumzerotrading.time.TimeUpdatedListener;
 import com.sumzerotrading.websocket.IWebSocketEventListener;
 
 /**
@@ -63,16 +52,15 @@ import com.sumzerotrading.websocket.IWebSocketEventListener;
  *
  * @author Rob Terpilowski
  */
-public class HyperliquidBroker implements IBroker, IWebSocketEventListener<IAccountUpdate> {
+public class HyperliquidBroker extends AbstractBasicBroker implements IWebSocketEventListener<IAccountUpdate> {
     protected static Logger logger = LoggerFactory.getLogger(HyperliquidBroker.class);
-
-    protected static int contractRequestId = 1;
-    protected static int executionRequestId = 1;
 
     protected IHyperliquidRestApi restApi;
     protected String jwtToken;
     protected int jwtRefreshInSeconds = 60;
     protected boolean connected = false;
+
+    protected List<Position> currentPositions = new ArrayList<>();
 
     protected HyperliquidWebSocketClient accountInfoWSClient;
     protected HyperliquidWebSocketClient orderStatusWSClient;
@@ -80,28 +68,15 @@ public class HyperliquidBroker implements IBroker, IWebSocketEventListener<IAcco
 
     protected Set<OrderTicket> currencyOrderList = new HashSet<>();
     protected BlockingQueue<Integer> nextIdQueue = new LinkedBlockingQueue<>();
-    protected BlockingQueue<ZonedDateTime> brokerTimeQueue = new LinkedBlockingQueue<>();
-    protected BlockingQueue<BrokerError> brokerErrorQueue = new LinkedBlockingQueue<>();
-    protected BlockingQueue<OrderEvent> orderEventQueue = new LinkedBlockingQueue<>();
-    // protected BlockingQueue<ContractDetails> contractDetailsQueue = new
-    // LinkedBlockingDeque<>();
-    protected int nextOrderId = -1;
-    protected SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
-    protected DateTimeFormatter zonedDateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
 
-    protected List<OrderEventListener> orderEventListeners = new ArrayList<>();
-    protected List<BrokerAccountInfoListener> brokerAccountInfoListeners = new ArrayList<>();
-    protected Set<String> filledOrderSet = new HashSet<>();
-    protected Timer currencyOrderTimer;
+    protected int nextOrderId = -1;
+
     protected ScheduledExecutorService authenticationScheduler;
     protected ExecutorService orderEventExecutor;
-    protected Object lock = new Object();
-    protected Semaphore semaphore = new Semaphore(1);
-    protected Semaphore tradeFileSemaphore = new Semaphore(1);
+
     protected boolean started = false;
     protected String directory;
     protected Map<String, OrderEvent> orderEventMap;
-    protected CountDownLatch getPositionsCountdownLatch = null;
     protected List<Position> positionsList = new ArrayList<>();
     protected Map<String, OrderTicket> tradeOrderMap = new HashMap<>();
 
@@ -158,69 +133,16 @@ public class HyperliquidBroker implements IBroker, IWebSocketEventListener<IAcco
     }
 
     @Override
-    public void addOrderEventListener(OrderEventListener listener) {
-        orderEventListeners.add(listener);
-    }
-
-    @Override
-    public void removeOrderEventListener(OrderEventListener listener) {
-        orderEventListeners.remove(listener);
-    }
-
-    @Override
-    public void addBrokerAccountInfoListener(BrokerAccountInfoListener listener) {
-        brokerAccountInfoListeners.add(listener);
-    }
-
-    @Override
-    public void removeBrokerAccountInfoListener(BrokerAccountInfoListener listener) {
-        brokerAccountInfoListeners.remove(listener);
-    }
-
-    @Override
-    public void addBrokerErrorListener(BrokerErrorListener listener) {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
-    }
-
-    @Override
-    public void removeBrokerErrorListener(BrokerErrorListener listener) {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
-    }
-
-    @Override
-    public String getFormattedDate(int hour, int minute, int second) {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
-    }
-
-    @Override
-    public String getFormattedDate(ZonedDateTime date) {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
-    }
-
-    @Override
-    public ZonedDateTime getCurrentTime() {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
-    }
-
-    @Override
     public void connect() {
         // startAuthenticationScheduler();
         orderEventExecutor = Executors.newCachedThreadPool();
-        // orderStatusProcessor = new OrderStatusWebSocketProcessor(this, () -> {
-        // logger.info("Order status WebSocket closed, trying to restart...");
-        // startOrderStatusWSClient();
-        // });
+        startAccountInfoWSClient();
+
         connected = true;
     }
 
     @Override
-    public void disconnect() {
-        // stopAuthenticationScheduler();
+    protected void onDisconnect() {
         stopOrderEventExecutor();
         connected = false;
     }
@@ -229,32 +151,6 @@ public class HyperliquidBroker implements IBroker, IWebSocketEventListener<IAcco
     public boolean isConnected() {
         throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
                                                                        // Tools | Templates.
-    }
-
-    @Override
-    public void aquireLock() {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
-    }
-
-    @Override
-    public void releaseLock() {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
-    }
-
-    @Override
-    public ComboTicker buildComboTicker(Ticker ticker1, Ticker ticker2) {
-        throw new UnsupportedOperationException("Not supported for paradex."); // To change body of generated methods,
-                                                                               // choose
-        // Tools | Templates.
-    }
-
-    @Override
-    public ComboTicker buildComboTicker(Ticker ticker1, int ratio1, Ticker ticker2, int ratio2) {
-        throw new UnsupportedOperationException("Not supported for paradex."); // To change body of generated methods,
-                                                                               // choose
-        // Tools | Templates.
     }
 
     @Override
@@ -271,18 +167,6 @@ public class HyperliquidBroker implements IBroker, IWebSocketEventListener<IAcco
 
     @Override
     public void cancelAndReplaceOrder(String originalOrderId, OrderTicket newOrder) {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
-    }
-
-    @Override
-    public void addTimeUpdateListener(TimeUpdatedListener listener) {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
-    }
-
-    @Override
-    public void removeTimeUpdateListener(TimeUpdatedListener listener) {
         throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
                                                                        // Tools | Templates.
     }
@@ -437,8 +321,15 @@ public class HyperliquidBroker implements IBroker, IWebSocketEventListener<IAcco
 
     @Override
     public void onWebSocketEvent(IAccountUpdate event) {
-        // TODO Auto-generated method stub
+        double accountValue = event.getAccountValue();
+        fireAccountEquityUpdated(accountValue);
 
+        currentPositions = Translator.translatePositions(event.getPositions());
+
+        List<HyperliquidPositionUpdate> positions = event.getPositions();
+        for (HyperliquidPositionUpdate pos : positions) {
+            logger.info("Position: {} - Size: {} - Avg Price: {}", pos.getTicker(), pos.getSize(), pos.getEntryPrice());
+        }
     }
 
 }

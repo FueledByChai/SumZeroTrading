@@ -14,8 +14,8 @@ public interface IAccountUpdate {
 
     double getMarginRatioPercent();
 
-    List<IPositionUpdate> getPositions();
+    List<HyperliquidPositionUpdate> getPositions();
 
-    void setPositions(List<IPositionUpdate> positions);
+    void setPositions(List<HyperliquidPositionUpdate> positions);
 
 }

@@ -3,13 +3,13 @@ package com.sumzerotrading.broker.hyperliquid;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ParadexAccountInfoUpdate implements IAccountUpdate {
+public class HyperliquidAccountInfoUpdate implements IAccountUpdate {
 
     protected double accountValue;
     protected double maintenanceMargin;
-    protected List<IPositionUpdate> positions = new ArrayList<>();
+    protected List<HyperliquidPositionUpdate> positions = new ArrayList<>();
 
-    public ParadexAccountInfoUpdate() {
+    public HyperliquidAccountInfoUpdate() {
 
     }
 
@@ -34,12 +34,12 @@ public class ParadexAccountInfoUpdate implements IAccountUpdate {
     }
 
     @Override
-    public List<IPositionUpdate> getPositions() {
+    public List<HyperliquidPositionUpdate> getPositions() {
         return positions;
     }
 
     @Override
-    public void setPositions(List<IPositionUpdate> positions) {
+    public void setPositions(List<HyperliquidPositionUpdate> positions) {
         this.positions = positions != null ? positions : new ArrayList<>();
     }
 
@@ -55,7 +55,7 @@ public class ParadexAccountInfoUpdate implements IAccountUpdate {
 
     @Override
     public String toString() {
-        return "ParadexAccountInfo [accountValue=" + accountValue + ", maintenanceMargin=" + maintenanceMargin
+        return "HyperliquidAccountInfo [accountValue=" + accountValue + ", maintenanceMargin=" + maintenanceMargin
                 + ", positions=" + positions.size() + "]";
     }
 

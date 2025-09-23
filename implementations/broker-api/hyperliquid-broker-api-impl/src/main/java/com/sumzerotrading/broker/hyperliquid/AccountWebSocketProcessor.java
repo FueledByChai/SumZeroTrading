@@ -42,7 +42,7 @@ public class AccountWebSocketProcessor extends AbstractWebSocketProcessor<IAccou
                 String accountValueString = data.getString("account_value");
                 String maintMarginString = data.getString("maintenance_margin_requirement");
 
-                IAccountUpdate accountInfo = new ParadexAccountInfoUpdate();
+                IAccountUpdate accountInfo = new HyperliquidAccountInfoUpdate();
                 accountInfo.setAccountValue(Double.parseDouble(accountValueString));
                 accountInfo.setMaintenanceMargin(Double.parseDouble(maintMarginString));
 
@@ -73,7 +73,7 @@ public class AccountWebSocketProcessor extends AbstractWebSocketProcessor<IAccou
             }
 
             // Parse positions
-            List<IPositionUpdate> positions = new ArrayList<>();
+            List<HyperliquidPositionUpdate> positions = new ArrayList<>();
             if (clearinghouseState.has("assetPositions")) {
                 JSONArray assetPositions = clearinghouseState.getJSONArray("assetPositions");
                 for (int i = 0; i < assetPositions.length(); i++) {
@@ -98,8 +98,8 @@ public class AccountWebSocketProcessor extends AbstractWebSocketProcessor<IAccou
                         }
 
                         // Create position update
-                        IPositionUpdate positionUpdate = new HyperliquidPositionUpdate(ticker, size, entryPrice,
-                                unrealizedPnl, liquidationPrice, fundingSinceOpen);
+                        HyperliquidPositionUpdate positionUpdate = new HyperliquidPositionUpdate(ticker, size,
+                                entryPrice, unrealizedPnl, liquidationPrice, fundingSinceOpen);
                         positions.add(positionUpdate);
 
                         logger.debug("Parsed position - Ticker: {}, Size: {}, Entry: {}, PnL: {}, Liq: {}, Funding: {}",
@@ -108,7 +108,7 @@ public class AccountWebSocketProcessor extends AbstractWebSocketProcessor<IAccou
                 }
             }
 
-            IAccountUpdate accountInfo = new ParadexAccountInfoUpdate();
+            HyperliquidAccountInfoUpdate accountInfo = new HyperliquidAccountInfoUpdate();
             accountInfo.setAccountValue(accountValue);
             accountInfo.setMaintenanceMargin(maintenanceMargin);
             accountInfo.setPositions(positions);
