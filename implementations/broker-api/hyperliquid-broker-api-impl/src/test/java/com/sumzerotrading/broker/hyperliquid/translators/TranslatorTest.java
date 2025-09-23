@@ -30,11 +30,24 @@ public class TranslatorTest {
     @Mock
     HyperliquidPositionUpdate mockUpdate2;
 
+    private static org.mockito.MockedStatic<HyperliquidTickerRegistry> staticMock;
+
+    @org.junit.jupiter.api.BeforeAll
+    public static void setupAll() {
+        staticMock = Mockito.mockStatic(HyperliquidTickerRegistry.class);
+    }
+
     @BeforeEach
     public void setup() {
-        // Use Mockito to mock static getInstance()
-        Mockito.mockStatic(HyperliquidTickerRegistry.class).when(HyperliquidTickerRegistry::getInstance)
-                .thenReturn(mockRegistry);
+        staticMock.when(HyperliquidTickerRegistry::getInstance).thenReturn(mockRegistry);
+    }
+
+    @org.junit.jupiter.api.AfterAll
+    public static void tearDownAll() {
+        if (staticMock != null) {
+            staticMock.close();
+            staticMock = null;
+        }
     }
 
     @Test
@@ -87,8 +100,8 @@ public class TranslatorTest {
         Position pos = Translator.translatePosition(mockUpdate1);
         assertNotNull(pos);
         assertEquals(mockTicker, pos.getTicker());
-        assertEquals(2.0, pos.getSize());
-        assertEquals(50000.0, pos.getAverageCost());
-        assertEquals(45000.0, pos.getLiquidationPrice());
+        assertEquals(2.0, pos.getSize().doubleValue());
+        assertEquals(50000.0, pos.getAverageCost().doubleValue());
+        assertEquals(45000.0, pos.getLiquidationPrice().doubleValue());
     }
 }
