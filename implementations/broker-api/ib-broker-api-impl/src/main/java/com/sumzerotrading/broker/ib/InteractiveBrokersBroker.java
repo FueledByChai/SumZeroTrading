@@ -546,13 +546,13 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
 
         Order ibOrder = new Order();
         if (order.getType() == OrderTicket.Type.MARKET_ON_OPEN) {
-            order.setDuration(OrderTicket.Duration.MARKET_ON_OPEN);
+            order.setType(OrderTicket.Type.MARKET_ON_OPEN);
         }
 
         ibOrder.action(IbUtils.getAction(order.getTradeDirection()));
         ibOrder.orderType(IbUtils.getOrderType(order.getType()));
 
-        ibOrder.tif(IbUtils.getTif(order.getDuration()));
+        ibOrder.tif(IbUtils.getTif(order.getDuration(), order.getType()));
         ibOrder.orderId(Integer.parseInt(order.getOrderId()));
         ibOrder.totalQuantity(com.ib.client.Decimal.get(order.getSize()));
 

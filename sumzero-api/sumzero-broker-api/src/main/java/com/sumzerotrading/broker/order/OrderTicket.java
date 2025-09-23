@@ -38,11 +38,11 @@ public class OrderTicket implements Serializable {
     };
 
     public enum Duration {
-        DAY, GOOD_UNTIL_CANCELED, GOOD_UNTIL_TIME, FILL_OR_KILL, MARKET_ON_OPEN
+        DAY, GOOD_UNTIL_CANCELED, GOOD_UNTIL_TIME, FILL_OR_KILL, IMMEDIATE_OR_CANCEL
     };
 
     public enum Modifier {
-        ALL_OR_NONE, FILL_OR_KILL, POST_ONLY
+        ALL_OR_NONE, POST_ONLY, REDUCE_ONLY
     };
 
     protected Ticker ticker;

@@ -1,4 +1,4 @@
-package com.sumzerotrading.hyperliquid.order;
+package com.sumzerotrading.hyperliquid.websocket;
 
 public enum Side {
     BUY("1"), SELL("2");

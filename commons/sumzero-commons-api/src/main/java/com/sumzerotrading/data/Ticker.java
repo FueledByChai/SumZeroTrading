@@ -37,6 +37,7 @@ public class Ticker implements Serializable {
         CALL, PUT, NONE
     }
 
+    protected String id;
     protected InstrumentType instrumentType;
     protected String symbol;
     protected Exchange exchange;
@@ -236,10 +237,31 @@ public class Ticker implements Serializable {
         return this;
     }
 
+    public String getId() {
+        return id;
+    }
+
+    public int getIdAsInt() {
+        if (id != null) {
+            try {
+                return Integer.parseInt(id);
+            } catch (NumberFormatException nfe) {
+                return 0;
+            }
+        }
+        return 0;
+    }
+
+    public Ticker setId(String id) {
+        this.id = id;
+        return this;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
+        result = prime * result + ((id == null) ? 0 : id.hashCode());
         result = prime * result + ((instrumentType == null) ? 0 : instrumentType.hashCode());
         result = prime * result + ((symbol == null) ? 0 : symbol.hashCode());
         result = prime * result + ((exchange == null) ? 0 : exchange.hashCode());
@@ -269,10 +291,10 @@ public class Ticker implements Serializable {
         Ticker other = (Ticker) obj;
         if (instrumentType != other.instrumentType)
             return false;
-        if (symbol == null) {
-            if (other.symbol != null)
+        if (id == null) {
+            if (other.id != null)
                 return false;
-        } else if (!symbol.equals(other.symbol))
+        } else if (!id.equals(other.id))
             return false;
         if (exchange == null) {
             if (other.exchange != null)
@@ -329,8 +351,8 @@ public class Ticker implements Serializable {
 
     @Override
     public String toString() {
-        return "Ticker [instrumentType=" + instrumentType + ", symbol=" + symbol + ", exchange=" + exchange
-                + ", primaryExchange=" + primaryExchange + ", currency=" + currency + ", minimumTickSize="
+        return "Ticker [id=" + id + ", instrumentType=" + instrumentType + ", symbol=" + symbol + ", exchange="
+                + exchange + ", primaryExchange=" + primaryExchange + ", currency=" + currency + ", minimumTickSize="
                 + minimumTickSize + ", contractMultiplier=" + contractMultiplier + ", orderSizeIncrement="
                 + orderSizeIncrement + ", minimumOrderSize=" + minimumOrderSize + ", expiryMonth=" + expiryMonth
                 + ", expiryYear=" + expiryYear + ", expiryDay=" + expiryDay + ", strike=" + strike + ", right=" + right

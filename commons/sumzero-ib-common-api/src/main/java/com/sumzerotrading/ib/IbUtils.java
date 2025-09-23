@@ -91,7 +91,7 @@ public class IbUtils {
         }
     }
 
-    public static String getTif(OrderTicket.Duration duration) {
+    public static String getTif(OrderTicket.Duration duration, OrderTicket.Type orderType) {
         if (duration == null) {
             return "DAY";
         }
@@ -105,10 +105,14 @@ public class IbUtils {
             return "GTD";
         case FILL_OR_KILL:
             return "IOC";
-        case MARKET_ON_OPEN:
-            return "OPG";
         default:
-            throw new IllegalStateException("Unknown duration: " + duration);
+            switch (orderType) {
+            case MARKET_ON_OPEN:
+                return "OPG";
+            default:
+                throw new IllegalStateException(
+                        "Unknown duration: " + duration + " and unknown order type: " + orderType);
+            }
         }
     }
 

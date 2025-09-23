@@ -21,7 +21,6 @@ package com.sumzerotrading.ib;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
@@ -37,8 +36,8 @@ import org.junit.Test;
 
 import com.ib.client.TagValue;
 import com.sumzerotrading.broker.order.OrderStatus;
-import com.sumzerotrading.broker.order.TradeDirection;
 import com.sumzerotrading.broker.order.OrderTicket;
+import com.sumzerotrading.broker.order.TradeDirection;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.marketdata.QuoteType;
@@ -72,15 +71,15 @@ public class IbUtilsTest {
     public void testGetTif() {
         OrderTicket.Duration[] values = OrderTicket.Duration.values();
         for (OrderTicket.Duration value : values) {
-            assertNotNull(IbUtils.getTif(value));
+            assertNotNull(IbUtils.getTif(value, null));
         }
 
-        assertEquals("DAY", IbUtils.getTif(OrderTicket.Duration.DAY));
-        assertEquals("GTC", IbUtils.getTif(OrderTicket.Duration.GOOD_UNTIL_CANCELED));
-        assertEquals("IOC", IbUtils.getTif(OrderTicket.Duration.FILL_OR_KILL));
-        assertEquals("GTD", IbUtils.getTif(OrderTicket.Duration.GOOD_UNTIL_TIME));
-        assertEquals("OPG", IbUtils.getTif(OrderTicket.Duration.MARKET_ON_OPEN));
-        assertEquals("DAY", IbUtils.getTif(null));
+        assertEquals("DAY", IbUtils.getTif(OrderTicket.Duration.DAY, null));
+        assertEquals("GTC", IbUtils.getTif(OrderTicket.Duration.GOOD_UNTIL_CANCELED, null));
+        assertEquals("IOC", IbUtils.getTif(OrderTicket.Duration.FILL_OR_KILL, null));
+        assertEquals("GTD", IbUtils.getTif(OrderTicket.Duration.GOOD_UNTIL_TIME, null));
+        assertEquals("OPG", IbUtils.getTif(null, OrderTicket.Type.MARKET_ON_OPEN));
+        assertEquals("DAY", IbUtils.getTif(null, null));
     }
 
     @Test
