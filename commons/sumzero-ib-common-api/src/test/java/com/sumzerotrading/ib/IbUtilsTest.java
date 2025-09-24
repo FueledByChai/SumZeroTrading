@@ -76,7 +76,8 @@ public class IbUtilsTest {
 
         assertEquals("DAY", IbUtils.getTif(OrderTicket.Duration.DAY, null));
         assertEquals("GTC", IbUtils.getTif(OrderTicket.Duration.GOOD_UNTIL_CANCELED, null));
-        assertEquals("IOC", IbUtils.getTif(OrderTicket.Duration.FILL_OR_KILL, null));
+        assertEquals("FOK", IbUtils.getTif(OrderTicket.Duration.FILL_OR_KILL, null));
+        assertEquals("IOC", IbUtils.getTif(OrderTicket.Duration.IMMEDIATE_OR_CANCEL, null));
         assertEquals("GTD", IbUtils.getTif(OrderTicket.Duration.GOOD_UNTIL_TIME, null));
         assertEquals("OPG", IbUtils.getTif(null, OrderTicket.Type.MARKET_ON_OPEN));
         assertEquals("DAY", IbUtils.getTif(null, null));

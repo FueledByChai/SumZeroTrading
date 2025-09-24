@@ -291,6 +291,11 @@ public class Ticker implements Serializable {
         Ticker other = (Ticker) obj;
         if (instrumentType != other.instrumentType)
             return false;
+        if (symbol == null) {
+            if (other.symbol != null)
+                return false;
+        } else if (!symbol.equals(other.symbol))
+            return false;
         if (id == null) {
             if (other.id != null)
                 return false;

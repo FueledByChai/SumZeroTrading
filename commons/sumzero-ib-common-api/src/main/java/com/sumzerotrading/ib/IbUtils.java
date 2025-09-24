@@ -92,28 +92,50 @@ public class IbUtils {
     }
 
     public static String getTif(OrderTicket.Duration duration, OrderTicket.Type orderType) {
-        if (duration == null) {
+        String tif = null;
+
+        if (duration == null && orderType == null) {
             return "DAY";
         }
 
-        switch (duration) {
-        case DAY:
-            return "DAY";
-        case GOOD_UNTIL_CANCELED:
-            return "GTC";
-        case GOOD_UNTIL_TIME:
-            return "GTD";
-        case FILL_OR_KILL:
-            return "IOC";
-        default:
+        if (duration != null) {
+            switch (duration) {
+            case DAY:
+                tif = "DAY";
+                break;
+            case GOOD_UNTIL_CANCELED:
+                tif = "GTC";
+                break;
+            case GOOD_UNTIL_TIME:
+                tif = "GTD";
+                break;
+            case FILL_OR_KILL:
+                tif = "FOK";
+                break;
+            case IMMEDIATE_OR_CANCEL:
+                tif = "IOC";
+                break;
+            default:
+                tif = null;
+            }
+
+        } else if (orderType != null) {
             switch (orderType) {
             case MARKET_ON_OPEN:
-                return "OPG";
+                tif = "OPG";
+                break;
             default:
-                throw new IllegalStateException(
-                        "Unknown duration: " + duration + " and unknown order type: " + orderType);
+                tif = null;
             }
         }
+
+        if (tif == null) {
+            throw new IllegalStateException(
+                    "Unable to determine TIF for duration: " + duration + " and order type: " + orderType);
+        } else {
+            return tif;
+        }
+
     }
 
     public static String getSecurityType(InstrumentType instrumentType) {
