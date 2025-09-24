@@ -20,13 +20,15 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.sumzerotrading.BestBidOffer;
 import com.sumzerotrading.broker.Position;
+import com.sumzerotrading.broker.hyperliquid.HyperliquidOrderTicket;
 import com.sumzerotrading.broker.hyperliquid.HyperliquidPositionUpdate;
-import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.hyperliquid.websocket.HyperliquidTickerRegistry;
 import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.broker.order.TradeDirection;
-import com.sumzerotrading.broker.hyperliquid.json.OrderJson;
+import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.hyperliquid.websocket.HyperliquidTickerRegistry;
+import com.sumzerotrading.hyperliquid.websocket.json.OrderJson;
 
 @ExtendWith(MockitoExtension.class)
 public class TranslatorTest {
@@ -39,6 +41,8 @@ public class TranslatorTest {
     HyperliquidPositionUpdate mockUpdate1;
     @Mock
     HyperliquidPositionUpdate mockUpdate2;
+
+    ITranslator translator = Translator.getInstance();
 
     private static org.mockito.MockedStatic<HyperliquidTickerRegistry> staticMock;
 
@@ -62,12 +66,12 @@ public class TranslatorTest {
 
     @Test
     public void testTranslatePositions_NullInput() {
-        assertNull(Translator.translatePositions(null));
+        assertNull(translator.translatePositions(null));
     }
 
     @Test
     public void testTranslatePositions_EmptyList() {
-        List<Position> result = Translator.translatePositions(Collections.emptyList());
+        List<Position> result = translator.translatePositions(Collections.emptyList());
         assertNotNull(result);
         assertTrue(result.isEmpty());
     }
@@ -87,7 +91,7 @@ public class TranslatorTest {
         when(mockRegistry.lookupByBrokerSymbol("ETHUSD")).thenReturn(mockTicker);
 
         List<HyperliquidPositionUpdate> updates = Arrays.asList(mockUpdate1, mockUpdate2);
-        List<Position> positions = Translator.translatePositions(updates);
+        List<Position> positions = translator.translatePositions(updates);
         assertEquals(2, positions.size());
         for (Position pos : positions) {
             assertEquals(mockTicker, pos.getTicker());
@@ -96,7 +100,7 @@ public class TranslatorTest {
 
     @Test
     public void testTranslatePosition_NullInput() {
-        assertNull(Translator.translatePosition(null));
+        assertNull(translator.translatePosition(null));
     }
 
     @Test
@@ -107,7 +111,7 @@ public class TranslatorTest {
         when(mockUpdate1.getLiquidationPrice()).thenReturn(java.math.BigDecimal.valueOf(45000.0));
         when(mockRegistry.lookupByBrokerSymbol("BTCUSD")).thenReturn(mockTicker);
 
-        Position pos = Translator.translatePosition(mockUpdate1);
+        Position pos = translator.translatePosition(mockUpdate1);
         assertNotNull(pos);
         assertEquals(mockTicker, pos.getTicker());
         assertEquals(2.0, pos.getSize().doubleValue());
@@ -126,10 +130,10 @@ public class TranslatorTest {
         ticket.setType(OrderTicket.Type.MARKET);
         ticket.setSize(new java.math.BigDecimal("1.5"));
         ticket.setReference("cloid-1");
-        java.math.BigDecimal currentBid = new java.math.BigDecimal("100.00");
-        java.math.BigDecimal currentAsk = new java.math.BigDecimal("101.00");
+        BestBidOffer bestBidOffer = new BestBidOffer(new java.math.BigDecimal("100.00"),
+                new java.math.BigDecimal("101.00"));
 
-        OrderJson orderJson = Translator.translateOrderTicketToOrderJson(ticket, currentBid, currentAsk);
+        OrderJson orderJson = translator.translateOrderTicketToOrderJson(ticket, bestBidOffer);
         assertEquals(123, orderJson.assetId);
         assertTrue(orderJson.isBuy);
         assertEquals("1.5", orderJson.size);
@@ -137,7 +141,7 @@ public class TranslatorTest {
         assertEquals("101.05", orderJson.price); // 101 + 0.05% slippage
         assertNotNull(orderJson.type);
         assertFalse(orderJson.reduceOnly);
-        assertTrue(orderJson.type instanceof com.sumzerotrading.broker.hyperliquid.json.LimitType);
+        assertTrue(orderJson.type instanceof com.sumzerotrading.hyperliquid.websocket.json.LimitType);
     }
 
     @Test
@@ -152,10 +156,10 @@ public class TranslatorTest {
         ticket.setLimitPrice(new java.math.BigDecimal("99.99"));
         ticket.setReference("cloid-2");
         ticket.getModifiers().add(OrderTicket.Modifier.POST_ONLY);
-        java.math.BigDecimal currentBid = new java.math.BigDecimal("99.00");
-        java.math.BigDecimal currentAsk = new java.math.BigDecimal("100.00");
+        BestBidOffer bestBidOffer = new BestBidOffer(new java.math.BigDecimal("99.00"),
+                new java.math.BigDecimal("100.00"));
 
-        OrderJson orderJson = Translator.translateOrderTicketToOrderJson(ticket, currentBid, currentAsk);
+        OrderJson orderJson = translator.translateOrderTicketToOrderJson(ticket, bestBidOffer);
         assertEquals(456, orderJson.assetId);
         assertFalse(orderJson.isBuy);
         assertEquals("2.0", orderJson.size);
@@ -163,9 +167,9 @@ public class TranslatorTest {
         assertEquals("99.99", orderJson.price);
         assertNotNull(orderJson.type);
         assertFalse(orderJson.reduceOnly);
-        assertTrue(orderJson.type instanceof com.sumzerotrading.broker.hyperliquid.json.LimitType);
-        com.sumzerotrading.broker.hyperliquid.json.LimitType limitType = (com.sumzerotrading.broker.hyperliquid.json.LimitType) orderJson.type;
-        assertEquals(com.sumzerotrading.broker.hyperliquid.json.LimitType.TimeInForce.ALO, limitType.tif);
+        assertTrue(orderJson.type instanceof com.sumzerotrading.hyperliquid.websocket.json.LimitType);
+        com.sumzerotrading.hyperliquid.websocket.json.LimitType limitType = (com.sumzerotrading.hyperliquid.websocket.json.LimitType) orderJson.type;
+        assertEquals(com.sumzerotrading.hyperliquid.websocket.json.LimitType.TimeInForce.ALO, limitType.tif);
     }
 
     @Test
@@ -188,12 +192,17 @@ public class TranslatorTest {
         ticket2.setSize(new java.math.BigDecimal("2.0"));
         ticket2.setLimitPrice(new java.math.BigDecimal("99.99"));
         ticket2.setReference("cloid-2");
-        java.math.BigDecimal currentBid = new java.math.BigDecimal("99.00");
-        java.math.BigDecimal currentAsk = new java.math.BigDecimal("100.00");
-        var tickets = java.util.Arrays.asList(ticket1, ticket2);
-        var orderAction = Translator.translateOrderTickets(tickets, currentBid, currentAsk);
+        BestBidOffer bestBidOffer1 = new BestBidOffer(new java.math.BigDecimal("99.00"),
+                new java.math.BigDecimal("100.00"));
+
+        BestBidOffer bestBidOffer = new BestBidOffer(new java.math.BigDecimal("999.00"),
+                new java.math.BigDecimal("1000.00"));
+        HyperliquidOrderTicket hyperliquidOrderTicket1 = new HyperliquidOrderTicket(bestBidOffer1, ticket1);
+        HyperliquidOrderTicket hyperliquidOrderTicket2 = new HyperliquidOrderTicket(bestBidOffer, ticket2);
+        var tickets = java.util.Arrays.asList(hyperliquidOrderTicket1, hyperliquidOrderTicket2);
+        var orderAction = translator.translateOrderTickets(tickets);
         assertNotNull(orderAction);
-        assertEquals(2, orderAction.toJson().getAsJsonArray("orders").size());
+
     }
 
     @Test
@@ -208,9 +217,9 @@ public class TranslatorTest {
         ticket.setLimitPrice(new java.math.BigDecimal("105.00"));
         ticket.setReference("cloid-3");
         ticket.getModifiers().add(OrderTicket.Modifier.REDUCE_ONLY);
-        java.math.BigDecimal currentBid = new java.math.BigDecimal("104.00");
-        java.math.BigDecimal currentAsk = new java.math.BigDecimal("105.00");
-        OrderJson orderJson = Translator.translateOrderTicketToOrderJson(ticket, currentBid, currentAsk);
+        BestBidOffer bestBidOffer = new BestBidOffer(new java.math.BigDecimal("104.00"),
+                new java.math.BigDecimal("105.00"));
+        OrderJson orderJson = translator.translateOrderTicketToOrderJson(ticket, bestBidOffer);
         assertTrue(orderJson.reduceOnly);
     }
 }

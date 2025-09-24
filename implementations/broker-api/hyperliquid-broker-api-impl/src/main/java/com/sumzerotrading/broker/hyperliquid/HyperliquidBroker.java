@@ -33,8 +33,10 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sumzerotrading.BestBidOffer;
 import com.sumzerotrading.broker.AbstractBasicBroker;
 import com.sumzerotrading.broker.Position;
+import com.sumzerotrading.broker.hyperliquid.translators.ITranslator;
 import com.sumzerotrading.broker.hyperliquid.translators.Translator;
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderTicket;
@@ -56,9 +58,12 @@ public class HyperliquidBroker extends AbstractBasicBroker implements IWebSocket
     protected static Logger logger = LoggerFactory.getLogger(HyperliquidBroker.class);
 
     protected IHyperliquidRestApi restApi;
+
     protected String jwtToken;
     protected int jwtRefreshInSeconds = 60;
     protected boolean connected = false;
+    protected Map<String, BestBidOffer> bestBidOfferMap = new HashMap<>();
+    protected ITranslator translator = Translator.getInstance();
 
     protected List<Position> currentPositions = new ArrayList<>();
 
@@ -122,9 +127,9 @@ public class HyperliquidBroker extends AbstractBasicBroker implements IWebSocket
     @Override
     public void placeOrder(OrderTicket order) {
         checkConnected();
-        // String orderId = restApi.placeOrder(jwtToken, order);
-        // order.setOrderId(orderId);
-        // tradeOrderMap.put(orderId, order);
+        BestBidOffer bbo = bestBidOfferMap.get(order.getTicker().getSymbol());
+        HyperliquidOrderTicket hyperliquidOrderTicket = new HyperliquidOrderTicket(bbo, order);
+        restApi.placeOrder(translator.translateOrderTickets(hyperliquidOrderTicket));
     }
 
     @Override
@@ -324,7 +329,7 @@ public class HyperliquidBroker extends AbstractBasicBroker implements IWebSocket
         double accountValue = event.getAccountValue();
         fireAccountEquityUpdated(accountValue);
 
-        currentPositions = Translator.translatePositions(event.getPositions());
+        currentPositions = translator.translatePositions(event.getPositions());
 
         List<HyperliquidPositionUpdate> positions = event.getPositions();
         for (HyperliquidPositionUpdate pos : positions) {

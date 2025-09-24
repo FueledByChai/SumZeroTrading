@@ -5,38 +5,58 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.sumzerotrading.BestBidOffer;
 import com.sumzerotrading.broker.Position;
+import com.sumzerotrading.broker.hyperliquid.HyperliquidOrderTicket;
 import com.sumzerotrading.broker.hyperliquid.HyperliquidPositionUpdate;
-import com.sumzerotrading.broker.hyperliquid.json.LimitType;
-import com.sumzerotrading.broker.hyperliquid.json.OrderAction;
-import com.sumzerotrading.broker.hyperliquid.json.OrderJson;
 import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.hyperliquid.websocket.HyperliquidTickerRegistry;
+import com.sumzerotrading.hyperliquid.websocket.json.LimitType;
+import com.sumzerotrading.hyperliquid.websocket.json.OrderAction;
+import com.sumzerotrading.hyperliquid.websocket.json.OrderJson;
+import com.sumzerotrading.hyperliquid.websocket.json.PlaceOrderRequest;
 
-public class Translator {
+public class Translator implements ITranslator {
 
     protected static final double SLIPPAGE_PERCENTAGE = 0.05; // 0.25%
+    protected static ITranslator instance;
 
-    public static OrderAction translateOrderTicket(OrderTicket ticket, BigDecimal currentBid, BigDecimal currentAsk) {
-        List<OrderJson> orders = new ArrayList<>();
-
-        orders.add(translateOrderTicketToOrderJson(ticket, currentBid, currentAsk));
-
-        return new OrderAction(orders);
-    }
-
-    public static OrderAction translateOrderTickets(List<OrderTicket> tickets, BigDecimal currentBid,
-            BigDecimal currentAsk) {
-        List<OrderJson> orders = new ArrayList<>();
-        for (OrderTicket ticket : tickets) {
-            orders.add(translateOrderTicketToOrderJson(ticket, currentBid, currentAsk));
+    public static ITranslator getInstance() {
+        if (instance == null) {
+            instance = new Translator();
         }
+        return instance;
+    }
+
+    @Override
+    public OrderAction translateOrderTicket(OrderTicket ticket, BestBidOffer bestBidOffer) {
+        List<OrderJson> orders = new ArrayList<>();
+
+        orders.add(translateOrderTicketToOrderJson(ticket, bestBidOffer));
+
         return new OrderAction(orders);
     }
 
-    public static OrderJson translateOrderTicketToOrderJson(OrderTicket ticket, BigDecimal currentBid,
-            BigDecimal currentAsk) {
+    @Override
+    public PlaceOrderRequest translateOrderTickets(HyperliquidOrderTicket ticket) {
+        List<OrderJson> orders = new ArrayList<>();
+        orders.add(translateOrderTicketToOrderJson(ticket.getOrderTicket(), ticket.getBestBidOffer()));
+        return new PlaceOrderRequest(new OrderAction(orders), 0, null);
+    }
+
+    @Override
+    public PlaceOrderRequest translateOrderTickets(List<HyperliquidOrderTicket> hyperliquidOrderTickets) {
+        List<OrderJson> orders = new ArrayList<>();
+        for (HyperliquidOrderTicket ticket : hyperliquidOrderTickets) {
+            orders.add(translateOrderTicketToOrderJson(ticket.getOrderTicket(), ticket.getBestBidOffer()));
+        }
+        OrderAction action = new OrderAction(orders);
+        return new PlaceOrderRequest(action, 0, null);
+    }
+
+    @Override
+    public OrderJson translateOrderTicketToOrderJson(OrderTicket ticket, BestBidOffer bestBidOffer) {
         OrderJson order = new OrderJson();
         order.assetId = ticket.getTicker().getIdAsInt();
         order.isBuy = ticket.isBuyOrder();
@@ -45,10 +65,13 @@ public class Translator {
         order.reduceOnly = false;
 
         if (ticket.getType() == OrderTicket.Type.MARKET) {
+            if (bestBidOffer == null || bestBidOffer.getBid() == null || bestBidOffer.getAsk() == null) {
+                throw new IllegalArgumentException("BestBid/BestAsk is required for market orders.");
+            }
             if (ticket.isBuyOrder()) {
-                order.price = getBuySlippage(ticket.getTicker(), currentAsk);
+                order.price = getBuySlippage(ticket.getTicker(), bestBidOffer.getAsk());
             } else {
-                order.price = getSellSlippage(ticket.getTicker(), currentBid);
+                order.price = getSellSlippage(ticket.getTicker(), bestBidOffer.getBid());
             }
             order.type = new LimitType(LimitType.TimeInForce.IOC);
         } else if (ticket.getType() == OrderTicket.Type.LIMIT) {
@@ -72,13 +95,15 @@ public class Translator {
         return order;
     }
 
-    public static List<Position> translatePositions(List<HyperliquidPositionUpdate> positionUpdates) {
+    @Override
+    public List<Position> translatePositions(List<HyperliquidPositionUpdate> positionUpdates) {
         if (positionUpdates == null)
             return null;
-        return positionUpdates.stream().map(Translator::translatePosition).collect(Collectors.toList());
+        return positionUpdates.stream().map(this::translatePosition).collect(Collectors.toList());
     }
 
-    public static Position translatePosition(HyperliquidPositionUpdate positionUpdate) {
+    @Override
+    public Position translatePosition(HyperliquidPositionUpdate positionUpdate) {
         if (positionUpdate == null)
             return null;
         Ticker ticker = HyperliquidTickerRegistry.getInstance().lookupByBrokerSymbol(positionUpdate.getTicker());
@@ -87,12 +112,14 @@ public class Translator {
                 .setLiquidationPrice(positionUpdate.getLiquidationPrice());
     }
 
-    public static String getBuySlippage(Ticker ticker, BigDecimal currentAsk) {
+    @Override
+    public String getBuySlippage(Ticker ticker, BigDecimal currentAsk) {
         BigDecimal slippage = currentAsk.multiply(BigDecimal.valueOf(SLIPPAGE_PERCENTAGE / 100));
         return ticker.formatPrice(currentAsk.add(slippage)).toPlainString();
     }
 
-    public static String getSellSlippage(Ticker ticker, BigDecimal currentBid) {
+    @Override
+    public String getSellSlippage(Ticker ticker, BigDecimal currentBid) {
         BigDecimal slippage = currentBid.multiply(BigDecimal.valueOf(SLIPPAGE_PERCENTAGE / 100));
         return ticker.formatPrice(currentBid.subtract(slippage)).toPlainString();
     }

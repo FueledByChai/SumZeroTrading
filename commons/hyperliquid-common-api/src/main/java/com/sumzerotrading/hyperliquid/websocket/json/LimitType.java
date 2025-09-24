@@ -1,4 +1,4 @@
-package com.sumzerotrading.broker.hyperliquid.json;
+package com.sumzerotrading.hyperliquid.websocket.json;
 
 import com.google.gson.JsonObject;
 

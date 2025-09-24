@@ -17,11 +17,12 @@ public class InstrumentDescriptor {
     protected InstrumentType instrumentType;
     protected BigDecimal contractMultiplier = BigDecimal.ONE;
     protected int maxLeverage = 1;
+    protected String instrumentId;
 
     public InstrumentDescriptor(InstrumentType instrumentType, Exchange exchange, String commonSymbol,
             String exchangeSymbol, String baseCurrency, String quoteCurrency, BigDecimal orderSizeIncrement,
             BigDecimal priceTickSize, int minNotionalOrderSize, BigDecimal minOrderSize, int fundingPeriodHours,
-            BigDecimal contractMultiplier, int maxLeverage) {
+            BigDecimal contractMultiplier, int maxLeverage, String instrumentId) {
         this.instrumentType = instrumentType;
         this.exchange = exchange;
         this.commonSymbol = commonSymbol;
@@ -35,6 +36,7 @@ public class InstrumentDescriptor {
         this.minOrderSize = minOrderSize;
         this.fundingPeriodHours = fundingPeriodHours;
         this.contractMultiplier = contractMultiplier;
+        this.instrumentId = instrumentId;
     }
 
     public Exchange getExchange() {
@@ -89,6 +91,10 @@ public class InstrumentDescriptor {
         return maxLeverage;
     }
 
+    public String getInstrumentId() {
+        return instrumentId;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -106,6 +112,7 @@ public class InstrumentDescriptor {
         result = prime * result + fundingPeriodHours;
         result = prime * result + ((contractMultiplier == null) ? 0 : contractMultiplier.hashCode());
         result = prime * result + ((minOrderSize == null) ? 0 : minOrderSize.hashCode());
+        result = prime * result + ((instrumentId == null) ? 0 : instrumentId.hashCode());
         return result;
     }
 
@@ -171,6 +178,11 @@ public class InstrumentDescriptor {
             return false;
         if (maxLeverage != other.maxLeverage)
             return false;
+        if (instrumentId == null) {
+            if (other.instrumentId != null)
+                return false;
+        } else if (!instrumentId.equals(other.instrumentId))
+            return false;
         return true;
     }
 
@@ -181,7 +193,7 @@ public class InstrumentDescriptor {
                 + ", quoteCurrency=" + quoteCurrency + ", orderSizeIncrement=" + orderSizeIncrement + ", priceTickSize="
                 + priceTickSize + ", minNotionalOrderSize=" + minNotionalOrderSize + ", fundingPeriodHours="
                 + fundingPeriodHours + ", contractMultiplier=" + contractMultiplier + ", minOrderSize=" + minOrderSize
-                + ", maxLeverage=" + maxLeverage + "]";
+                + ", maxLeverage=" + maxLeverage + ", instrumentId=" + instrumentId + "]";
     }
 
 }

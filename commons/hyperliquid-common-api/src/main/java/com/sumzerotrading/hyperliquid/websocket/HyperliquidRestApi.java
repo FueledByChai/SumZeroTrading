@@ -25,6 +25,7 @@ import com.sumzerotrading.data.InstrumentDescriptor;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.SumZeroException;
 import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.hyperliquid.websocket.json.PlaceOrderRequest;
 
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -77,6 +78,37 @@ public class HyperliquidRestApi implements IHyperliquidRestApi {
         // Register the custom adapter
         this.gson = new GsonBuilder().registerTypeAdapter(ZonedDateTime.class, new ZonedDateTimeAdapter()).create();
         publicApiOnly = accountAddressString == null || privateKeyString == null;
+    }
+
+    public String placeOrder(PlaceOrderRequest request) {
+        if (publicApiOnly)
+            throw new IllegalStateException("Cannot place order with public API only instance.");
+
+        return executeWithRetry(() -> {
+            String path = "/exchange";
+            String url = baseUrl + path;
+            HttpUrl.Builder urlBuilder = HttpUrl.parse(url).newBuilder();
+            String newUrl = urlBuilder.build().toString();
+            String json = gson.toJson(request);
+            RequestBody body = RequestBody.create(json, MediaType.parse("application/json"));
+
+            Request httpRequest = new Request.Builder().url(newUrl).post(body).build();
+            logger.info("Request: " + httpRequest);
+
+            try (Response response = client.newCall(httpRequest).execute()) {
+                if (!response.isSuccessful()) {
+                    logger.error("Error response: " + response.body().string());
+                    throw new IOException("Unexpected code " + response);
+                }
+
+                String responseBody = response.body().string();
+                logger.info("Response output: " + responseBody);
+                return responseBody;
+            } catch (IOException e) {
+                logger.error(e.getMessage(), e);
+                throw new RuntimeException(e);
+            }
+        }, 3, 500);
     }
 
     @Override
@@ -197,6 +229,7 @@ public class HyperliquidRestApi implements IHyperliquidRestApi {
             // Parse each instrument from the universe array
             for (int i = 0; i < universe.size(); i++) {
                 JsonObject instrumentObj = universe.get(i).getAsJsonObject();
+                int assetId = 10000 + i; // Assign a unique assetId based on index
 
                 // Skip delisted instruments (those with marginTableId != null)
                 boolean isDelisted = instrumentObj.has("isDelisted") && !instrumentObj.get("isDelisted").isJsonNull();
@@ -248,7 +281,7 @@ public class HyperliquidRestApi implements IHyperliquidRestApi {
                                                                                                                  // HYPERLIQUID
                         commonSymbol, exchangeSymbol, baseCurrency, quoteCurrency, orderSizeIncrement, priceTickSize,
                         minNotionalOrderSize, null, // no settlement price for perpetuals
-                        fundingPeriodHours, BigDecimal.ONE, maxLeverage);
+                        fundingPeriodHours, BigDecimal.ONE, maxLeverage, assetId + ""); // Use assetId as instrumentId
 
                 // Note: Additional Hyperliquid-specific properties like szDecimals,
                 // marginTableId,
