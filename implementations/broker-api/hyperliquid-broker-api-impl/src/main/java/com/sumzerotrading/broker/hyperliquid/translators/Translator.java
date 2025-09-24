@@ -46,9 +46,9 @@ public class Translator {
 
         if (ticket.getType() == OrderTicket.Type.MARKET) {
             if (ticket.isBuyOrder()) {
-                order.price = getBuySlippage(currentAsk);
+                order.price = getBuySlippage(ticket.getTicker(), currentAsk);
             } else {
-                order.price = getSellSlippage(currentBid);
+                order.price = getSellSlippage(ticket.getTicker(), currentBid);
             }
             order.type = new LimitType(LimitType.TimeInForce.IOC);
         } else if (ticket.getType() == OrderTicket.Type.LIMIT) {
@@ -87,13 +87,13 @@ public class Translator {
                 .setLiquidationPrice(positionUpdate.getLiquidationPrice());
     }
 
-    public static String getBuySlippage(BigDecimal currentAsk) {
+    public static String getBuySlippage(Ticker ticker, BigDecimal currentAsk) {
         BigDecimal slippage = currentAsk.multiply(BigDecimal.valueOf(SLIPPAGE_PERCENTAGE / 100));
-        return currentAsk.add(slippage).toPlainString();
+        return ticker.formatPrice(currentAsk.add(slippage)).toPlainString();
     }
 
-    public static String getSellSlippage(BigDecimal currentBid) {
+    public static String getSellSlippage(Ticker ticker, BigDecimal currentBid) {
         BigDecimal slippage = currentBid.multiply(BigDecimal.valueOf(SLIPPAGE_PERCENTAGE / 100));
-        return currentBid.subtract(slippage).toPlainString();
+        return ticker.formatPrice(currentBid.subtract(slippage)).toPlainString();
     }
 }

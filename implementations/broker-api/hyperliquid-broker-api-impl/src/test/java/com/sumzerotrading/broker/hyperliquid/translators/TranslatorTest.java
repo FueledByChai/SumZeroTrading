@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -118,6 +119,7 @@ public class TranslatorTest {
     public void testTranslateOrderTicketToOrderJson_MarketBuy() {
         Ticker ticker = mock(Ticker.class);
         when(ticker.getIdAsInt()).thenReturn(123);
+        when(ticker.formatPrice(new java.math.BigDecimal("101.0505000"))).thenReturn(new BigDecimal("101.05"));
         OrderTicket ticket = new OrderTicket();
         ticket.setTicker(ticker);
         ticket.setTradeDirection(TradeDirection.BUY);
@@ -132,7 +134,7 @@ public class TranslatorTest {
         assertTrue(orderJson.isBuy);
         assertEquals("1.5", orderJson.size);
         assertEquals("cloid-1", orderJson.clientOrderId);
-        assertEquals("101.0505", orderJson.price); // 101 + 0.05% slippage
+        assertEquals("101.05", orderJson.price); // 101 + 0.05% slippage
         assertNotNull(orderJson.type);
         assertFalse(orderJson.reduceOnly);
         assertTrue(orderJson.type instanceof com.sumzerotrading.broker.hyperliquid.json.LimitType);
@@ -170,6 +172,7 @@ public class TranslatorTest {
     public void testTranslateOrderTicket_MultipleTickets() {
         Ticker ticker1 = mock(Ticker.class);
         when(ticker1.getIdAsInt()).thenReturn(1);
+        when(ticker1.formatPrice(new java.math.BigDecimal("100.0500000"))).thenReturn(new BigDecimal("100.05"));
         Ticker ticker2 = mock(Ticker.class);
         when(ticker2.getIdAsInt()).thenReturn(2);
         OrderTicket ticket1 = new OrderTicket();
