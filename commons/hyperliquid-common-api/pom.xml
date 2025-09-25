@@ -32,6 +32,21 @@
             <scope>test</scope>
         </dependency> 
 
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.19.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.msgpack</groupId>
+            <artifactId>jackson-dataformat-msgpack</artifactId>
+            <version>0.9.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.web3j</groupId>
+            <artifactId>core</artifactId>
+            <version>4.10.3</version>
+        </dependency>
 
                 <dependency>
             <groupId>com.google.code.gson</groupId>

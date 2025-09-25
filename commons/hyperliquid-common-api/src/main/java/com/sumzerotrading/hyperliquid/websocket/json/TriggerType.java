@@ -13,14 +13,14 @@ public class TriggerType extends OrderType {
         this.tpsl = tpsl;
     }
 
-    @Override
-    public JsonObject toJson() {
-        JsonObject obj = new JsonObject();
-        JsonObject trigger = new JsonObject();
-        trigger.addProperty("isMarket", isMarket);
-        trigger.addProperty("triggerPx", triggerPx);
-        trigger.addProperty("tpsl", tpsl);
-        obj.add("trigger", trigger);
-        return obj;
-    }
+    // @Override
+    // public JsonObject toJson() {
+    // JsonObject obj = new JsonObject();
+    // JsonObject trigger = new JsonObject();
+    // trigger.addProperty("isMarket", isMarket);
+    // trigger.addProperty("triggerPx", triggerPx);
+    // trigger.addProperty("tpsl", tpsl);
+    // obj.add("trigger", trigger);
+    // return obj;
+    // }
 }

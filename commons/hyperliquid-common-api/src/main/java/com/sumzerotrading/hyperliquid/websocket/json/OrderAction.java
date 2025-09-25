@@ -1,16 +1,20 @@
 package com.sumzerotrading.hyperliquid.websocket.json;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.util.List;
+import java.util.Map;
 
 public class OrderAction {
-    private String type = "order";
-    private List<OrderJson> orders;
-    private String grouping;
-    private Builder builder;
+    public String type = "order";
+    public List<Order> orders;
+    public String grouping = "na"; // "na" | "normalTpsl" | "positionTpsl"
 
-    public OrderAction(List<OrderJson> orders) {
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public Map<String, Object> builder; // optional: {"b":"0x..","f":10}
+
+    public OrderAction(List<Order> orders) {
         this.orders = orders;
         this.grouping = "na";
         this.builder = null;
