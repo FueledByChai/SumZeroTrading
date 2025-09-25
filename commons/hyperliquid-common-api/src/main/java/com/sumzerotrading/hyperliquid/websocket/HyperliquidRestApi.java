@@ -25,7 +25,7 @@ import com.sumzerotrading.data.InstrumentDescriptor;
 import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.SumZeroException;
 import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.hyperliquid.websocket.json.PlaceOrderRequest;
+import com.sumzerotrading.hyperliquid.websocket.json.SignableExchangeOrderRequest;
 
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -80,7 +80,7 @@ public class HyperliquidRestApi implements IHyperliquidRestApi {
         publicApiOnly = accountAddressString == null || privateKeyString == null;
     }
 
-    public String placeOrder(PlaceOrderRequest request) {
+    public String placeOrder(SignableExchangeOrderRequest request) {
         if (publicApiOnly)
             throw new IllegalStateException("Cannot place order with public API only instance.");
 

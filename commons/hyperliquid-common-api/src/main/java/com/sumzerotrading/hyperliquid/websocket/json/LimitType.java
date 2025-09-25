@@ -1,16 +1,35 @@
 package com.sumzerotrading.hyperliquid.websocket.json;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.annotation.JsonValue;
 
-@JsonPropertyOrder({ "limit" })
-public class LimitType extends OrderType {
+@JsonPropertyOrder({ "tif" })
+public class LimitType implements OrderType {
 
     public enum TimeInForce {
-        ALO, IOC, GTC
+        ALO("Alo"), IOC("Ioc"), GTC("Gtc");
+
+        private final String wireName;
+
+        TimeInForce(String wireName) {
+            this.wireName = wireName;
+        }
+
+        @JsonValue
+        public String getWireName() {
+            return wireName;
+        }
+
+        @Override
+        public String toString() {
+            return wireName;
+        }
     }
 
-    public TimeInForce tif; // "Alo" | "Ioc" | "Gtc"
+    public TimeInForce tif = TimeInForce.GTC;
+
+    public LimitType() {
+    }
 
     public LimitType(TimeInForce tif) {
         this.tif = tif;

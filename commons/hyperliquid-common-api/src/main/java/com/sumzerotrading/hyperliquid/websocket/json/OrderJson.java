@@ -1,29 +1,32 @@
 package com.sumzerotrading.hyperliquid.websocket.json;
 
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
+@JsonPropertyOrder({ "a", "b", "p", "s", "r", "t", "c" })
 public class OrderJson {
-    public Number assetId; // asset
+
+    @JsonProperty("a")
+    public int assetId; // asset
+
+    @JsonProperty("b")
     public Boolean isBuy; // isBuy
+
+    @JsonProperty("p")
     public String price; // price
+
+    @JsonProperty("s")
     public String size; // size
+
+    @JsonProperty("r")
     public Boolean reduceOnly; // reduceOnly
+
+    @JsonProperty("t")
     public OrderType type; // type (limit or trigger)
 
-    // Client Order ID (cloid) is an optional 128 bit hex string, e.g.
-    // 0x1234567890abcdef1234567890abcdef
+    @JsonProperty("c")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public String clientOrderId = null; // clientId/cloid (optional)
 
-    // public JsonObject toJson() {
-    // JsonObject obj = new JsonObject();
-    // obj.addProperty("a", assetId);
-    // obj.addProperty("b", isBuy);
-    // obj.addProperty("p", price);
-    // obj.addProperty("s", size);
-    // obj.addProperty("r", reduceOnly);
-    // obj.add("t", type.toJson());
-    // if (clientOrderId != null)
-    // obj.addProperty("c", clientOrderId);
-    // return obj;
-    // }
 }

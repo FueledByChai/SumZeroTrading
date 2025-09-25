@@ -2,13 +2,13 @@ package com.sumzerotrading.hyperliquid.websocket;
 
 import com.sumzerotrading.data.InstrumentDescriptor;
 import com.sumzerotrading.data.InstrumentType;
-import com.sumzerotrading.hyperliquid.websocket.json.PlaceOrderRequest;
+import com.sumzerotrading.hyperliquid.websocket.json.SignableExchangeOrderRequest;
 
 public interface IHyperliquidRestApi {
 
     boolean isPublicApiOnly();
 
-    String placeOrder(PlaceOrderRequest order);
+    String placeOrder(SignableExchangeOrderRequest order);
 
     InstrumentDescriptor getInstrumentDescriptor(String symbol);
 
