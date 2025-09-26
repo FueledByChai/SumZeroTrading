@@ -229,7 +229,7 @@ public class HyperliquidRestApi implements IHyperliquidRestApi {
             // Parse each instrument from the universe array
             for (int i = 0; i < universe.size(); i++) {
                 JsonObject instrumentObj = universe.get(i).getAsJsonObject();
-                int assetId = 10000 + i; // Assign a unique assetId based on index
+                int assetId = i; // Assign a unique assetId based on index
 
                 // Skip delisted instruments (those with marginTableId != null)
                 boolean isDelisted = instrumentObj.has("isDelisted") && !instrumentObj.get("isDelisted").isJsonNull();

@@ -7,14 +7,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class SubmitExchangeRequest extends SignableExchangeOrderRequest {
 
     @JsonProperty("signature")
-    private SignatureFields signature;
-
-    public SignatureFields getSignature() {
-        return signature;
-    }
-
-    public void setSignature(SignatureFields signature) {
-        this.signature = signature;
-    }
+    public SignatureFields signature;
 
 }
