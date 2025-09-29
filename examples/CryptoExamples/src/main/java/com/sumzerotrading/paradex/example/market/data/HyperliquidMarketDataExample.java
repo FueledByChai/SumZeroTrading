@@ -22,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.hyperliquid.websocket.HyperliquidTickerRegistry;
+import com.sumzerotrading.hyperliquid.ws.HyperliquidTickerRegistry;
 import com.sumzerotrading.marketdata.ILevel1Quote;
 import com.sumzerotrading.marketdata.hyperliquid.HyperliquidQuoteEngine;
 

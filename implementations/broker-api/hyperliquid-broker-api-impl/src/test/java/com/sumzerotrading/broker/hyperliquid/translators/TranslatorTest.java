@@ -23,12 +23,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.sumzerotrading.BestBidOffer;
 import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.hyperliquid.HyperliquidOrderTicket;
-import com.sumzerotrading.broker.hyperliquid.HyperliquidPositionUpdate;
 import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.broker.order.TradeDirection;
 import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.hyperliquid.websocket.HyperliquidTickerRegistry;
-import com.sumzerotrading.hyperliquid.websocket.json.OrderJson;
+import com.sumzerotrading.hyperliquid.ws.HyperliquidTickerRegistry;
+import com.sumzerotrading.hyperliquid.ws.json.OrderJson;
+import com.sumzerotrading.hyperliquid.ws.json.LimitType;
+import com.sumzerotrading.hyperliquid.ws.listeners.accountinfo.HyperliquidPositionUpdate;
 
 @ExtendWith(MockitoExtension.class)
 public class TranslatorTest {
@@ -141,7 +142,7 @@ public class TranslatorTest {
         assertEquals("101.05", orderJson.price); // 101 + 0.05% slippage
         assertNotNull(orderJson.type);
         assertFalse(orderJson.reduceOnly);
-        assertTrue(orderJson.type instanceof com.sumzerotrading.hyperliquid.websocket.json.LimitType);
+        assertTrue(orderJson.type instanceof com.sumzerotrading.hyperliquid.ws.json.LimitType);
     }
 
     @Test
@@ -167,9 +168,9 @@ public class TranslatorTest {
         assertEquals("99.99", orderJson.price);
         assertNotNull(orderJson.type);
         assertFalse(orderJson.reduceOnly);
-        assertTrue(orderJson.type instanceof com.sumzerotrading.hyperliquid.websocket.json.LimitType);
-        com.sumzerotrading.hyperliquid.websocket.json.LimitType limitType = (com.sumzerotrading.hyperliquid.websocket.json.LimitType) orderJson.type;
-        assertEquals(com.sumzerotrading.hyperliquid.websocket.json.LimitType.TimeInForce.ALO, limitType.tif);
+        assertTrue(orderJson.type instanceof LimitType);
+        LimitType limitType = (LimitType) orderJson.type;
+        assertEquals(LimitType.TimeInForce.ALO, limitType.tif);
     }
 
     @Test

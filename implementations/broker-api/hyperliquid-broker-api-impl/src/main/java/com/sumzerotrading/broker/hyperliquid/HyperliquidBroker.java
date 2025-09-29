@@ -41,10 +41,18 @@ import com.sumzerotrading.broker.hyperliquid.translators.Translator;
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.hyperliquid.websocket.HyperliquidApiFactory;
-import com.sumzerotrading.hyperliquid.websocket.HyperliquidConfiguration;
-import com.sumzerotrading.hyperliquid.websocket.HyperliquidWebSocketClient;
-import com.sumzerotrading.hyperliquid.websocket.IHyperliquidRestApi;
+import com.sumzerotrading.hyperliquid.ws.HyperliquidApiFactory;
+import com.sumzerotrading.hyperliquid.ws.HyperliquidConfiguration;
+import com.sumzerotrading.hyperliquid.ws.HyperliquidWebSocketClient;
+import com.sumzerotrading.hyperliquid.ws.IHyperliquidRestApi;
+import com.sumzerotrading.hyperliquid.ws.IHyperliquidWebsocketApi;
+import com.sumzerotrading.hyperliquid.ws.json.EncodeUtil;
+import com.sumzerotrading.hyperliquid.ws.json.ws.SubmitPostResponse;
+import com.sumzerotrading.hyperliquid.ws.listeners.accountinfo.AccountWebSocketProcessor;
+import com.sumzerotrading.hyperliquid.ws.listeners.accountinfo.HyperliquidPositionUpdate;
+import com.sumzerotrading.hyperliquid.ws.listeners.accountinfo.IAccountUpdate;
+import com.sumzerotrading.hyperliquid.ws.listeners.orderupdates.WsOrderUpdate;
+import com.sumzerotrading.hyperliquid.ws.listeners.orderupdates.WsOrderWebSocketProcessor;
 import com.sumzerotrading.websocket.IWebSocketEventListener;
 
 /**
@@ -54,13 +62,12 @@ import com.sumzerotrading.websocket.IWebSocketEventListener;
  *
  * @author Rob Terpilowski
  */
-public class HyperliquidBroker extends AbstractBasicBroker implements IWebSocketEventListener<IAccountUpdate> {
+public class HyperliquidBroker extends AbstractBasicBroker {
     protected static Logger logger = LoggerFactory.getLogger(HyperliquidBroker.class);
 
     protected IHyperliquidRestApi restApi;
+    protected IHyperliquidWebsocketApi websocketApi;
 
-    protected String jwtToken;
-    protected int jwtRefreshInSeconds = 60;
     protected boolean connected = false;
     protected Map<String, BestBidOffer> bestBidOfferMap = new HashMap<>();
     protected ITranslator translator = Translator.getInstance();
@@ -70,11 +77,12 @@ public class HyperliquidBroker extends AbstractBasicBroker implements IWebSocket
     protected HyperliquidWebSocketClient accountInfoWSClient;
     protected HyperliquidWebSocketClient orderStatusWSClient;
     protected AccountWebSocketProcessor accountWebSocketProcessor;
+    protected WsOrderWebSocketProcessor orderStatusWebSocketProcessor;
 
     protected Set<OrderTicket> currencyOrderList = new HashSet<>();
     protected BlockingQueue<Integer> nextIdQueue = new LinkedBlockingQueue<>();
 
-    protected int nextOrderId = -1;
+    protected int nextOrderId = 1;
 
     protected ScheduledExecutorService authenticationScheduler;
     protected ExecutorService orderEventExecutor;
@@ -92,11 +100,11 @@ public class HyperliquidBroker extends AbstractBasicBroker implements IWebSocket
      */
     public HyperliquidBroker() {
         // Initialize using centralized configuration
-        this.restApi = HyperliquidApiFactory.getPrivateApi();
+        this.restApi = HyperliquidApiFactory.getRestApi();
+        this.websocketApi = HyperliquidApiFactory.getWebsocketApi();
 
         // Get JWT refresh interval from configuration
         HyperliquidConfiguration config = HyperliquidConfiguration.getInstance();
-        this.jwtRefreshInSeconds = config.getJwtRefreshSeconds();
 
         logger.info("HyperliquidBroker initialized with configuration: {}",
                 HyperliquidApiFactory.getConfigurationInfo());
@@ -109,32 +117,35 @@ public class HyperliquidBroker extends AbstractBasicBroker implements IWebSocket
      */
     public HyperliquidBroker(IHyperliquidRestApi restApi) {
         this.restApi = restApi;
-        this.jwtRefreshInSeconds = 60; // default
     }
 
     @Override
     public void cancelOrder(String id) {
         checkConnected();
-        // restApi.cancelOrder(jwtToken, id);
+        throw new UnsupportedOperationException("Cancel order by ID not implemented yet");
     }
 
     @Override
     public void cancelOrder(OrderTicket order) {
         checkConnected();
-        cancelOrder(order.getOrderId());
+        throw new UnsupportedOperationException("Cancel order by OrderTicket not implemented yet");
     }
 
     @Override
     public void placeOrder(OrderTicket order) {
         checkConnected();
+        order.setClientOrderId(getNextOrderId());
         BestBidOffer bbo = bestBidOfferMap.get(order.getTicker().getSymbol());
         HyperliquidOrderTicket hyperliquidOrderTicket = new HyperliquidOrderTicket(bbo, order);
-        restApi.placeOrder(translator.translateOrderTickets(hyperliquidOrderTicket));
+        SubmitPostResponse submittedOrders = websocketApi
+                .submitOrders(translator.translateOrderTickets(hyperliquidOrderTicket));
+        updateOrderIds(order, submittedOrders);
+
     }
 
     @Override
     public String getNextOrderId() {
-        return "";
+        return EncodeUtil.encode128BitHex(nextOrderId++ + "");
     }
 
     @Override
@@ -142,6 +153,7 @@ public class HyperliquidBroker extends AbstractBasicBroker implements IWebSocket
         // startAuthenticationScheduler();
         orderEventExecutor = Executors.newCachedThreadPool();
         startAccountInfoWSClient();
+        startOrderStatusWSClient();
 
         connected = true;
     }
@@ -188,77 +200,6 @@ public class HyperliquidBroker extends AbstractBasicBroker implements IWebSocket
         // }
     }
 
-    // @Override
-    // public void orderStatusUpdated(IParadexOrderStatusUpdate orderStatus) {
-    // OrderStatus status = ParadexBrokerUtil.translateOrderStatus(orderStatus);
-    // OrderTicket order = tradeOrderMap.get(orderStatus.getOrderId());
-    // order.setCurrentStatus(status.getStatus());
-    // order.setFilledPrice(status.getFillPrice());
-    // order.setFilledSize(status.getFilled());
-    // // Can't set the order commission here, only on fill events.
-
-    // OrderEvent event = new OrderEvent(order, status);
-    // if (status.getStatus() == OrderStatus.Status.FILLED || status.getStatus() ==
-    // OrderStatus.Status.CANCELED) {
-    // tradeOrderMap.remove(orderStatus.getOrderId());
-    // }
-    // for (OrderEventListener listener : orderEventListeners) {
-    // if (orderEventExecutor != null && !orderEventExecutor.isShutdown()) {
-    // orderEventExecutor.submit(() -> {
-    // try {
-    // listener.orderEvent(event);
-    // } catch (Exception e) {
-    // logger.error("Error notifying order event listener", e);
-    // }
-    // });
-    // }
-    // }
-    // }
-
-    // private void startAuthenticationScheduler() {
-    // if (authenticationScheduler == null || authenticationScheduler.isShutdown())
-    // {
-    // authenticationScheduler = Executors.newSingleThreadScheduledExecutor();
-
-    // // Authenticate immediately when starting
-    // try {
-    // logger.info("Initial JWT token authentication");
-    // // jwtToken = authenticate();
-    // } catch (Exception e) {
-    // logger.error("Failed to obtain initial JWT token", e);
-    // }
-
-    // // Schedule authentication every minute
-    // authenticationScheduler.scheduleAtFixedRate(() -> {
-    // try {
-    // logger.info("Refreshing JWT token");
-    // // jwtToken = authenticate();
-    // } catch (Exception e) {
-    // logger.error("Failed to refresh JWT token", e);
-    // }
-    // }, jwtRefreshInSeconds, jwtRefreshInSeconds, TimeUnit.SECONDS);
-
-    // logger.info("Authentication scheduler started - will refresh JWT token every
-    // minute");
-    // }
-    // }
-
-    // private void stopAuthenticationScheduler() {
-    // if (authenticationScheduler != null && !authenticationScheduler.isShutdown())
-    // {
-    // authenticationScheduler.shutdown();
-    // try {
-    // if (!authenticationScheduler.awaitTermination(5, TimeUnit.SECONDS)) {
-    // authenticationScheduler.shutdownNow();
-    // }
-    // logger.info("Authentication scheduler stopped");
-    // } catch (InterruptedException e) {
-    // authenticationScheduler.shutdownNow();
-    // Thread.currentThread().interrupt();
-    // }
-    // }
-    // }
-
     private void stopOrderEventExecutor() {
         if (orderEventExecutor != null && !orderEventExecutor.isShutdown()) {
             orderEventExecutor.shutdown();
@@ -274,26 +215,6 @@ public class HyperliquidBroker extends AbstractBasicBroker implements IWebSocket
         }
     }
 
-    // protected String authenticate() throws Exception {
-    // jwtToken = restApi.getJwtToken();
-    // logger.info("Obtained JWT Token");
-    // return jwtToken;
-    // }
-
-    // public void startOrderStatusWSClient() {
-    // logger.info("Starting order status WebSocket client");
-    // String jwtToken = restApi.getJwtToken();
-    // String wsUrl = ParadexApiFactory.getWebSocketUrl();
-
-    // try {
-    // orderStatusWSClient = new ParadexWebSocketClient(wsUrl, "orders.ALL",
-    // orderStatusProcessor, jwtToken);
-    // orderStatusWSClient.connect();
-    // } catch (Exception e) {
-    // throw new IllegalStateException(e);
-    // }
-    // }
-
     protected void startAccountInfoWSClient() {
         logger.info("Starting account info WebSocket client");
         String wsUrl = HyperliquidConfiguration.getInstance().getWebSocketUrl();
@@ -303,10 +224,33 @@ public class HyperliquidBroker extends AbstractBasicBroker implements IWebSocket
                 logger.info("Account info WebSocket closed, trying to restart...");
                 startAccountInfoWSClient();
             });
-            accountWebSocketProcessor.addEventListener(this);
+            accountWebSocketProcessor.addEventListener((IAccountUpdate event) -> {
+                accountUpdateWsEventReceived(event);
+            });
             accountInfoWSClient = new HyperliquidWebSocketClient(wsUrl, "account", accountWebSocketProcessor);
 
             accountInfoWSClient.connect();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+
+    }
+
+    protected void startOrderStatusWSClient() {
+        logger.info("Starting order status WebSocket client");
+        String wsUrl = HyperliquidConfiguration.getInstance().getWebSocketUrl();
+
+        try {
+            orderStatusWebSocketProcessor = new WsOrderWebSocketProcessor(() -> {
+                logger.info("Order status WebSocket closed, trying to restart...");
+                startOrderStatusWSClient();
+            });
+            orderStatusWebSocketProcessor.addEventListener((List<WsOrderUpdate> event) -> {
+                ordersUpdateWsEventReceived(event);
+            });
+            orderStatusWSClient = new HyperliquidWebSocketClient(wsUrl, "order", orderStatusWebSocketProcessor);
+
+            orderStatusWSClient.connect();
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
@@ -324,8 +268,14 @@ public class HyperliquidBroker extends AbstractBasicBroker implements IWebSocket
 
     }
 
-    @Override
-    public void onWebSocketEvent(IAccountUpdate event) {
+    public void ordersUpdateWsEventReceived(List<WsOrderUpdate> event) {
+        for (WsOrderUpdate orderUpdate : event) {
+            logger.info("WS Order Update {}", orderUpdate);
+        }
+
+    }
+
+    public void accountUpdateWsEventReceived(IAccountUpdate event) {
         double accountValue = event.getAccountValue();
         fireAccountEquityUpdated(accountValue);
 
@@ -334,6 +284,29 @@ public class HyperliquidBroker extends AbstractBasicBroker implements IWebSocket
         List<HyperliquidPositionUpdate> positions = event.getPositions();
         for (HyperliquidPositionUpdate pos : positions) {
             logger.info("Position: {} - Size: {} - Avg Price: {}", pos.getTicker(), pos.getSize(), pos.getEntryPrice());
+        }
+    }
+
+    protected void updateOrderIds(OrderTicket order, SubmitPostResponse response) {
+
+        if (response.orders.size() != 1) {
+            throw new IllegalStateException("Expected exactly one order in response");
+        }
+        int hyperliquidOrderId = response.orders.get(0).orderId;
+        order.setOrderId(String.valueOf(hyperliquidOrderId));
+
+    }
+
+    protected void updateOrderIds(List<OrderTicket> orders, SubmitPostResponse response) {
+        if (response.orders.size() != orders.size()) {
+            throw new IllegalStateException(
+                    "Expected " + orders.size() + " orders in response but got " + response.orders.size());
+        }
+
+        for (int i = 0; i < orders.size(); i++) {
+            OrderTicket order = orders.get(i);
+            int hyperliquidOrderId = response.orders.get(i).orderId;
+            order.setOrderId(String.valueOf(hyperliquidOrderId));
         }
     }
 

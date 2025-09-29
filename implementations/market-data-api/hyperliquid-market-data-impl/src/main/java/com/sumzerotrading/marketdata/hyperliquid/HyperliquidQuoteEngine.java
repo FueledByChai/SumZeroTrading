@@ -10,8 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.hyperliquid.websocket.HyperliquidConfiguration;
-import com.sumzerotrading.hyperliquid.websocket.HyperliquidWebSocketClient;
+import com.sumzerotrading.hyperliquid.ws.HyperliquidConfiguration;
+import com.sumzerotrading.hyperliquid.ws.HyperliquidWebSocketClient;
+import com.sumzerotrading.hyperliquid.ws.HyperliquidWebSocketClientBuilder;
 import com.sumzerotrading.marketdata.IOrderBook;
 import com.sumzerotrading.marketdata.Level1Quote;
 import com.sumzerotrading.marketdata.Level1QuoteListener;
@@ -200,8 +201,8 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements OrderBookUpda
                 startBBOWSClient(ticker);
             });
             processor.addBBOListener(this);
-            HyperliquidWebSocketClient bboWSClient = new HyperliquidWebSocketClient(wsUrl, "bbo", ticker.getSymbol(),
-                    processor);
+            HyperliquidWebSocketClient bboWSClient = HyperliquidWebSocketClientBuilder.buildBBOClient(wsUrl,
+                    ticker.getSymbol(), processor);
             bboWSClient.connect();
 
         } catch (Exception e) {
@@ -218,8 +219,8 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements OrderBookUpda
                 startVolumeAndFundingWSClient(ticker);
             });
             processor.add(this);
-            HyperliquidWebSocketClient volumeAndFundingWSClient = new HyperliquidWebSocketClient(wsUrl,
-                    "activeAssetCtx", ticker.getSymbol(), processor);
+            HyperliquidWebSocketClient volumeAndFundingWSClient = HyperliquidWebSocketClientBuilder
+                    .buildActiveAssetCtxClient(wsUrl, ticker.getSymbol(), processor);
             volumeAndFundingWSClient.connect();
 
         } catch (Exception e) {
@@ -236,7 +237,7 @@ public class HyperliquidQuoteEngine extends QuoteEngine implements OrderBookUpda
                 startTradesWSClient(ticker);
             });
             processor.addOrderFlowListener(this);
-            HyperliquidWebSocketClient tradesWSClient = new HyperliquidWebSocketClient(wsUrl, "trades",
+            HyperliquidWebSocketClient tradesWSClient = HyperliquidWebSocketClientBuilder.buildTradesClient(wsUrl,
                     ticker.getSymbol(), processor);
             tradesWSClient.connect();
 

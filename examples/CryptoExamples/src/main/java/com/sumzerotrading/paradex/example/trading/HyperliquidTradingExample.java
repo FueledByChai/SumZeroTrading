@@ -7,7 +7,7 @@ import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.broker.order.OrderTicket.Type;
 import com.sumzerotrading.broker.order.TradeDirection;
 import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.hyperliquid.websocket.HyperliquidTickerRegistry;
+import com.sumzerotrading.hyperliquid.ws.HyperliquidTickerRegistry;
 
 public class HyperliquidTradingExample {
 

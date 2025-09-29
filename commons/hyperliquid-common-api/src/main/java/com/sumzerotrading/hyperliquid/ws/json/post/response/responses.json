@@ -1,0 +1,76 @@
+{
+  "channel": "post",
+  "data": {
+    "id": 3,
+    "response": {
+      "type": "action",
+      "payload": {
+        "status": "ok",
+        "response": {
+          "type": "order",
+          "data": {
+            "statuses": [
+              {
+                "filled": {
+                  "totalSz": "0.01",
+                  "avgPx": "109531.0",
+                  "oid": 39734960381
+                },
+                 "error":"Post only order would have immediately matched, bbo was 108841@108875. asset=3"
+
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+},
+{
+  "channel":"post",
+  "data":{
+    "id":3,
+    "response":{
+      "type":"action",
+      "payload":{
+        "status":"ok",
+        "response":{
+          "type":"order",
+          "data":{
+            "statuses":[
+              {
+                "error":"Post only order would have immediately matched, bbo was 108841@108875. asset=3"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+},
+{
+  "channel":"post",
+  "data":{
+    "id":2,
+    "response":{
+      "type":"action",
+      "payload":{
+        "status":"ok",
+        "response":{
+          "type":"order",
+          "data":{
+            "statuses":[
+              {
+                "resting":{
+                  "oid":39715122327
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+},
+{ "channel":"post",
+"data": {"id":1,"response":{"type":"action","payload":{"status":"ok","response":{"type":"order","data":{"statuses":[{"filled":{"totalSz":"0.01","avgPx":"109444.0","oid":39735064316}},{"filled":{"totalSz":"0.005","avgPx":"109444.0","oid":39735064317}}]}}}}}

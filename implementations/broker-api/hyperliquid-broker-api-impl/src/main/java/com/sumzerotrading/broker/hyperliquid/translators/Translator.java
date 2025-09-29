@@ -8,14 +8,13 @@ import java.util.stream.Collectors;
 import com.sumzerotrading.BestBidOffer;
 import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.hyperliquid.HyperliquidOrderTicket;
-import com.sumzerotrading.broker.hyperliquid.HyperliquidPositionUpdate;
 import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.hyperliquid.websocket.HyperliquidTickerRegistry;
-import com.sumzerotrading.hyperliquid.websocket.json.LimitType;
-import com.sumzerotrading.hyperliquid.websocket.json.OrderAction;
-import com.sumzerotrading.hyperliquid.websocket.json.OrderJson;
-import com.sumzerotrading.hyperliquid.websocket.json.PlaceOrderRequest;
+import com.sumzerotrading.hyperliquid.ws.HyperliquidTickerRegistry;
+import com.sumzerotrading.hyperliquid.ws.json.LimitType;
+import com.sumzerotrading.hyperliquid.ws.json.OrderAction;
+import com.sumzerotrading.hyperliquid.ws.json.OrderJson;
+import com.sumzerotrading.hyperliquid.ws.listeners.accountinfo.HyperliquidPositionUpdate;
 
 public class Translator implements ITranslator {
 
@@ -39,20 +38,21 @@ public class Translator implements ITranslator {
     }
 
     @Override
-    public PlaceOrderRequest translateOrderTickets(HyperliquidOrderTicket ticket) {
+    public OrderAction translateOrderTickets(HyperliquidOrderTicket ticket) {
         List<OrderJson> orders = new ArrayList<>();
         orders.add(translateOrderTicketToOrderJson(ticket.getOrderTicket(), ticket.getBestBidOffer()));
-        return new PlaceOrderRequest(new OrderAction(orders), 0, null);
+        return new OrderAction(orders);
+
     }
 
     @Override
-    public PlaceOrderRequest translateOrderTickets(List<HyperliquidOrderTicket> hyperliquidOrderTickets) {
+    public OrderAction translateOrderTickets(List<HyperliquidOrderTicket> hyperliquidOrderTickets) {
         List<OrderJson> orders = new ArrayList<>();
         for (HyperliquidOrderTicket ticket : hyperliquidOrderTickets) {
             orders.add(translateOrderTicketToOrderJson(ticket.getOrderTicket(), ticket.getBestBidOffer()));
         }
         OrderAction action = new OrderAction(orders);
-        return new PlaceOrderRequest(action, 0, null);
+        return action;
     }
 
     @Override

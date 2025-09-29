@@ -2,7 +2,7 @@ package com.sumzerotrading.broker.hyperliquid;
 
 import com.sumzerotrading.BestBidOffer;
 import com.sumzerotrading.broker.order.OrderTicket;
-import com.sumzerotrading.hyperliquid.websocket.json.Signature;
+import com.sumzerotrading.hyperliquid.ws.json.Signature;
 
 public class HyperliquidOrderTicket {
 

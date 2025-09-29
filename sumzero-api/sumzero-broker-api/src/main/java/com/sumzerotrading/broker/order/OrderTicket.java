@@ -54,7 +54,7 @@ public class OrderTicket implements Serializable {
     protected BigDecimal stopPrice = null;
     protected Duration duration;
     protected BigDecimal size;
-    protected String orderId;
+    protected String orderId = "";
     protected String parentOrderId = "";
     protected String ocaGroup;
     protected String positionId;
@@ -66,6 +66,7 @@ public class OrderTicket implements Serializable {
     protected ZonedDateTime orderEntryTime;
     protected ZonedDateTime orderFilledTime;
     protected double orderTimeInForceMinutes = 0;
+    protected String clientOrderId = "";
 
     protected BigDecimal filledSize = BigDecimal.ZERO;
     protected BigDecimal filledPrice = BigDecimal.ZERO;
@@ -372,6 +373,15 @@ public class OrderTicket implements Serializable {
         return modifiers.contains(modifier);
     }
 
+    public String getClientOrderId() {
+        return clientOrderId;
+    }
+
+    public OrderTicket setClientOrderId(String clientOrderId) {
+        this.clientOrderId = clientOrderId;
+        return this;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -404,6 +414,7 @@ public class OrderTicket implements Serializable {
         result = prime * result + ((commission == null) ? 0 : commission.hashCode());
         result = prime * result + ((currentStatus == null) ? 0 : currentStatus.hashCode());
         result = prime * result + ((modifiers == null) ? 0 : modifiers.hashCode());
+        result = prime * result + ((clientOrderId == null) ? 0 : clientOrderId.hashCode());
         return result;
     }
 
@@ -525,6 +536,11 @@ public class OrderTicket implements Serializable {
                 return false;
         } else if (!modifiers.equals(other.modifiers))
             return false;
+        if (clientOrderId == null) {
+            if (other.clientOrderId != null)
+                return false;
+        } else if (!clientOrderId.equals(other.clientOrderId))
+            return false;
         return true;
     }
 
@@ -538,7 +554,8 @@ public class OrderTicket implements Serializable {
                 + ", submitChildOrdersFirst=" + submitChildOrdersFirst + ", orderEntryTime=" + orderEntryTime
                 + ", orderFilledTime=" + orderFilledTime + ", orderTimeInForceMinutes=" + orderTimeInForceMinutes
                 + ", filledSize=" + filledSize + ", filledPrice=" + filledPrice + ", commission=" + commission
-                + ", currentStatus=" + currentStatus + ", modifiers=" + modifiers + "]";
+                + ", currentStatus=" + currentStatus + ", modifiers=" + modifiers + ", clientOrderId=" + clientOrderId
+                + "]";
     }
 
 }

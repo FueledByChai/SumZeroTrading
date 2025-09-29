@@ -7,8 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.hyperliquid.websocket.HyperliquidConfiguration;
-import com.sumzerotrading.hyperliquid.websocket.HyperliquidWebSocketClient;
+import com.sumzerotrading.hyperliquid.ws.HyperliquidConfiguration;
+import com.sumzerotrading.hyperliquid.ws.HyperliquidWebSocketClient;
+import com.sumzerotrading.hyperliquid.ws.HyperliquidWebSocketClientBuilder;
 
 public class OrderBookRegistry {
     protected static final Logger logger = LoggerFactory.getLogger(OrderBookRegistry.class);
@@ -37,8 +38,8 @@ public class OrderBookRegistry {
     public void startMarketBookWSClient(Ticker ticker, HyperliquidOrderBook orderBook) {
         try {
             logger.info("Starting order book WebSocket client");
-            HyperliquidWebSocketClient orderBookWSClient = new HyperliquidWebSocketClient(wsUrl, "l2Book",
-                    ticker.getSymbol(), new OrderBookWebSocketProcessor(orderBook, () -> {
+            HyperliquidWebSocketClient orderBookWSClient = HyperliquidWebSocketClientBuilder.buildOrderBookUpdateClient(
+                    wsUrl, ticker.getSymbol(), new OrderBookWebSocketProcessor(orderBook, () -> {
                         logger.info("Order book WebSocket closed, trying to restart...");
                         startMarketBookWSClient(ticker, orderBook);
                     }));
