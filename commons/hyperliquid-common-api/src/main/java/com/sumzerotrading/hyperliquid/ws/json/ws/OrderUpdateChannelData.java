@@ -8,5 +8,5 @@ public class OrderUpdateChannelData {
     public String channel = "orderUpdates";
 
     @JsonProperty("data")
-    public OrderStatus[] data;
+    public OrderStatusOld[] data;
 }

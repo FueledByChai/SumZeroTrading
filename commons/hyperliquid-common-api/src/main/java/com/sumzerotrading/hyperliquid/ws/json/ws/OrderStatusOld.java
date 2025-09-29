@@ -2,7 +2,7 @@ package com.sumzerotrading.hyperliquid.ws.json.ws;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class OrderStatus {
+public class OrderStatusOld {
 
     /**
      * open

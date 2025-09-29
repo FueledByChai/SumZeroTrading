@@ -10,6 +10,7 @@ import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.hyperliquid.HyperliquidOrderTicket;
 import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.hyperliquid.HyperliquidUtil;
 import com.sumzerotrading.hyperliquid.ws.HyperliquidTickerRegistry;
 import com.sumzerotrading.hyperliquid.ws.json.LimitType;
 import com.sumzerotrading.hyperliquid.ws.json.OrderAction;
@@ -61,7 +62,7 @@ public class Translator implements ITranslator {
         order.assetId = ticket.getTicker().getIdAsInt();
         order.isBuy = ticket.isBuyOrder();
         order.size = ticket.getSize().toPlainString();
-        order.clientOrderId = ticket.getReference();
+        order.clientOrderId = ticket.getClientOrderId();
         order.reduceOnly = false;
 
         if (ticket.getType() == OrderTicket.Type.MARKET) {
@@ -75,7 +76,9 @@ public class Translator implements ITranslator {
             }
             order.type = new LimitType(LimitType.TimeInForce.IOC);
         } else if (ticket.getType() == OrderTicket.Type.LIMIT) {
-            order.price = ticket.getLimitPrice() != null ? ticket.getLimitPrice().toPlainString() : null;
+            order.price = ticket.getLimitPrice() != null
+                    ? HyperliquidUtil.formatPriceAsString(ticket.getTicker(), ticket.getLimitPrice())
+                    : null;
             if (ticket.getModifiers().contains(OrderTicket.Modifier.POST_ONLY)) {
                 order.type = new LimitType(LimitType.TimeInForce.ALO);
             } else if (ticket.getDuration() == OrderTicket.Duration.IMMEDIATE_OR_CANCEL) {
@@ -115,12 +118,12 @@ public class Translator implements ITranslator {
     @Override
     public String getBuySlippage(Ticker ticker, BigDecimal currentAsk) {
         BigDecimal slippage = currentAsk.multiply(BigDecimal.valueOf(SLIPPAGE_PERCENTAGE / 100));
-        return ticker.formatPrice(currentAsk.add(slippage)).toPlainString();
+        return HyperliquidUtil.formatPriceAsString(ticker, currentAsk.add(slippage));
     }
 
     @Override
     public String getSellSlippage(Ticker ticker, BigDecimal currentBid) {
         BigDecimal slippage = currentBid.multiply(BigDecimal.valueOf(SLIPPAGE_PERCENTAGE / 100));
-        return ticker.formatPrice(currentBid.subtract(slippage)).toPlainString();
+        return HyperliquidUtil.formatPriceAsString(ticker, currentBid.subtract(slippage));
     }
 }

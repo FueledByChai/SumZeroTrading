@@ -6,7 +6,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 
-import com.sumzerotrading.hyperliquid.ws.json.EncodeUtil;
+import com.sumzerotrading.hyperliquid.HyperliquidUtil;
 import com.sumzerotrading.hyperliquid.ws.json.HLSigner;
 import com.sumzerotrading.hyperliquid.ws.json.LimitType;
 import com.sumzerotrading.hyperliquid.ws.json.Mappers;
@@ -104,7 +104,7 @@ public class HyperliquidClient {
         buy2.size = "0.005";
         buy2.reduceOnly = false;
         buy2.type = new LimitType(LimitType.TimeInForce.GTC);
-        buy2.clientOrderId = EncodeUtil.encode128BitHex("Another Order 456");
+        buy2.clientOrderId = HyperliquidUtil.encode128BitHex("Another Order 456");
 
         OrderAction action = new OrderAction();
         action.orders = java.util.Arrays.asList(buy, buy2);
@@ -159,7 +159,7 @@ public class HyperliquidClient {
         buy.size = "0.01";
         buy.reduceOnly = false;
         buy.type = new LimitType(LimitType.TimeInForce.ALO);
-        buy.clientOrderId = EncodeUtil.encode128BitHex("Hello World 123");
+        buy.clientOrderId = HyperliquidUtil.encode128BitHex("Hello World 123");
 
         OrderJson buy2 = new OrderJson();
         buy2.assetId = 3;
@@ -168,7 +168,7 @@ public class HyperliquidClient {
         buy2.size = "0.005";
         buy2.reduceOnly = false;
         buy2.type = new LimitType(LimitType.TimeInForce.GTC);
-        buy2.clientOrderId = EncodeUtil.encode128BitHex("Another Order 456");
+        buy2.clientOrderId = HyperliquidUtil.encode128BitHex("Another Order 456");
 
         OrderAction action = new OrderAction();
         action.orders = java.util.Arrays.asList(buy, buy2);

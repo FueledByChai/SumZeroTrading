@@ -8,6 +8,8 @@ public class SubmitPostResponse {
     public int requestId;
     public String requestStatus;
     public List<SubmitOrderResponse> orders = new ArrayList<>();
+    public Boolean success = true;
+    public String errorMessage = "";
 
     public void addSubmitOrderResponse(SubmitOrderResponse order) {
         orders.add(order);

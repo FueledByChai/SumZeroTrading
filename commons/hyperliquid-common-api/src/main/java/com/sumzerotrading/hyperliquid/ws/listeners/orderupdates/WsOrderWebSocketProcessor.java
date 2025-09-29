@@ -22,6 +22,7 @@ public class WsOrderWebSocketProcessor extends AbstractWebSocketProcessor<List<W
 
     @Override
     protected List<WsOrderUpdate> parseMessage(String message) {
+        logger.info("Received order update message: {}", message);
         try {
             JSONObject jsonObject = new JSONObject(message);
 
@@ -29,6 +30,7 @@ public class WsOrderWebSocketProcessor extends AbstractWebSocketProcessor<List<W
             if (!jsonObject.has("channel")) {
                 return null;
             }
+
             String channel = jsonObject.getString("channel");
 
             if ("orderUpdates".equals(channel)) {
@@ -50,6 +52,7 @@ public class WsOrderWebSocketProcessor extends AbstractWebSocketProcessor<List<W
                 }
             } else {
                 logger.warn("Unknown message type: " + channel);
+                logger.warn(message);
                 return null;
             }
         } catch (Exception e) {
@@ -60,6 +63,7 @@ public class WsOrderWebSocketProcessor extends AbstractWebSocketProcessor<List<W
 
     protected WsOrderUpdate parseOrderUpdate(JSONObject orderJson) {
         try {
+
             WsOrderUpdate orderUpdate = new WsOrderUpdate();
             orderUpdate.setStatus(orderJson.getString("status"));
             orderUpdate.setStatusTimestamp(orderJson.getLong("timestamp"));

@@ -25,6 +25,7 @@ public class HyperliquidConfiguration {
     public static final String HYPERLIQUID_REST_URL = "hyperliquid.rest.url";
     public static final String HYPERLIQUID_WS_URL = "hyperliquid.ws.url";
     public static final String HYPERLIQUID_ACCOUNT_ADDRESS = "hyperliquid.account.address";
+    public static final String HYPERLIQUID_API_ADDRESS = "hyperliquid.api.address";
     public static final String HYPERLIQUID_PRIVATE_KEY = "hyperliquid.private.key";
     public static final String HYPERLIQUID_ENVIRONMENT = "hyperliquid.environment";
     public static final String HYPERLIQUID_KEYSTORE_PATH = "hyperliquid.keystore.path";
@@ -100,6 +101,7 @@ public class HyperliquidConfiguration {
     private void loadFromPropertiesFile() {
         // Try external properties file first
         String configFile = System.getProperty("hyperliquid.config.file", "hyperliquid.properties");
+        logger.info("Attempting to load config file: {}", configFile);
         try (InputStream is = new FileInputStream(configFile)) {
             properties.load(is);
             logger.info("Loaded configuration from file: {}", configFile);

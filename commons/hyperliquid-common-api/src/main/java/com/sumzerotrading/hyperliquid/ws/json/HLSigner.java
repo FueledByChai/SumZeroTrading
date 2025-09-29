@@ -12,9 +12,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sumzerotrading.data.SumZeroException;
-import com.sumzerotrading.hyperliquid.ws.json.Mappers;
-import com.sumzerotrading.hyperliquid.ws.json.SignableExchangeOrderRequest;
-import com.sumzerotrading.hyperliquid.ws.json.SignatureFields;
 
 public final class HLSigner {
     private final ECKeyPair keyPair;

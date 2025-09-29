@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -46,6 +47,8 @@ public abstract class QuoteEngine implements IQuoteEngine {
     // Thread pool for handling quote notifications
     private final ExecutorService quoteExecutor;
 
+    private static final Map<Class<? extends QuoteEngine>, QuoteEngine> instances = new ConcurrentHashMap<>();
+
     // Custom ThreadFactory for naming quote processing threads
     private static class QuoteThreadFactory implements ThreadFactory {
         private final AtomicInteger threadNumber = new AtomicInteger(1);
@@ -59,9 +62,24 @@ public abstract class QuoteEngine implements IQuoteEngine {
         }
     }
 
+    public static synchronized QuoteEngine getInstance(Class<? extends QuoteEngine> clazz) {
+        return instances.computeIfAbsent(clazz, c -> {
+            try {
+                return c.getDeclaredConstructor().newInstance();
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to instantiate QuoteEngine: " + c.getName(), e);
+            }
+        });
+    }
+
     protected List<ErrorListener> errorListeners;
     protected Map<Ticker, List<Level1QuoteListener>> level1ListenerMap = Collections
             .synchronizedMap(new HashMap<Ticker, List<Level1QuoteListener>>());
+
+    // List of global Level1 listeners that receive all Level1 quotes
+    protected List<Level1QuoteListener> globalLevel1ListenerList = Collections
+            .synchronizedList(new ArrayList<Level1QuoteListener>());
+
     protected Map<Ticker, List<Level2QuoteListener>> level2ListenerMap = Collections
             .synchronizedMap(new HashMap<Ticker, List<Level2QuoteListener>>());
     protected Map<Ticker, List<OrderFlowListener>> orderFlowListenerMap = Collections
@@ -118,6 +136,20 @@ public abstract class QuoteEngine implements IQuoteEngine {
     }
 
     @Override
+    public void subscribeGlobalLevel1(Level1QuoteListener listener) {
+        synchronized (globalLevel1ListenerList) {
+            globalLevel1ListenerList.add(listener);
+        }
+    }
+
+    @Override
+    public void unsubscribeGlobalLevel1(Level1QuoteListener listener) {
+        synchronized (globalLevel1ListenerList) {
+            globalLevel1ListenerList.remove(listener);
+        }
+    }
+
+    @Override
     public void unsubscribeLevel1(Ticker ticker, Level1QuoteListener listener) {
         synchronized (level1ListenerMap) {
             List<Level1QuoteListener> listeners = level1ListenerMap.get(ticker);
@@ -158,6 +190,23 @@ public abstract class QuoteEngine implements IQuoteEngine {
     @Override
     public void fireLevel1Quote(final ILevel1Quote quote) {
         synchronized (level1ListenerMap) {
+            // Fire to global listeners
+            if (globalLevel1ListenerList != null) {
+                for (final Level1QuoteListener listener : globalLevel1ListenerList) {
+                    try {
+                        quoteExecutor.submit(() -> {
+                            try {
+                                listener.quoteRecieved(quote);
+                            } catch (Exception ex) {
+                                logger.warn("Error processing Level1 quote for global listener", ex);
+                            }
+                        });
+                    } catch (Exception ex) {
+                        logger.warn("Error submitting Level1 quote task for global listener", ex);
+                    }
+                }
+            }
+
             List<Level1QuoteListener> listeners = level1ListenerMap.get(quote.getTicker());
             if (listeners == null) {
                 return;

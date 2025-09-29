@@ -55,6 +55,11 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       <artifactId>hyperliquid-common-api</artifactId>
       <version>${project.version}</version>
     </dependency>
+        <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>hyperliquid-market-data-impl</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     
     <!-- Test dependencies -->
     <dependency>

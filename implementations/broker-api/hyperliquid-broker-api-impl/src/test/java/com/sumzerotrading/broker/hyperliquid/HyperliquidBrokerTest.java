@@ -24,8 +24,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.sumzerotrading.broker.hyperliquid.translators.ITranslator;
 // import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.order.OrderTicket;
+import com.sumzerotrading.hyperliquid.HyperliquidUtil;
 import com.sumzerotrading.hyperliquid.ws.IHyperliquidRestApi;
-import com.sumzerotrading.hyperliquid.ws.json.EncodeUtil;
 
 @ExtendWith(MockitoExtension.class)
 public class HyperliquidBrokerTest {
@@ -88,7 +88,7 @@ public class HyperliquidBrokerTest {
 
     @Test
     public void testGetNextOrderId() {
-        assertEquals(EncodeUtil.encode128BitHex(1 + ""), broker.getNextOrderId());
+        assertEquals(HyperliquidUtil.encode128BitHex(1 + ""), broker.getNextOrderId());
     }
 
     @Test

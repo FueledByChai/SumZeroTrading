@@ -33,31 +33,39 @@ public class HyperliquidPostWebSocketProcessor extends AbstractWebSocketProcesso
                 JSONObject response = data.getJSONObject("response");
                 JSONObject payload = response.getJSONObject("payload");
                 String requestStatus = payload.getString("status");
-                JSONObject payloadResponse = payload.getJSONObject("response");
-                JSONObject payloadData = payloadResponse.getJSONObject("data");
-                JSONArray payloadStatuses = payloadData.getJSONArray("statuses");
+                if ("err".equalsIgnoreCase(requestStatus)) {
+                    String errorResponseMessage = payload.getString("response");
+                    postResponse.success = false;
+                    postResponse.requestStatus = requestStatus;
+                    postResponse.requestId = requestId;
+                    postResponse.errorMessage = errorResponseMessage;
+                } else {
+                    JSONObject payloadResponse = payload.getJSONObject("response");
+                    JSONObject payloadData = payloadResponse.getJSONObject("data");
+                    JSONArray payloadStatuses = payloadData.getJSONArray("statuses");
 
-                postResponse.requestId = requestId;
-                postResponse.requestStatus = requestStatus;
+                    postResponse.requestId = requestId;
+                    postResponse.requestStatus = requestStatus;
 
-                for (int i = 0; i < payloadStatuses.length(); i++) {
+                    for (int i = 0; i < payloadStatuses.length(); i++) {
 
-                    JSONObject statusObj = payloadStatuses.getJSONObject(i);
+                        JSONObject statusObj = payloadStatuses.getJSONObject(i);
 
-                    int oid = -1;
-                    String filledStatus = null;
-                    String clientOid = null;
+                        int oid = -1;
+                        String filledStatus = null;
+                        String clientOid = null;
 
-                    if (statusObj.has("filled")) {
-                        JSONObject filledObj = statusObj.getJSONObject("filled");
-                        oid = filledObj.getInt("oid");
-                        filledStatus = "filled";
-                        clientOid = filledObj.getString("cloid");
-                        postResponse.addSubmitOrderResponse(oid, clientOid, filledStatus);
-                    } else if (statusObj.has("error")) {
-                        postResponse.addSubmitOrderResponse("error");
-                    } else {
-                        throw new JSONException("Unknown status format: " + statusObj.toString());
+                        if (statusObj.has("filled")) {
+                            JSONObject filledObj = statusObj.getJSONObject("filled");
+                            oid = filledObj.getInt("oid");
+                            filledStatus = "filled";
+                            clientOid = filledObj.optString("cloid", null);
+                            postResponse.addSubmitOrderResponse(oid, clientOid, filledStatus);
+                        } else if (statusObj.has("error")) {
+                            postResponse.addSubmitOrderResponse("error");
+                        } else {
+                            throw new JSONException("Unknown status format: " + statusObj.toString());
+                        }
                     }
                 }
                 return postResponse;
@@ -66,7 +74,9 @@ public class HyperliquidPostWebSocketProcessor extends AbstractWebSocketProcesso
                 return null;
             }
 
-        } catch (JSONException e) {
+        } catch (
+
+        JSONException e) {
             logger.error("Error parsing POST message: " + message, e);
         }
         return null;

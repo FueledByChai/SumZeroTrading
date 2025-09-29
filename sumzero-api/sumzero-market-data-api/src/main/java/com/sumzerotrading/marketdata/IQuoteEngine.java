@@ -55,6 +55,10 @@ public interface IQuoteEngine {
      */
     public abstract void subscribeLevel1(Ticker ticker, Level1QuoteListener listener);
 
+    public abstract void subscribeGlobalLevel1(Level1QuoteListener listener);
+
+    public abstract void unsubscribeGlobalLevel1(Level1QuoteListener listener);
+
     /**
      * Unsubscribe from Level 1 market data
      * 

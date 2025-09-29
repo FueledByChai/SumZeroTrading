@@ -17,6 +17,8 @@
  */
 package com.sumzerotrading.broker.hyperliquid;
 
+import java.math.BigDecimal;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,21 +41,30 @@ import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.hyperliquid.translators.ITranslator;
 import com.sumzerotrading.broker.hyperliquid.translators.Translator;
 import com.sumzerotrading.broker.order.OrderEvent;
+import com.sumzerotrading.broker.order.OrderStatus;
+import com.sumzerotrading.broker.order.OrderStatus.Status;
 import com.sumzerotrading.broker.order.OrderTicket;
+import com.sumzerotrading.data.SumZeroException;
 import com.sumzerotrading.data.Ticker;
+import com.sumzerotrading.hyperliquid.HyperliquidUtil;
 import com.sumzerotrading.hyperliquid.ws.HyperliquidApiFactory;
 import com.sumzerotrading.hyperliquid.ws.HyperliquidConfiguration;
 import com.sumzerotrading.hyperliquid.ws.HyperliquidWebSocketClient;
+import com.sumzerotrading.hyperliquid.ws.HyperliquidWebSocketClientBuilder;
 import com.sumzerotrading.hyperliquid.ws.IHyperliquidRestApi;
 import com.sumzerotrading.hyperliquid.ws.IHyperliquidWebsocketApi;
-import com.sumzerotrading.hyperliquid.ws.json.EncodeUtil;
+import com.sumzerotrading.hyperliquid.ws.json.OrderStatusType;
 import com.sumzerotrading.hyperliquid.ws.json.ws.SubmitPostResponse;
 import com.sumzerotrading.hyperliquid.ws.listeners.accountinfo.AccountWebSocketProcessor;
 import com.sumzerotrading.hyperliquid.ws.listeners.accountinfo.HyperliquidPositionUpdate;
 import com.sumzerotrading.hyperliquid.ws.listeners.accountinfo.IAccountUpdate;
 import com.sumzerotrading.hyperliquid.ws.listeners.orderupdates.WsOrderUpdate;
 import com.sumzerotrading.hyperliquid.ws.listeners.orderupdates.WsOrderWebSocketProcessor;
-import com.sumzerotrading.websocket.IWebSocketEventListener;
+import com.sumzerotrading.marketdata.ILevel1Quote;
+import com.sumzerotrading.marketdata.Level1QuoteListener;
+import com.sumzerotrading.marketdata.QuoteEngine;
+import com.sumzerotrading.marketdata.QuoteType;
+import com.sumzerotrading.marketdata.hyperliquid.HyperliquidQuoteEngine;
 
 /**
  * Supported Order types are: Market, Stop and Limit Supported order parameters
@@ -62,7 +73,7 @@ import com.sumzerotrading.websocket.IWebSocketEventListener;
  *
  * @author Rob Terpilowski
  */
-public class HyperliquidBroker extends AbstractBasicBroker {
+public class HyperliquidBroker extends AbstractBasicBroker implements Level1QuoteListener {
     protected static Logger logger = LoggerFactory.getLogger(HyperliquidBroker.class);
 
     protected IHyperliquidRestApi restApi;
@@ -94,6 +105,9 @@ public class HyperliquidBroker extends AbstractBasicBroker {
     protected Map<String, OrderTicket> tradeOrderMap = new HashMap<>();
 
     protected Map<String, OrderTicket> completedOrderMap = new HashMap<>();
+    protected QuoteEngine quoteEngine;
+
+    protected Map<String, OrderTicket> pendingOrderMapByCloid = new HashMap<>();
 
     /**
      * Default constructor - uses centralized configuration for API initialization.
@@ -102,9 +116,9 @@ public class HyperliquidBroker extends AbstractBasicBroker {
         // Initialize using centralized configuration
         this.restApi = HyperliquidApiFactory.getRestApi();
         this.websocketApi = HyperliquidApiFactory.getWebsocketApi();
-
-        // Get JWT refresh interval from configuration
-        HyperliquidConfiguration config = HyperliquidConfiguration.getInstance();
+        this.quoteEngine = QuoteEngine.getInstance(HyperliquidQuoteEngine.class);
+        this.quoteEngine.startEngine();
+        this.quoteEngine.subscribeGlobalLevel1(this);
 
         logger.info("HyperliquidBroker initialized with configuration: {}",
                 HyperliquidApiFactory.getConfigurationInfo());
@@ -136,7 +150,28 @@ public class HyperliquidBroker extends AbstractBasicBroker {
         checkConnected();
         order.setClientOrderId(getNextOrderId());
         BestBidOffer bbo = bestBidOfferMap.get(order.getTicker().getSymbol());
+        int tries = 0;
+        int maxTries = 30; // Wait up to 30 seconds for market data
+        while (bbo == null) {
+            try {
+                logger.info("Waiting for market data for " + order.getTicker().getSymbol() + " to place order");
+                Thread.sleep(1000);
+                bbo = bestBidOfferMap.get(order.getTicker().getSymbol());
+                tries++;
+                if (tries > maxTries) {
+                    break;
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new SumZeroException(
+                        "Interrupted while waiting for market data for " + order.getTicker().getSymbol());
+            }
+        }
+        if (bbo == null) {
+            throw new SumZeroException("No market data available for " + order.getTicker() + ", cannot place order");
+        }
         HyperliquidOrderTicket hyperliquidOrderTicket = new HyperliquidOrderTicket(bbo, order);
+        pendingOrderMapByCloid.put(order.getClientOrderId(), order);
         SubmitPostResponse submittedOrders = websocketApi
                 .submitOrders(translator.translateOrderTickets(hyperliquidOrderTicket));
         updateOrderIds(order, submittedOrders);
@@ -145,7 +180,7 @@ public class HyperliquidBroker extends AbstractBasicBroker {
 
     @Override
     public String getNextOrderId() {
-        return EncodeUtil.encode128BitHex(nextOrderId++ + "");
+        return HyperliquidUtil.encode128BitHex(nextOrderId++ + "");
     }
 
     @Override
@@ -227,7 +262,8 @@ public class HyperliquidBroker extends AbstractBasicBroker {
             accountWebSocketProcessor.addEventListener((IAccountUpdate event) -> {
                 accountUpdateWsEventReceived(event);
             });
-            accountInfoWSClient = new HyperliquidWebSocketClient(wsUrl, "account", accountWebSocketProcessor);
+            accountInfoWSClient = HyperliquidWebSocketClientBuilder.buildAccountInfoClient(wsUrl,
+                    HyperliquidConfiguration.getInstance().getAccountAddress(), accountWebSocketProcessor);
 
             accountInfoWSClient.connect();
         } catch (Exception e) {
@@ -239,6 +275,7 @@ public class HyperliquidBroker extends AbstractBasicBroker {
     protected void startOrderStatusWSClient() {
         logger.info("Starting order status WebSocket client");
         String wsUrl = HyperliquidConfiguration.getInstance().getWebSocketUrl();
+        String userAddress = HyperliquidConfiguration.getInstance().getAccountAddress();
 
         try {
             orderStatusWebSocketProcessor = new WsOrderWebSocketProcessor(() -> {
@@ -248,7 +285,8 @@ public class HyperliquidBroker extends AbstractBasicBroker {
             orderStatusWebSocketProcessor.addEventListener((List<WsOrderUpdate> event) -> {
                 ordersUpdateWsEventReceived(event);
             });
-            orderStatusWSClient = new HyperliquidWebSocketClient(wsUrl, "order", orderStatusWebSocketProcessor);
+            orderStatusWSClient = HyperliquidWebSocketClientBuilder.buildOrderUpdateClient(wsUrl, userAddress,
+                    orderStatusWebSocketProcessor);
 
             orderStatusWSClient.connect();
         } catch (Exception e) {
@@ -269,8 +307,36 @@ public class HyperliquidBroker extends AbstractBasicBroker {
     }
 
     public void ordersUpdateWsEventReceived(List<WsOrderUpdate> event) {
+        // public OrderStatus(Status status, String orderId, BigDecimal filled,
+        // BigDecimal remaining, BigDecimal fillPrice,
+        // Ticker ticker, ZonedDateTime timestamp) {
+
+        // public OrderStatus(Status status, String originalOrderId, String orderId,
+        // BigDecimal filled, BigDecimal remaining,
+        // BigDecimal fillPrice, Ticker ticker, ZonedDateTime timestamp) {
         for (WsOrderUpdate orderUpdate : event) {
-            logger.info("WS Order Update {}", orderUpdate);
+            logger.info("Order Update: {}", orderUpdate);
+            OrderTicket orderTicket = pendingOrderMapByCloid.get(orderUpdate.getClientOrderId());
+            Status status;
+            if (orderUpdate.getStatus() == OrderStatusType.FILLED) {
+                status = Status.FILLED;
+            } else if (orderUpdate.getStatus() == OrderStatusType.CANCELED) {
+                status = Status.CANCELED;
+            } else if (orderUpdate.getStatus() == OrderStatusType.REJECTED) {
+                status = Status.REJECTED;
+            } else {
+                status = Status.UNKNOWN;
+            }
+
+            ZonedDateTime timestamp = ZonedDateTime.ofInstant(
+                    java.time.Instant.ofEpochMilli(orderUpdate.getStatusTimestamp()), java.time.ZoneId.of("GMT"));
+
+            OrderStatus orderStatus = new OrderStatus(status, orderTicket.getOrderId(), BigDecimal.ZERO,
+                    BigDecimal.ZERO, BigDecimal.ZERO, orderTicket.getTicker(), timestamp);
+
+            OrderEvent orderEvent = new OrderEvent(orderTicket, orderStatus);
+
+            fireOrderEvent(orderEvent);
         }
 
     }
@@ -287,12 +353,26 @@ public class HyperliquidBroker extends AbstractBasicBroker {
         }
     }
 
+    @Override
+    public void quoteRecieved(ILevel1Quote quote) {
+        // logger.info("Quote received: {}", quote);
+        if (quote.containsType(QuoteType.BID) && quote.containsType(QuoteType.ASK)) {
+            bestBidOfferMap.put(quote.getTicker().getSymbol(),
+                    new BestBidOffer(quote.getValue(QuoteType.BID), quote.getValue(QuoteType.ASK)));
+        }
+
+    }
+
     protected void updateOrderIds(OrderTicket order, SubmitPostResponse response) {
 
         if (response.orders.size() != 1) {
             throw new IllegalStateException("Expected exactly one order in response");
         }
         int hyperliquidOrderId = response.orders.get(0).orderId;
+        if (hyperliquidOrderId <= 0) {
+            return;
+        }
+
         order.setOrderId(String.valueOf(hyperliquidOrderId));
 
     }

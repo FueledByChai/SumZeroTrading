@@ -6,6 +6,7 @@
 package com.sumzerotrading.broker;
 
 import java.time.ZonedDateTime;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -48,10 +49,10 @@ public abstract class AbstractBasicBroker implements IBroker {
         eventExecutor.shutdown();
     }
 
-    protected Set<OrderEventListener> orderEventListeners = new TreeSet<>();
-    protected Set<BrokerErrorListener> brokerErrorListeners = new TreeSet<>();
-    protected Set<TimeUpdatedListener> timeUpdatedListeners = new TreeSet<>();
-    protected Set<BrokerAccountInfoListener> brokerAccountInfoListeners = new TreeSet<>();
+    protected Set<OrderEventListener> orderEventListeners = new HashSet<>();
+    protected Set<BrokerErrorListener> brokerErrorListeners = new HashSet<>();
+    protected Set<TimeUpdatedListener> timeUpdatedListeners = new HashSet<>();
+    protected Set<BrokerAccountInfoListener> brokerAccountInfoListeners = new HashSet<>();
     protected static Logger logger = LoggerFactory.getLogger(AbstractBasicBroker.class);
     protected final java.util.concurrent.ExecutorService eventExecutor = java.util.concurrent.Executors
             .newCachedThreadPool();

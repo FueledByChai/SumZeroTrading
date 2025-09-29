@@ -11,11 +11,11 @@ public class HyperliquidWebSocketClientBuilder {
     public static final String WS_TYPE_BBO = "bbo";
     public static final String WS_TYPE_ACTIVE_ASSET_CTX = "activeAssetCtx";
     public static final String WS_TYPE_TRADES = "trades";
+    public static final String WS_TYPE_ACCOUNT_INFO = "clearinghouseState";
 
     public static HyperliquidWebSocketClient buildOrderUpdateClient(String url, String userAddress,
             IWebSocketProcessor processor) throws Exception {
-        return new HyperliquidWebSocketClient(url, WS_TYPE_ORDER_UPDATES, Map.of("userAddress", userAddress),
-                processor);
+        return new HyperliquidWebSocketClient(url, WS_TYPE_ORDER_UPDATES, Map.of("user", userAddress), processor);
     }
 
     public static HyperliquidWebSocketClient buildOrderBookUpdateClient(String url, String assetSymbol,
@@ -37,6 +37,11 @@ public class HyperliquidWebSocketClientBuilder {
     public static HyperliquidWebSocketClient buildTradesClient(String url, String assetSymbol,
             IWebSocketProcessor processor) throws Exception {
         return new HyperliquidWebSocketClient(url, WS_TYPE_TRADES, Map.of("coin", assetSymbol), processor);
+    }
+
+    public static HyperliquidWebSocketClient buildAccountInfoClient(String url, String userAddress,
+            IWebSocketProcessor processor) throws Exception {
+        return new HyperliquidWebSocketClient(url, WS_TYPE_ACCOUNT_INFO, Map.of("user", userAddress), processor);
     }
 
 }
