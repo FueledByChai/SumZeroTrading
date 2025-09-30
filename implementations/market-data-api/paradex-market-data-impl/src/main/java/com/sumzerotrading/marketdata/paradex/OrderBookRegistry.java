@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sumzerotrading.data.Ticker;
-import com.sumzerotrading.paradex.common.api.ParadexWebSocketClient;
+import com.sumzerotrading.paradex.common.api.ws.ParadexWebSocketClient;
 
 public class OrderBookRegistry {
     protected static final Logger logger = LoggerFactory.getLogger(OrderBookRegistry.class);

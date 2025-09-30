@@ -124,13 +124,13 @@ public class TranslatorTest {
     public void testTranslateOrderTicketToOrderJson_MarketBuy() {
         Ticker ticker = mock(Ticker.class);
         when(ticker.getIdAsInt()).thenReturn(123);
-        when(ticker.formatPrice(new java.math.BigDecimal("101.0505000"))).thenReturn(new BigDecimal("101.05"));
+        when(ticker.getMinimumTickSize()).thenReturn(new BigDecimal("0.01"));
         OrderTicket ticket = new OrderTicket();
         ticket.setTicker(ticker);
         ticket.setTradeDirection(TradeDirection.BUY);
         ticket.setType(OrderTicket.Type.MARKET);
         ticket.setSize(new java.math.BigDecimal("1.5"));
-        ticket.setReference("cloid-1");
+        ticket.setClientOrderId("cloid-1");
         BestBidOffer bestBidOffer = new BestBidOffer(new java.math.BigDecimal("100.00"),
                 new java.math.BigDecimal("101.00"));
 
@@ -149,13 +149,14 @@ public class TranslatorTest {
     public void testTranslateOrderTicketToOrderJson_LimitSell_PostOnly() {
         Ticker ticker = mock(Ticker.class);
         when(ticker.getIdAsInt()).thenReturn(456);
+        when(ticker.getMinimumTickSize()).thenReturn(new BigDecimal("0.01"));
         OrderTicket ticket = new OrderTicket();
         ticket.setTicker(ticker);
         ticket.setTradeDirection(TradeDirection.SELL);
         ticket.setType(OrderTicket.Type.LIMIT);
         ticket.setSize(new java.math.BigDecimal("2.0"));
         ticket.setLimitPrice(new java.math.BigDecimal("99.99"));
-        ticket.setReference("cloid-2");
+        ticket.setClientOrderId("cloid-2");
         ticket.getModifiers().add(OrderTicket.Modifier.POST_ONLY);
         BestBidOffer bestBidOffer = new BestBidOffer(new java.math.BigDecimal("99.00"),
                 new java.math.BigDecimal("100.00"));
@@ -177,22 +178,23 @@ public class TranslatorTest {
     public void testTranslateOrderTicket_MultipleTickets() {
         Ticker ticker1 = mock(Ticker.class);
         when(ticker1.getIdAsInt()).thenReturn(1);
-        when(ticker1.formatPrice(new java.math.BigDecimal("100.0500000"))).thenReturn(new BigDecimal("100.05"));
+        when(ticker1.getMinimumTickSize()).thenReturn(new BigDecimal("0.01"));
         Ticker ticker2 = mock(Ticker.class);
         when(ticker2.getIdAsInt()).thenReturn(2);
+        when(ticker2.getMinimumTickSize()).thenReturn(new BigDecimal("0.01"));
         OrderTicket ticket1 = new OrderTicket();
         ticket1.setTicker(ticker1);
         ticket1.setTradeDirection(TradeDirection.BUY);
         ticket1.setType(OrderTicket.Type.MARKET);
         ticket1.setSize(new java.math.BigDecimal("1.0"));
-        ticket1.setReference("cloid-1");
+        ticket1.setClientOrderId("cloid-1");
         OrderTicket ticket2 = new OrderTicket();
         ticket2.setTicker(ticker2);
         ticket2.setTradeDirection(TradeDirection.SELL);
         ticket2.setType(OrderTicket.Type.LIMIT);
         ticket2.setSize(new java.math.BigDecimal("2.0"));
         ticket2.setLimitPrice(new java.math.BigDecimal("99.99"));
-        ticket2.setReference("cloid-2");
+        ticket2.setClientOrderId("cloid-2");
         BestBidOffer bestBidOffer1 = new BestBidOffer(new java.math.BigDecimal("99.00"),
                 new java.math.BigDecimal("100.00"));
 
@@ -210,6 +212,7 @@ public class TranslatorTest {
     public void testTranslateOrderTicket_ReduceOnlyModifier() {
         Ticker ticker = mock(Ticker.class);
         when(ticker.getIdAsInt()).thenReturn(789);
+        when(ticker.getMinimumTickSize()).thenReturn(new BigDecimal("0.01"));
         OrderTicket ticket = new OrderTicket();
         ticket.setTicker(ticker);
         ticket.setTradeDirection(TradeDirection.BUY);

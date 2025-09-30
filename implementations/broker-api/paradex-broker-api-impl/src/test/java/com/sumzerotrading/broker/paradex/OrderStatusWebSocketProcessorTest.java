@@ -16,6 +16,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.sumzerotrading.paradex.common.api.order.OrderType;
 import com.sumzerotrading.paradex.common.api.order.Side;
+import com.sumzerotrading.paradex.common.api.ws.orderstatus.CancelReason;
+import com.sumzerotrading.paradex.common.api.ws.orderstatus.IParadexOrderStatusUpdate;
+import com.sumzerotrading.paradex.common.api.ws.orderstatus.OrderStatusWebSocketProcessor;
+import com.sumzerotrading.paradex.common.api.ws.orderstatus.ParadexOrderStatus;
+import com.sumzerotrading.paradex.common.api.ws.orderstatus.ParadexOrderStatusListener;
 import com.sumzerotrading.websocket.IWebSocketClosedListener;
 
 /**

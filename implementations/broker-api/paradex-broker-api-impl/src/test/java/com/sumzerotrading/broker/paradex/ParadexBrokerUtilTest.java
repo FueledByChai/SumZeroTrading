@@ -21,6 +21,9 @@ import com.sumzerotrading.broker.order.OrderStatus.Status;
 import com.sumzerotrading.data.SumZeroException;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.paradex.common.ParadexTickerRegistry;
+import com.sumzerotrading.paradex.common.api.ws.orderstatus.CancelReason;
+import com.sumzerotrading.paradex.common.api.ws.orderstatus.ParadexOrderStatus;
+import com.sumzerotrading.paradex.common.api.ws.orderstatus.ParadoxOrderStatusUpdate;
 import com.sumzerotrading.util.ITickerRegistry;
 
 /**

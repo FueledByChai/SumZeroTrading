@@ -36,7 +36,10 @@ import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.paradex.common.api.ParadexConfiguration;
 import com.sumzerotrading.paradex.common.api.ParadexRestApi;
-import com.sumzerotrading.paradex.common.api.ParadexWebSocketClient;
+import com.sumzerotrading.paradex.common.api.ws.ParadexWebSocketClient;
+import com.sumzerotrading.paradex.common.api.ws.orderstatus.IParadexOrderStatusUpdate;
+import com.sumzerotrading.paradex.common.api.ws.orderstatus.OrderStatusWebSocketProcessor;
+import com.sumzerotrading.paradex.common.api.ws.orderstatus.ParadexOrderStatus;
 import com.sumzerotrading.time.TimeUpdatedListener;
 
 /**

@@ -17,44 +17,33 @@
  */
 package com.sumzerotrading.broker.paradex;
 
-import java.text.SimpleDateFormat;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Timer;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sumzerotrading.broker.AbstractBasicBroker;
-import com.sumzerotrading.broker.BrokerAccountInfoListener;
-import com.sumzerotrading.broker.BrokerError;
-import com.sumzerotrading.broker.BrokerErrorListener;
 import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.order.OrderEvent;
-import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.broker.order.OrderStatus;
 import com.sumzerotrading.broker.order.OrderTicket;
-import com.sumzerotrading.data.ComboTicker;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.paradex.common.api.IParadexRestApi;
 import com.sumzerotrading.paradex.common.api.ParadexApiFactory;
 import com.sumzerotrading.paradex.common.api.ParadexConfiguration;
-import com.sumzerotrading.paradex.common.api.ParadexWebSocketClient;
-import com.sumzerotrading.time.TimeUpdatedListener;
+import com.sumzerotrading.paradex.common.api.ws.ParadexWSClientBuilder;
+import com.sumzerotrading.paradex.common.api.ws.ParadexWebSocketClient;
+import com.sumzerotrading.paradex.common.api.ws.accountinfo.AccountWebSocketProcessor;
+import com.sumzerotrading.paradex.common.api.ws.orderstatus.IParadexOrderStatusUpdate;
+import com.sumzerotrading.paradex.common.api.ws.orderstatus.OrderStatusWebSocketProcessor;
 import com.sumzerotrading.websocket.IWebSocketEventListener;
 
 /**
@@ -266,7 +255,7 @@ public class ParadexBroker extends AbstractBasicBroker implements IWebSocketEven
         String wsUrl = ParadexApiFactory.getWebSocketUrl();
 
         try {
-            orderStatusWSClient = new ParadexWebSocketClient(wsUrl, "orders.ALL", orderStatusProcessor, jwtToken);
+            orderStatusWSClient = ParadexWSClientBuilder.buildOrderStatusClient(wsUrl, orderStatusProcessor, jwtToken);
             orderStatusWSClient.connect();
         } catch (Exception e) {
             throw new IllegalStateException(e);

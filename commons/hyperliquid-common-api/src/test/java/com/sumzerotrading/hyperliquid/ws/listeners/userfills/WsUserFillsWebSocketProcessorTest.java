@@ -7,7 +7,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class WsUserFillsWebSocketProcessorTest {
     @Test
     void testParseMessage_validUserFills() {
-        String json = "{" + "\"isSnapshot\":true," + "\"user\":\"testuser\"," + "\"fills\":[{"
+        String json = "{" + "\"channel\":\"userFills\"," + "\"isSnapshot\":true," + "\"user\":\"testuser\","
+                + "\"fills\":[{"
                 + "\"coin\":\"BTC\",\"px\":\"110000.0\",\"sz\":\"0.01\",\"side\":\"B\",\"time\":1759193135807,"
                 + "\"startPosition\":\"0.00\",\"dir\":\"buy\",\"closedPnl\":\"0.00\",\"hash\":\"0xabc\",\"oid\":39878035067,"
                 + "\"crossed\":true,\"fee\":\"-0.01\",\"tid\":12345,\"feeToken\":\"USDC\",\"builderFee\":\"0.001\"}]"
@@ -39,7 +40,7 @@ class WsUserFillsWebSocketProcessorTest {
 
     @Test
     void testParseMessage_emptyFills() {
-        String json = "{\"user\":\"testuser\",\"fills\":[]}";
+        String json = "{\"channel\":\"userFills\",\"user\":\"testuser\",\"fills\":[]}";
         WsUserFillsWebSocketProcessor processor = new WsUserFillsWebSocketProcessor(null);
         WsUserFill userFill = processor.parseMessage(json);
         assertNotNull(userFill);
@@ -49,7 +50,7 @@ class WsUserFillsWebSocketProcessorTest {
 
     @Test
     void testParseMessage_missingUser() {
-        String json = "{\"fills\":[]}";
+        String json = "{\"channel\":\"userFills\",\"fills\":[]}";
         WsUserFillsWebSocketProcessor processor = new WsUserFillsWebSocketProcessor(null);
         WsUserFill userFill = processor.parseMessage(json);
         assertNotNull(userFill);
@@ -59,7 +60,7 @@ class WsUserFillsWebSocketProcessorTest {
 
     @Test
     void testParseMessage_nullFills() {
-        String json = "{\"user\":\"testuser\"}";
+        String json = "{\"channel\":\"userFills\",\"user\":\"testuser\"}";
         WsUserFillsWebSocketProcessor processor = new WsUserFillsWebSocketProcessor(null);
         WsUserFill userFill = processor.parseMessage(json);
         assertNotNull(userFill);

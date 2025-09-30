@@ -1,4 +1,4 @@
-package com.sumzerotrading.paradex.common.api;
+package com.sumzerotrading.paradex.common.api.ws;
 
 import org.java_websocket.handshake.ServerHandshake;
 
