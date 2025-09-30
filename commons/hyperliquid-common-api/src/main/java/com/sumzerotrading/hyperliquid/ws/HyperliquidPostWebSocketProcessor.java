@@ -55,10 +55,11 @@ public class HyperliquidPostWebSocketProcessor extends AbstractWebSocketProcesso
                         String filledStatus = null;
                         String clientOid = null;
 
-                        if (statusObj.has("filled")) {
-                            JSONObject filledObj = statusObj.getJSONObject("filled");
+                        if (statusObj.has("filled") || statusObj.has("resting")) {
+                            JSONObject filledObj = statusObj.has("filled") ? statusObj.getJSONObject("filled")
+                                    : statusObj.getJSONObject("resting");
                             oid = filledObj.getInt("oid");
-                            filledStatus = "filled";
+                            filledStatus = statusObj.has("filled") ? "filled" : "resting";
                             clientOid = filledObj.optString("cloid", null);
                             postResponse.addSubmitOrderResponse(oid, clientOid, filledStatus);
                         } else if (statusObj.has("error")) {

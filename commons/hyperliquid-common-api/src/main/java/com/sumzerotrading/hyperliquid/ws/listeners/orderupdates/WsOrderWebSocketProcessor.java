@@ -26,7 +26,6 @@ public class WsOrderWebSocketProcessor extends AbstractWebSocketProcessor<List<W
         try {
             JSONObject jsonObject = new JSONObject(message);
 
-            // Legacy message format handling
             if (!jsonObject.has("channel")) {
                 return null;
             }
@@ -35,21 +34,13 @@ public class WsOrderWebSocketProcessor extends AbstractWebSocketProcessor<List<W
 
             if ("orderUpdates".equals(channel)) {
                 List<WsOrderUpdate> orderUpdates = new ArrayList<>();
-                JSONObject data = jsonObject.getJSONObject("data");
-                JSONArray ordersArray = data.getJSONArray("orders");
-                if (ordersArray.length() == 0) {
-                    return null;
-                }
-                JSONObject orderJson = ordersArray.getJSONObject(0);
-
-                WsOrderUpdate orderUpdate = parseOrderUpdate(orderJson);
-                if (orderUpdate != null) {
-
+                JSONArray dataArray = jsonObject.getJSONArray("data");
+                for (int i = 0; i < dataArray.length(); i++) {
+                    JSONObject data = dataArray.getJSONObject(i);
+                    WsOrderUpdate orderUpdate = parseOrderUpdate(data);
                     orderUpdates.add(orderUpdate);
-                    return orderUpdates;
-                } else {
-                    throw new SumZeroException("Error parsing order update");
                 }
+                return orderUpdates;
             } else {
                 logger.warn("Unknown message type: " + channel);
                 logger.warn(message);
@@ -61,15 +52,13 @@ public class WsOrderWebSocketProcessor extends AbstractWebSocketProcessor<List<W
         }
     }
 
-    protected WsOrderUpdate parseOrderUpdate(JSONObject orderJson) {
+    protected WsOrderUpdate parseOrderUpdate(JSONObject data) {
         try {
-
             WsOrderUpdate orderUpdate = new WsOrderUpdate();
-            orderUpdate.setStatus(orderJson.getString("status"));
-            orderUpdate.setStatusTimestamp(orderJson.getLong("timestamp"));
+            orderUpdate.setStatus(data.getString("status"));
+            orderUpdate.setStatusTimestamp(data.getLong("statusTimestamp"));
 
-            JSONObject order = orderJson.getJSONObject("order");
-
+            JSONObject order = data.getJSONObject("order");
             orderUpdate.setCoin(order.getString("coin"));
             orderUpdate.setSide(order.getString("side"));
             orderUpdate.setLimitPrice(order.getString("limitPx"));
@@ -78,10 +67,9 @@ public class WsOrderWebSocketProcessor extends AbstractWebSocketProcessor<List<W
             orderUpdate.setOrderTimestamp(order.getLong("timestamp"));
             orderUpdate.setOriginalSize(order.getString("origSz"));
             orderUpdate.setClientOrderId(order.optString("cloid", null));
-
             return orderUpdate;
         } catch (Exception e) {
-            logger.error("Error parsing order update: " + orderJson, e);
+            logger.error("Error parsing order update: " + data, e);
             throw new SumZeroException("Error parsing order update", e);
         }
     }

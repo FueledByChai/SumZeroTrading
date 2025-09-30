@@ -130,6 +130,7 @@ public class OrderStatus implements Serializable {
         hash = 97 * hash + (this.fillPrice != null ? this.fillPrice.hashCode() : 0);
         hash = 97 * hash + (this.ticker != null ? this.ticker.hashCode() : 0);
         hash = 97 * hash + (this.timestamp != null ? this.timestamp.hashCode() : 0);
+        hash = 97 * hash + (this.cancelReason != null ? this.cancelReason.hashCode() : 0);
         return hash;
     }
 
@@ -166,6 +167,9 @@ public class OrderStatus implements Serializable {
         if (this.timestamp != other.timestamp && (this.timestamp == null || !this.timestamp.equals(other.timestamp))) {
             return false;
         }
+        if (this.cancelReason != other.cancelReason) {
+            return false;
+        }
         return true;
     }
 
@@ -173,7 +177,7 @@ public class OrderStatus implements Serializable {
     public String toString() {
         return "OrderStatus{" + "status=" + status + ", orderId=" + orderId + ", oldOrderid=" + oldOrderid + ", filled="
                 + filled + ", remaining=" + remaining + ", fillPrice=" + fillPrice + ", ticker=" + ticker
-                + ", timestamp=" + timestamp + '}';
+                + ", timestamp=" + timestamp + ", cancelReason=" + cancelReason + '}';
     }
 
 }

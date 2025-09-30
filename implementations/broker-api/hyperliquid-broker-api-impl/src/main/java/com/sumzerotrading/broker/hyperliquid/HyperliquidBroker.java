@@ -42,6 +42,7 @@ import com.sumzerotrading.broker.hyperliquid.translators.ITranslator;
 import com.sumzerotrading.broker.hyperliquid.translators.Translator;
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderStatus;
+import com.sumzerotrading.broker.order.OrderStatus.CancelReason;
 import com.sumzerotrading.broker.order.OrderStatus.Status;
 import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.SumZeroException;
@@ -307,24 +308,50 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
     }
 
     public void ordersUpdateWsEventReceived(List<WsOrderUpdate> event) {
-        // public OrderStatus(Status status, String orderId, BigDecimal filled,
-        // BigDecimal remaining, BigDecimal fillPrice,
-        // Ticker ticker, ZonedDateTime timestamp) {
 
-        // public OrderStatus(Status status, String originalOrderId, String orderId,
-        // BigDecimal filled, BigDecimal remaining,
-        // BigDecimal fillPrice, Ticker ticker, ZonedDateTime timestamp) {
         for (WsOrderUpdate orderUpdate : event) {
             logger.info("Order Update: {}", orderUpdate);
             OrderTicket orderTicket = pendingOrderMapByCloid.get(orderUpdate.getClientOrderId());
             Status status;
-            if (orderUpdate.getStatus() == OrderStatusType.FILLED) {
+            CancelReason cancelReason = CancelReason.NONE;
+            switch (orderUpdate.getStatus()) {
+            case FILLED:
                 status = Status.FILLED;
-            } else if (orderUpdate.getStatus() == OrderStatusType.CANCELED) {
+                break;
+            case CANCELED:
+            case MARGIN_CANCELED:
+            case VAULT_WITHDRAWAL_CANCELED:
+            case OPEN_INTEREST_CAP_CANCELED:
+            case SELF_TRADE_CANCELED:
+            case REDUCE_ONLY_CANCELED:
+            case SIBLING_FILLED_CANCELED:
+            case DELISTED_CANCELED:
+            case LIQUIDATED_CANCELED:
+            case SCHEDULED_CANCEL:
+            case TICK_REJECTED:
+            case MIN_TRADE_NTL_REJECTED:
+            case PERP_MARGIN_REJECTED:
+            case REDUCE_ONLY_REJECTED:
+            case BAD_TRIGGER_PX_REJECTED:
+            case MARKET_ORDER_NO_LIQUIDITY_REJECTED:
+            case POSITION_INCREASE_AT_OPEN_INTEREST_CAP_REJECTED:
+            case POSITION_FLIP_AT_OPEN_INTEREST_CAP_REJECTED:
+            case TOO_AGGRESSIVE_AT_OPEN_INTEREST_CAP_REJECTED:
+            case OPEN_INTEREST_INCREASE_REJECTED:
+            case INSUFFICIENT_SPOT_BALANCE_REJECTED:
+            case ORACLE_REJECTED:
+            case PERP_MAX_POSITION_REJECTED:
                 status = Status.CANCELED;
-            } else if (orderUpdate.getStatus() == OrderStatusType.REJECTED) {
+                cancelReason = CancelReason.USER_CANCELED;
+                break;
+            case BAD_ALO_PX_REJECTED:
+                status = Status.CANCELED;
+                cancelReason = CancelReason.POST_ONLY_WOULD_CROSS;
+                break;
+            case REJECTED:
                 status = Status.REJECTED;
-            } else {
+                break;
+            default:
                 status = Status.UNKNOWN;
             }
 
@@ -333,6 +360,7 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
 
             OrderStatus orderStatus = new OrderStatus(status, orderTicket.getOrderId(), BigDecimal.ZERO,
                     BigDecimal.ZERO, BigDecimal.ZERO, orderTicket.getTicker(), timestamp);
+            orderStatus.setCancelReason(cancelReason);
 
             OrderEvent orderEvent = new OrderEvent(orderTicket, orderStatus);
 

@@ -6,6 +6,7 @@ nbbuild/
 dist/
 nbdist/
 target/
+local-stuff/
 nbactions.xml
 nb-configuration.xml
 
@@ -30,4 +31,4 @@ nb-configuration.xml
 /implementations/market-data-api/bitmex-market-data-api-impl/nbproject/
 /commons/bitmex-common-api/nbproject/
 /implementations/historical-data-api/bitmex-historical-data-api-imple/nbproject/
-local-stuff/hl-trading-example.properties
+

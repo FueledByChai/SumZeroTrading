@@ -172,6 +172,10 @@ public class HyperliquidConfiguration {
         return properties.getProperty(HYPERLIQUID_ACCOUNT_ADDRESS);
     }
 
+    public String getApiAddress() {
+        return properties.getProperty(HYPERLIQUID_API_ADDRESS);
+    }
+
     public String getPrivateKey() {
         return properties.getProperty(HYPERLIQUID_PRIVATE_KEY);
     }

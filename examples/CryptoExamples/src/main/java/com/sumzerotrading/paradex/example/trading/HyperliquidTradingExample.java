@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 import com.sumzerotrading.broker.hyperliquid.HyperliquidBroker;
 import com.sumzerotrading.broker.order.OrderTicket;
+import com.sumzerotrading.broker.order.OrderTicket.Modifier;
 import com.sumzerotrading.broker.order.OrderTicket.Type;
 import com.sumzerotrading.broker.order.TradeDirection;
 import com.sumzerotrading.data.Ticker;
@@ -35,7 +36,7 @@ public class HyperliquidTradingExample {
 
         OrderTicket order = new OrderTicket();
         order.setTicker(btcTicker).setSize(BigDecimal.valueOf(0.01)).setDirection(TradeDirection.BUY)
-                .setType(Type.LIMIT).setLimitPrice(BigDecimal.valueOf(110000));
+                .setType(Type.LIMIT).setLimitPrice(BigDecimal.valueOf(116000)).addModifier(Modifier.POST_ONLY);
         broker.placeOrder(order);
 
     }
