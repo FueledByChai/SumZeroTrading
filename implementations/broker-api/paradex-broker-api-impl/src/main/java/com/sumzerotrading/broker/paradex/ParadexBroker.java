@@ -42,18 +42,14 @@ import com.sumzerotrading.paradex.common.api.ParadexConfiguration;
 import com.sumzerotrading.paradex.common.api.ws.ParadexWSClientBuilder;
 import com.sumzerotrading.paradex.common.api.ws.ParadexWebSocketClient;
 import com.sumzerotrading.paradex.common.api.ws.accountinfo.AccountWebSocketProcessor;
+import com.sumzerotrading.paradex.common.api.ws.accountinfo.IAccountUpdate;
+import com.sumzerotrading.paradex.common.api.ws.fills.ParadexFill;
 import com.sumzerotrading.paradex.common.api.ws.orderstatus.IParadexOrderStatusUpdate;
 import com.sumzerotrading.paradex.common.api.ws.orderstatus.OrderStatusWebSocketProcessor;
-import com.sumzerotrading.websocket.IWebSocketEventListener;
 
 /**
- * Supported Order types are: Market, Stop and Limit Supported order parameters
- * are parent/child, OCA, Good-after-time, good-till-date. Supported
- * Time-in-force: DAY, Good-till-canceled, Good-till-time, Immediate-or-cancel
- *
- * @author Rob Terpilowski
  */
-public class ParadexBroker extends AbstractBasicBroker implements IWebSocketEventListener<IParadexOrderStatusUpdate> {
+public class ParadexBroker extends AbstractBasicBroker {
     protected static Logger logger = LoggerFactory.getLogger(ParadexBroker.class);
 
     protected static int contractRequestId = 1;
@@ -75,6 +71,8 @@ public class ParadexBroker extends AbstractBasicBroker implements IWebSocketEven
 
     protected ScheduledExecutorService authenticationScheduler;
 
+    protected IParadexTranslator translator;
+
     protected boolean started = false;
 
     protected List<Position> positionsList = new ArrayList<>();
@@ -92,6 +90,8 @@ public class ParadexBroker extends AbstractBasicBroker implements IWebSocketEven
         // Get JWT refresh interval from configuration
         ParadexConfiguration config = ParadexConfiguration.getInstance();
         this.jwtRefreshInSeconds = config.getJwtRefreshSeconds();
+
+        this.translator = ParadexTranslator.getInstance();
 
         logger.info("ParadexBroker initialized with configuration: {}", ParadexApiFactory.getConfigurationInfo());
     }
@@ -133,12 +133,17 @@ public class ParadexBroker extends AbstractBasicBroker implements IWebSocketEven
 
     @Override
     public void connect() {
-        startAuthenticationScheduler();
         orderStatusProcessor = new OrderStatusWebSocketProcessor(() -> {
             logger.info("Order status WebSocket closed, trying to restart...");
             startOrderStatusWSClient();
         });
-        orderStatusProcessor.addEventListener(this);
+        orderStatusProcessor.addEventListener(orderStatus -> {
+            onParadexOrderStatusEvent(orderStatus);
+        });
+
+        startAuthenticationScheduler();
+        startOrderStatusWSClient();
+
         connected = true;
     }
 
@@ -179,14 +184,10 @@ public class ParadexBroker extends AbstractBasicBroker implements IWebSocketEven
     }
 
     protected void checkConnected() {
-        // if (bitmexClient == null) {
-        // throw new SumZeroException("Not connected to broker, call connect() first");
-        // }
     }
 
-    @Override
-    public void onWebSocketEvent(IParadexOrderStatusUpdate orderStatus) {
-        OrderStatus status = ParadexBrokerUtil.translateOrderStatus(orderStatus);
+    protected void onParadexOrderStatusEvent(IParadexOrderStatusUpdate orderStatus) {
+        OrderStatus status = translator.translateOrderStatus(orderStatus);
         OrderTicket order = tradeOrderMap.get(orderStatus.getOrderId());
         order.setCurrentStatus(status.getStatus());
         order.setFilledPrice(status.getFillPrice());
@@ -199,6 +200,13 @@ public class ParadexBroker extends AbstractBasicBroker implements IWebSocketEven
         }
 
         super.fireOrderEvent(event);
+    }
+
+    protected void onParadexFillEvent(ParadexFill fill) {
+
+    }
+
+    protected void onParadexAccountInfoEvent(IAccountUpdate accountInfo) {
 
     }
 
@@ -259,6 +267,7 @@ public class ParadexBroker extends AbstractBasicBroker implements IWebSocketEven
             orderStatusWSClient.connect();
         } catch (Exception e) {
             throw new IllegalStateException(e);
+
         }
 
     }

@@ -8,7 +8,9 @@ import java.util.stream.Collectors;
 import com.sumzerotrading.BestBidOffer;
 import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.hyperliquid.HyperliquidOrderTicket;
+import com.sumzerotrading.broker.order.Fill;
 import com.sumzerotrading.broker.order.OrderTicket;
+import com.sumzerotrading.broker.order.TradeDirection;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.hyperliquid.HyperliquidUtil;
 import com.sumzerotrading.hyperliquid.ws.HyperliquidTickerRegistry;
@@ -16,6 +18,9 @@ import com.sumzerotrading.hyperliquid.ws.json.LimitType;
 import com.sumzerotrading.hyperliquid.ws.json.OrderAction;
 import com.sumzerotrading.hyperliquid.ws.json.OrderJson;
 import com.sumzerotrading.hyperliquid.ws.listeners.accountinfo.HyperliquidPositionUpdate;
+import com.sumzerotrading.hyperliquid.ws.listeners.userfills.WsFill;
+import com.sumzerotrading.hyperliquid.ws.listeners.userfills.WsUserFill;
+import com.sumzerotrading.util.Util;
 
 public class Translator implements ITranslator {
 
@@ -125,5 +130,30 @@ public class Translator implements ITranslator {
     public String getSellSlippage(Ticker ticker, BigDecimal currentBid) {
         BigDecimal slippage = currentBid.multiply(BigDecimal.valueOf(SLIPPAGE_PERCENTAGE / 100));
         return HyperliquidUtil.formatPriceAsString(ticker, currentBid.subtract(slippage));
+    }
+
+    @Override
+    public List<Fill> translateFill(WsUserFill wsUserFill) {
+        if (wsUserFill == null) {
+            return new ArrayList<>();
+        }
+
+        List<Fill> fills = new ArrayList<>();
+        for (WsFill wsFill : wsUserFill.getFills()) {
+            Ticker ticker = HyperliquidTickerRegistry.getInstance().lookupByBrokerSymbol(wsFill.getCoin());
+            Fill fill = new Fill();
+            fill.setTicker(ticker);
+            fill.setPrice(new BigDecimal(wsFill.getPrice()));
+            fill.setSize(new BigDecimal(wsFill.getSize()));
+            fill.setFillId(wsFill.getTradeId() + "");
+            fill.setCommission(wsFill.getFee() != null ? new BigDecimal(wsFill.getFee()) : BigDecimal.ZERO);
+            fill.setOrderId(wsFill.getOrderId() + "");
+            fill.setSide("buy".equalsIgnoreCase(wsFill.getSide()) ? TradeDirection.BUY : TradeDirection.SELL);
+            fill.setTime(Util.convertEpochToZonedDateTime(wsFill.getTime()));
+            fill.setTaker(wsFill.isTaker());
+            fill.setClientOrderId("");
+            fills.add(fill);
+        }
+        return fills;
     }
 }

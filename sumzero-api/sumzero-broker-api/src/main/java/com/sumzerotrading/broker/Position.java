@@ -22,7 +22,6 @@ package com.sumzerotrading.broker;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.Objects;
 
 import com.sumzerotrading.data.Ticker;
 

@@ -30,10 +30,12 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.IPaperBrokerStatus;
+import com.sumzerotrading.broker.AbstractBasicBroker;
 import com.sumzerotrading.broker.BrokerAccountInfoListener;
 import com.sumzerotrading.broker.BrokerErrorListener;
-import com.sumzerotrading.broker.IBroker;
 import com.sumzerotrading.broker.Position;
+import com.sumzerotrading.broker.order.Fill;
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.broker.order.OrderStatus;
@@ -46,7 +48,6 @@ import com.sumzerotrading.broker.order.TradeDirection;
 import com.sumzerotrading.data.ComboTicker;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.marketdata.ILevel1Quote;
-
 import com.sumzerotrading.marketdata.Level1QuoteListener;
 import com.sumzerotrading.marketdata.OrderFlow;
 import com.sumzerotrading.marketdata.OrderFlowListener;
@@ -54,7 +55,7 @@ import com.sumzerotrading.marketdata.QuoteEngine;
 import com.sumzerotrading.marketdata.QuoteType;
 import com.sumzerotrading.time.TimeUpdatedListener;
 
-public class PaperBroker implements IBroker, Level1QuoteListener, OrderFlowListener {
+public class PaperBroker extends AbstractBasicBroker implements Level1QuoteListener, OrderFlowListener {
 
     protected Logger logger = LoggerFactory.getLogger(PaperBroker.class);
 
@@ -227,6 +228,12 @@ public class PaperBroker implements IBroker, Level1QuoteListener, OrderFlowListe
             currentAccountBalance += fundingThisPeriod; // Update account balance with funding
         }
         this.lastFundingTimestamp = currentTimestamp;
+    }
+
+    @Override
+    protected void onDisconnect() {
+        // TODO Auto-generated method stub
+
     }
 
     @Override
@@ -563,9 +570,25 @@ public class PaperBroker implements IBroker, Level1QuoteListener, OrderFlowListe
         OrderEvent event = new OrderEvent(order, orderStatus);
 
         executedOrders.add(order);
+
+        double fee = calcFee(price, order.getSize().doubleValue(), order.getType() != Type.MARKET);
+
+        Fill fill = new Fill();
+        fill.setCommission(BigDecimal.valueOf(fee));
+        fill.setFillId(System.currentTimeMillis() + "-" + (int) (Math.random() * 10000));
+        fill.setOrderId(orderId);
+        fill.setPrice(averageFillPrice);
+        fill.setSide(order.getTradeDirection());
+        fill.setSize(originalSize);
+        fill.setTaker(order.getType() == Type.MARKET);
+        fill.setTicker(ticker);
+        fill.setTime(getCurrentTime());
+
+        fireFillEvent(fill); // Notify listeners of the fill event
+
         fireOrderStatusUpdate(event); // Notify listeners of the order status update
 
-        writeTradeToCsv(order, price, calcFee(price, order.getSize().doubleValue(), order.getType() != Type.MARKET));
+        writeTradeToCsv(order, price, fee);
 
     }
 
@@ -814,11 +837,6 @@ public class PaperBroker implements IBroker, Level1QuoteListener, OrderFlowListe
         // }
         // }
         startAccountUpdateTask();
-
-    }
-
-    @Override
-    public void disconnect() {
 
     }
 

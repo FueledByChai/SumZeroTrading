@@ -14,11 +14,20 @@ import com.sumzerotrading.paradex.common.api.ws.orderstatus.IParadexOrderStatusU
 import com.sumzerotrading.paradex.common.api.ws.orderstatus.ParadexOrderStatus;
 import com.sumzerotrading.util.ITickerRegistry;
 
-public class ParadexBrokerUtil {
+public class ParadexTranslator implements IParadexTranslator {
 
     protected static ITickerRegistry tickerRegistry = ParadexTickerRegistry.getInstance();
+    protected static IParadexTranslator instance;
 
-    public static OrderStatus translateOrderStatus(IParadexOrderStatusUpdate paradexStatus) {
+    public static IParadexTranslator getInstance() {
+        if (instance == null) {
+            instance = new ParadexTranslator();
+        }
+        return instance;
+    }
+
+    @Override
+    public OrderStatus translateOrderStatus(IParadexOrderStatusUpdate paradexStatus) {
 
         Ticker ticker = tickerRegistry.lookupByBrokerSymbol(paradexStatus.getTickerString());
         Status status = translateStatusCode(paradexStatus.getStatus(), paradexStatus.getCancelReason(),
@@ -46,7 +55,8 @@ public class ParadexBrokerUtil {
         return orderStatus;
     }
 
-    public static Status translateStatusCode(ParadexOrderStatus paradexStatus, CancelReason cancelReason,
+    @Override
+    public Status translateStatusCode(ParadexOrderStatus paradexStatus, CancelReason cancelReason,
             BigDecimal originalSize, BigDecimal remainingSize) {
 
         if (paradexStatus == ParadexOrderStatus.NEW || paradexStatus == ParadexOrderStatus.UNTRIGGERED) {

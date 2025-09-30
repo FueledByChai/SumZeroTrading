@@ -1,4 +1,4 @@
-package com.sumzerotrading.broker.paper;
+package com;
 
 import java.util.Collection;
 import java.util.Set;

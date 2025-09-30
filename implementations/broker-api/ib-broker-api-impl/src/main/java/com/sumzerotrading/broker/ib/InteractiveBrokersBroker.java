@@ -19,6 +19,37 @@
  */
 package com.sumzerotrading.broker.ib;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.collections4.map.PassiveExpiringMap;
+import org.apache.log4j.Logger;
+
 import com.ib.client.Contract;
 import com.ib.client.ContractDetails;
 import com.ib.client.Decimal;
@@ -32,12 +63,12 @@ import com.sumzerotrading.broker.BrokerError;
 import com.sumzerotrading.broker.BrokerErrorListener;
 import com.sumzerotrading.broker.IBroker;
 import com.sumzerotrading.broker.Position;
+import com.sumzerotrading.broker.order.FillEventListener;
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.broker.order.OrderStatus;
 import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.ComboTicker;
-import com.sumzerotrading.data.InstrumentType;
 import com.sumzerotrading.data.SumZeroException;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.ib.BaseIBConnectionDelegate;
@@ -48,27 +79,6 @@ import com.sumzerotrading.ib.IBSocket;
 import com.sumzerotrading.ib.IbUtils;
 import com.sumzerotrading.time.TimeUpdatedListener;
 import com.sumzerotrading.util.QuoteUtil;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import org.apache.commons.collections4.map.PassiveExpiringMap;
-import org.apache.log4j.Logger;
 
 /**
  * Supported Order types are: Market, Stop and Limit Supported order parameters
@@ -160,6 +170,29 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
     }
 
     @Override
+    public void addFillEventListener(FillEventListener listener) {
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods,
+                                                                       // choose Tools | Templates.
+
+    }
+
+    @Override
+    public void disconnect() {
+        if (started) {
+            orderProcessor.stopProcessor();
+            started = false;
+        }
+
+    }
+
+    @Override
+    public void removeFillEventListener(FillEventListener listener) {
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods,
+                                                                       // choose Tools | Templates.
+
+    }
+
+    @Override
     public boolean isConnected() {
         System.out.println("Checking if connected to IB: " + ibSocket.isConnected());
         return ibSocket.isConnected();
@@ -178,14 +211,6 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
         if (!started) {
             orderProcessor.startProcessor();
             started = true;
-        }
-    }
-
-    @Override
-    public void disconnect() {
-        if (started) {
-            orderProcessor.stopProcessor();
-            started = false;
         }
     }
 

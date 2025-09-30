@@ -40,6 +40,7 @@ import com.sumzerotrading.broker.AbstractBasicBroker;
 import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.hyperliquid.translators.ITranslator;
 import com.sumzerotrading.broker.hyperliquid.translators.Translator;
+import com.sumzerotrading.broker.order.Fill;
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderStatus;
 import com.sumzerotrading.broker.order.OrderStatus.CancelReason;
@@ -54,13 +55,13 @@ import com.sumzerotrading.hyperliquid.ws.HyperliquidWebSocketClient;
 import com.sumzerotrading.hyperliquid.ws.HyperliquidWebSocketClientBuilder;
 import com.sumzerotrading.hyperliquid.ws.IHyperliquidRestApi;
 import com.sumzerotrading.hyperliquid.ws.IHyperliquidWebsocketApi;
-import com.sumzerotrading.hyperliquid.ws.json.OrderStatusType;
 import com.sumzerotrading.hyperliquid.ws.json.ws.SubmitPostResponse;
 import com.sumzerotrading.hyperliquid.ws.listeners.accountinfo.AccountWebSocketProcessor;
 import com.sumzerotrading.hyperliquid.ws.listeners.accountinfo.HyperliquidPositionUpdate;
 import com.sumzerotrading.hyperliquid.ws.listeners.accountinfo.IAccountUpdate;
 import com.sumzerotrading.hyperliquid.ws.listeners.orderupdates.WsOrderUpdate;
 import com.sumzerotrading.hyperliquid.ws.listeners.orderupdates.WsOrderWebSocketProcessor;
+import com.sumzerotrading.hyperliquid.ws.listeners.userfills.WsUserFill;
 import com.sumzerotrading.marketdata.ILevel1Quote;
 import com.sumzerotrading.marketdata.Level1QuoteListener;
 import com.sumzerotrading.marketdata.QuoteEngine;
@@ -109,6 +110,7 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
     protected QuoteEngine quoteEngine;
 
     protected Map<String, OrderTicket> pendingOrderMapByCloid = new HashMap<>();
+    protected Map<String, String> exchangeIdToCloidMap = new HashMap<>();
 
     /**
      * Default constructor - uses centralized configuration for API initialization.
@@ -378,6 +380,26 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
         List<HyperliquidPositionUpdate> positions = event.getPositions();
         for (HyperliquidPositionUpdate pos : positions) {
             logger.info("Position: {} - Size: {} - Avg Price: {}", pos.getTicker(), pos.getSize(), pos.getEntryPrice());
+        }
+    }
+
+    public void fillEventWsReceived(WsUserFill wsUserFill) {
+        List<Fill> fills = translator.translateFill(wsUserFill);
+        for (Fill fill : fills) {
+            logger.info("Fill received: {}", fill);
+            String clientOrderId = exchangeIdToCloidMap.get(fill.getOrderId());
+            fill.setClientOrderId(clientOrderId != null ? clientOrderId : "");
+            OrderTicket orderTicket = pendingOrderMapByCloid.get(clientOrderId);
+            if (orderTicket != null) {
+                orderTicket.setFilledSize(orderTicket.getFilledSize().add(fill.getSize()));
+                orderTicket.addFill(fill);
+                if (orderTicket.getFilledSize().compareTo(orderTicket.getSize()) >= 0) {
+                    orderTicket.setCurrentStatus(OrderStatus.Status.FILLED);
+                } else {
+                    orderTicket.setCurrentStatus(OrderStatus.Status.PARTIAL_FILL);
+                }
+            }
+            fireFillEvent(fill);
         }
     }
 

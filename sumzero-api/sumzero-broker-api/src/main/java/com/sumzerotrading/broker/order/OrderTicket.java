@@ -73,6 +73,7 @@ public class OrderTicket implements Serializable {
     protected BigDecimal commission = BigDecimal.ZERO;
     protected Status currentStatus = Status.NEW;
     protected List<Modifier> modifiers = new ArrayList<>();
+    protected List<Fill> fills = new ArrayList<>();
 
     public OrderTicket() {
     }
@@ -382,6 +383,22 @@ public class OrderTicket implements Serializable {
         return this;
     }
 
+    public List<Fill> getFills() {
+        return fills;
+    }
+
+    public OrderTicket setFills(List<Fill> fills) {
+        this.fills = fills;
+        return this;
+    }
+
+    public OrderTicket addFill(Fill fill) {
+        if (fill != null) {
+            fills.add(fill);
+        }
+        return this;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -415,6 +432,7 @@ public class OrderTicket implements Serializable {
         result = prime * result + ((currentStatus == null) ? 0 : currentStatus.hashCode());
         result = prime * result + ((modifiers == null) ? 0 : modifiers.hashCode());
         result = prime * result + ((clientOrderId == null) ? 0 : clientOrderId.hashCode());
+        result = prime * result + ((fills == null) ? 0 : fills.hashCode());
         return result;
     }
 
@@ -541,6 +559,11 @@ public class OrderTicket implements Serializable {
                 return false;
         } else if (!clientOrderId.equals(other.clientOrderId))
             return false;
+        if (fills == null) {
+            if (other.fills != null)
+                return false;
+        } else if (!fills.equals(other.fills))
+            return false;
         return true;
     }
 
@@ -555,7 +578,7 @@ public class OrderTicket implements Serializable {
                 + ", orderFilledTime=" + orderFilledTime + ", orderTimeInForceMinutes=" + orderTimeInForceMinutes
                 + ", filledSize=" + filledSize + ", filledPrice=" + filledPrice + ", commission=" + commission
                 + ", currentStatus=" + currentStatus + ", modifiers=" + modifiers + ", clientOrderId=" + clientOrderId
-                + "]";
+                + ", fills=" + fills + "]";
     }
 
 }

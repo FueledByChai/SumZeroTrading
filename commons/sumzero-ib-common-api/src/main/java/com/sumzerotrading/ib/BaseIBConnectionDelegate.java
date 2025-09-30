@@ -18,8 +18,6 @@ import com.ib.client.ContractDetails;
 import com.ib.client.Decimal;
 import com.ib.client.DeltaNeutralContract;
 import com.ib.client.DepthMktDataDescription;
-import com.ib.client.EReaderSignal;
-import com.ib.client.EWrapper;
 import com.ib.client.Execution;
 import com.ib.client.FamilyCode;
 import com.ib.client.HistogramEntry;
@@ -40,7 +38,7 @@ import com.ib.client.TickAttribLast;
  *
  * @author RobTerpilowski
  */
-public class BaseIBConnectionDelegate implements IBConnectionInterface {
+public abstract class BaseIBConnectionDelegate implements IBConnectionInterface {
 
     @Override
     public void addIbConnectionDelegate(IBConnectionInterface delegate) {

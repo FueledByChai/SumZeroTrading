@@ -268,22 +268,19 @@ public class ParadexBrokerTest {
         // Mock the order status update
         when(mockOrderStatusUpdate.getOrderId()).thenReturn("testOrderId");
 
-        // Mock ParadexBrokerUtil.translateOrderStatus to return a valid OrderStatus
-        try (var mockedStatic = mockStatic(ParadexBrokerUtil.class)) {
-            OrderStatus mockOrderStatus = mock(OrderStatus.class);
-            when(mockOrderStatus.getStatus()).thenReturn(OrderStatus.Status.NEW);
-            mockedStatic.when(() -> ParadexBrokerUtil.translateOrderStatus(mockOrderStatusUpdate))
-                    .thenReturn(mockOrderStatus);
+        // Mock broker.translator.translateOrderStatus to return a valid OrderStatus
+        IParadexTranslator mockTranslator = mock(IParadexTranslator.class);
+        broker.translator = mockTranslator;
+        OrderStatus mockOrderStatus = mock(OrderStatus.class);
+        when(mockOrderStatus.getStatus()).thenReturn(OrderStatus.Status.NEW);
+        when(mockTranslator.translateOrderStatus(mockOrderStatusUpdate)).thenReturn(mockOrderStatus);
 
-            // Act
-            broker.onWebSocketEvent(mockOrderStatusUpdate);
+        // Act
+        broker.onParadexOrderStatusEvent(mockOrderStatusUpdate);
 
-            // Assert - Wait for the async call to complete
-            assertTrue(latch.await(1, TimeUnit.SECONDS), "Listener should be called asynchronously");
-        } finally {
-            // Clean up
-            broker.disconnect(); // Ensure proper cleanup using public API
-        }
+        // Assert - Wait for the async call to complete
+        assertTrue(latch.await(1, TimeUnit.SECONDS), "Listener should be called asynchronously");
+        broker.disconnect(); // Ensure proper cleanup using public API
     }
 
     // ==================== Authentication Tests ====================
@@ -378,18 +375,17 @@ public class ParadexBrokerTest {
 
         when(mockOrderStatusUpdate.getOrderId()).thenReturn(orderId);
 
-        try (var mockedStatic = mockStatic(ParadexBrokerUtil.class)) {
-            OrderStatus mockOrderStatus = mock(OrderStatus.class);
-            when(mockOrderStatus.getStatus()).thenReturn(OrderStatus.Status.FILLED);
-            mockedStatic.when(() -> ParadexBrokerUtil.translateOrderStatus(mockOrderStatusUpdate))
-                    .thenReturn(mockOrderStatus);
+        IParadexTranslator mockTranslator = mock(IParadexTranslator.class);
+        broker.translator = mockTranslator;
+        OrderStatus mockOrderStatus = mock(OrderStatus.class);
+        when(mockOrderStatus.getStatus()).thenReturn(OrderStatus.Status.FILLED);
+        when(mockTranslator.translateOrderStatus(mockOrderStatusUpdate)).thenReturn(mockOrderStatus);
 
-            // Act
-            broker.onWebSocketEvent(mockOrderStatusUpdate);
+        // Act
+        broker.onParadexOrderStatusEvent(mockOrderStatusUpdate);
 
-            // Assert - Order should be removed from map for FILLED status
-            assertFalse(broker.tradeOrderMap.containsKey(orderId));
-        }
+        // Assert - Order should be removed from map for FILLED status
+        assertFalse(broker.tradeOrderMap.containsKey(orderId));
     }
 
     @Test
@@ -401,18 +397,17 @@ public class ParadexBrokerTest {
 
         when(mockOrderStatusUpdate.getOrderId()).thenReturn(orderId);
 
-        try (var mockedStatic = mockStatic(ParadexBrokerUtil.class)) {
-            OrderStatus mockOrderStatus = mock(OrderStatus.class);
-            when(mockOrderStatus.getStatus()).thenReturn(OrderStatus.Status.CANCELED);
-            mockedStatic.when(() -> ParadexBrokerUtil.translateOrderStatus(mockOrderStatusUpdate))
-                    .thenReturn(mockOrderStatus);
+        IParadexTranslator mockTranslator = mock(IParadexTranslator.class);
+        broker.translator = mockTranslator;
+        OrderStatus mockOrderStatus = mock(OrderStatus.class);
+        when(mockOrderStatus.getStatus()).thenReturn(OrderStatus.Status.CANCELED);
+        when(mockTranslator.translateOrderStatus(mockOrderStatusUpdate)).thenReturn(mockOrderStatus);
 
-            // Act
-            broker.onWebSocketEvent(mockOrderStatusUpdate);
+        // Act
+        broker.onParadexOrderStatusEvent(mockOrderStatusUpdate);
 
-            // Assert - Order should be removed from map for CANCELED status
-            assertFalse(broker.tradeOrderMap.containsKey(orderId));
-        }
+        // Assert - Order should be removed from map for CANCELED status
+        assertFalse(broker.tradeOrderMap.containsKey(orderId));
     }
 
     @Test
@@ -424,18 +419,17 @@ public class ParadexBrokerTest {
 
         when(mockOrderStatusUpdate.getOrderId()).thenReturn(orderId);
 
-        try (var mockedStatic = mockStatic(ParadexBrokerUtil.class)) {
-            OrderStatus mockOrderStatus = mock(OrderStatus.class);
-            when(mockOrderStatus.getStatus()).thenReturn(OrderStatus.Status.NEW);
-            mockedStatic.when(() -> ParadexBrokerUtil.translateOrderStatus(mockOrderStatusUpdate))
-                    .thenReturn(mockOrderStatus);
+        IParadexTranslator mockTranslator = mock(IParadexTranslator.class);
+        broker.translator = mockTranslator;
+        OrderStatus mockOrderStatus = mock(OrderStatus.class);
+        when(mockOrderStatus.getStatus()).thenReturn(OrderStatus.Status.NEW);
+        when(mockTranslator.translateOrderStatus(mockOrderStatusUpdate)).thenReturn(mockOrderStatus);
 
-            // Act
-            broker.onWebSocketEvent(mockOrderStatusUpdate);
+        // Act
+        broker.onParadexOrderStatusEvent(mockOrderStatusUpdate);
 
-            // Assert - Order should remain in map for NEW status
-            assertTrue(broker.tradeOrderMap.containsKey(orderId));
-        }
+        // Assert - Order should remain in map for NEW status
+        assertTrue(broker.tradeOrderMap.containsKey(orderId));
     }
 
     // ==================== Authentication Scheduler Tests ====================
@@ -603,10 +597,10 @@ public class ParadexBrokerTest {
 
         // No need to set executor, just use broker as is
 
-        try (var mockedStatic = mockStatic(ParadexBrokerUtil.class)) {
+        try (var mockedStatic = mockStatic(ParadexTranslator.class)) {
             OrderStatus mockOrderStatus = mock(OrderStatus.class);
             lenient().when(mockOrderStatus.getStatus()).thenReturn(OrderStatus.Status.NEW);
-            lenient().when(ParadexBrokerUtil.translateOrderStatus(any())).thenReturn(mockOrderStatus);
+            lenient().when(ParadexTranslator.translateOrderStatus(any())).thenReturn(mockOrderStatus);
 
             // Create multiple order status updates with valid status
             for (int i = 0; i < numThreads; i++) {

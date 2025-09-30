@@ -5,6 +5,8 @@
  */
 package com.sumzerotrading.util;
 
+import java.time.ZonedDateTime;
+
 import com.sumzerotrading.data.SumZeroException;
 
 /**
@@ -30,6 +32,10 @@ public class Util {
         } else {
             return ticker;
         }
+    }
+
+    public static ZonedDateTime convertEpochToZonedDateTime(long epochMillis) {
+        return ZonedDateTime.ofInstant(java.time.Instant.ofEpochMilli(epochMillis), java.time.ZoneId.of("GMT"));
     }
 
 }

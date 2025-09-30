@@ -44,14 +44,14 @@ public class ParadexBrokerUtilTest {
     @BeforeEach
     public void setUp() {
         // Save original tickerRegistry and inject mock
-        originalTickerRegistry = ParadexBrokerUtil.tickerRegistry;
-        ParadexBrokerUtil.tickerRegistry = mockTickerRegistry;
+        originalTickerRegistry = ParadexTranslator.tickerRegistry;
+        ParadexTranslator.tickerRegistry = mockTickerRegistry;
     }
 
     @AfterEach
     public void tearDown() {
         // Restore original tickerRegistry
-        ParadexBrokerUtil.tickerRegistry = originalTickerRegistry;
+        ParadexTranslator.tickerRegistry = originalTickerRegistry;
     }
 
     @Test
@@ -70,7 +70,7 @@ public class ParadexBrokerUtilTest {
                 originalSize, "NEW", "NONE", averageFillPrice, "LIMIT", "BUY", timestamp);
 
         // Act
-        OrderStatus result = ParadexBrokerUtil.translateOrderStatus(orderUpdate);
+        OrderStatus result = ParadexTranslator.translateOrderStatus(orderUpdate);
 
         // Assert
         assertEquals(Status.NEW, result.getStatus());
@@ -100,7 +100,7 @@ public class ParadexBrokerUtilTest {
                 originalSize, "OPEN", "NONE", averageFillPrice, "MARKET", "SELL", timestamp);
 
         // Act
-        OrderStatus result = ParadexBrokerUtil.translateOrderStatus(orderUpdate);
+        OrderStatus result = ParadexTranslator.translateOrderStatus(orderUpdate);
 
         // Assert
         assertEquals(Status.PARTIAL_FILL, result.getStatus());
@@ -124,7 +124,7 @@ public class ParadexBrokerUtilTest {
                 originalSize, "CLOSED", "NONE", averageFillPrice, "LIMIT", "BUY", timestamp);
 
         // Act
-        OrderStatus result = ParadexBrokerUtil.translateOrderStatus(orderUpdate);
+        OrderStatus result = ParadexTranslator.translateOrderStatus(orderUpdate);
 
         // Assert
         assertEquals(Status.FILLED, result.getStatus());
@@ -148,7 +148,7 @@ public class ParadexBrokerUtilTest {
                 originalSize, "CLOSED", "USER_CANCELED", averageFillPrice, "STOP", "SELL", timestamp);
 
         // Act
-        OrderStatus result = ParadexBrokerUtil.translateOrderStatus(orderUpdate);
+        OrderStatus result = ParadexTranslator.translateOrderStatus(orderUpdate);
 
         // Assert
         assertEquals(Status.CANCELED, result.getStatus());
@@ -173,7 +173,7 @@ public class ParadexBrokerUtilTest {
         ZonedDateTime beforeCall = ZonedDateTime.now();
 
         // Act
-        OrderStatus result = ParadexBrokerUtil.translateOrderStatus(orderUpdate);
+        OrderStatus result = ParadexTranslator.translateOrderStatus(orderUpdate);
 
         ZonedDateTime afterCall = ZonedDateTime.now();
 
@@ -185,7 +185,7 @@ public class ParadexBrokerUtilTest {
     @Test
     public void testTranslateStatusCode_NewStatus_ReturnsNew() {
         // Act
-        Status result = ParadexBrokerUtil.translateStatusCode(ParadexOrderStatus.NEW, CancelReason.NONE,
+        Status result = ParadexTranslator.translateStatusCode(ParadexOrderStatus.NEW, CancelReason.NONE,
                 new BigDecimal("10.0"), new BigDecimal("10.0"));
 
         // Assert
@@ -195,7 +195,7 @@ public class ParadexBrokerUtilTest {
     @Test
     public void testTranslateStatusCode_UntriggeredStatus_ReturnsNew() {
         // Act
-        Status result = ParadexBrokerUtil.translateStatusCode(ParadexOrderStatus.UNTRIGGERED, CancelReason.NONE,
+        Status result = ParadexTranslator.translateStatusCode(ParadexOrderStatus.UNTRIGGERED, CancelReason.NONE,
                 new BigDecimal("10.0"), new BigDecimal("10.0"));
 
         // Assert
@@ -205,7 +205,7 @@ public class ParadexBrokerUtilTest {
     @Test
     public void testTranslateStatusCode_ClosedWithUserCanceled_ReturnsCanceled() {
         // Act
-        Status result = ParadexBrokerUtil.translateStatusCode(ParadexOrderStatus.CLOSED, CancelReason.USER_CANCELED,
+        Status result = ParadexTranslator.translateStatusCode(ParadexOrderStatus.CLOSED, CancelReason.USER_CANCELED,
                 new BigDecimal("10.0"), new BigDecimal("5.0"));
 
         // Assert
@@ -215,7 +215,7 @@ public class ParadexBrokerUtilTest {
     @Test
     public void testTranslateStatusCode_ClosedWithPostOnlyWouldCross_ReturnsCanceled() {
         // Act
-        Status result = ParadexBrokerUtil.translateStatusCode(ParadexOrderStatus.CLOSED,
+        Status result = ParadexTranslator.translateStatusCode(ParadexOrderStatus.CLOSED,
                 CancelReason.POST_ONLY_WOULD_CROSS, new BigDecimal("10.0"), new BigDecimal("10.0"));
 
         // Assert
@@ -225,7 +225,7 @@ public class ParadexBrokerUtilTest {
     @Test
     public void testTranslateStatusCode_ClosedWithZeroRemaining_ReturnsFilled() {
         // Act
-        Status result = ParadexBrokerUtil.translateStatusCode(ParadexOrderStatus.CLOSED, CancelReason.NONE,
+        Status result = ParadexTranslator.translateStatusCode(ParadexOrderStatus.CLOSED, CancelReason.NONE,
                 new BigDecimal("10.0"), BigDecimal.ZERO);
 
         // Assert
@@ -235,7 +235,7 @@ public class ParadexBrokerUtilTest {
     @Test
     public void testTranslateStatusCode_OpenWithPartialFill_ReturnsPartialFill() {
         // Act
-        Status result = ParadexBrokerUtil.translateStatusCode(ParadexOrderStatus.OPEN, CancelReason.NONE,
+        Status result = ParadexTranslator.translateStatusCode(ParadexOrderStatus.OPEN, CancelReason.NONE,
                 new BigDecimal("10.0"), new BigDecimal("3.0"));
 
         // Assert
@@ -245,7 +245,7 @@ public class ParadexBrokerUtilTest {
     @Test
     public void testTranslateStatusCode_OpenWithFullRemaining_ReturnsNew() {
         // Act
-        Status result = ParadexBrokerUtil.translateStatusCode(ParadexOrderStatus.OPEN, CancelReason.NONE,
+        Status result = ParadexTranslator.translateStatusCode(ParadexOrderStatus.OPEN, CancelReason.NONE,
                 new BigDecimal("10.0"), new BigDecimal("10.0"));
 
         // Assert
@@ -255,7 +255,7 @@ public class ParadexBrokerUtilTest {
     @Test
     public void testTranslateStatusCode_OpenWithNullRemaining_ReturnsNew() {
         // Act
-        Status result = ParadexBrokerUtil.translateStatusCode(ParadexOrderStatus.OPEN, CancelReason.NONE,
+        Status result = ParadexTranslator.translateStatusCode(ParadexOrderStatus.OPEN, CancelReason.NONE,
                 new BigDecimal("10.0"), null);
 
         // Assert
@@ -265,7 +265,7 @@ public class ParadexBrokerUtilTest {
     @Test
     public void testTranslateStatusCode_OpenWithNullOriginal_ReturnsNew() {
         // Act
-        Status result = ParadexBrokerUtil.translateStatusCode(ParadexOrderStatus.OPEN, CancelReason.NONE, null,
+        Status result = ParadexTranslator.translateStatusCode(ParadexOrderStatus.OPEN, CancelReason.NONE, null,
                 new BigDecimal("5.0"));
 
         // Assert
@@ -277,7 +277,7 @@ public class ParadexBrokerUtilTest {
         // This tests the fallthrough case where CLOSED doesn't meet FILLED or CANCELED
         // conditions
         assertThrows(SumZeroException.class, () -> {
-            ParadexBrokerUtil.translateStatusCode(ParadexOrderStatus.CLOSED, CancelReason.NONE, new BigDecimal("10.0"),
+            ParadexTranslator.translateStatusCode(ParadexOrderStatus.CLOSED, CancelReason.NONE, new BigDecimal("10.0"),
                     new BigDecimal("5.0") // Not zero remaining, no cancel reason
             );
         });

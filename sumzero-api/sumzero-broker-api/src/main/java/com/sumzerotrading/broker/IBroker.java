@@ -20,13 +20,15 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 package com.sumzerotrading.broker;
 
+import java.time.ZonedDateTime;
+import java.util.List;
+
+import com.sumzerotrading.broker.order.FillEventListener;
 import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.ComboTicker;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.time.TimeUpdatedListener;
-import java.time.ZonedDateTime;
-import java.util.List;
 
 /**
  */
@@ -78,6 +80,20 @@ public interface IBroker {
      * @param listener
      */
     public abstract void addOrderEventListener(OrderEventListener listener);
+
+    /**
+     * Add a listener to receive FillEvents.
+     *
+     * @param listener
+     */
+    public abstract void addFillEventListener(FillEventListener listener);
+
+    /**
+     * Remove a listener from receiving fill events.
+     *
+     * @param listener
+     */
+    public abstract void removeFillEventListener(FillEventListener listener);
 
     /**
      * Remove a listener from receiving order events.

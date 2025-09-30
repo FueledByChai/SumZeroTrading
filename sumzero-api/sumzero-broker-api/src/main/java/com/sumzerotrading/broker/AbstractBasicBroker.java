@@ -8,11 +8,12 @@ package com.sumzerotrading.broker;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sumzerotrading.broker.order.Fill;
+import com.sumzerotrading.broker.order.FillEventListener;
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderEventListener;
 import com.sumzerotrading.data.ComboTicker;
@@ -50,6 +51,7 @@ public abstract class AbstractBasicBroker implements IBroker {
     }
 
     protected Set<OrderEventListener> orderEventListeners = new HashSet<>();
+    protected Set<FillEventListener> fillEventListeners = new HashSet<>();
     protected Set<BrokerErrorListener> brokerErrorListeners = new HashSet<>();
     protected Set<TimeUpdatedListener> timeUpdatedListeners = new HashSet<>();
     protected Set<BrokerAccountInfoListener> brokerAccountInfoListeners = new HashSet<>();
@@ -96,6 +98,20 @@ public abstract class AbstractBasicBroker implements IBroker {
     public void removeTimeUpdateListener(TimeUpdatedListener listener) {
         synchronized (timeUpdatedListeners) {
             timeUpdatedListeners.remove(listener);
+        }
+    }
+
+    @Override
+    public void addFillEventListener(FillEventListener listener) {
+        synchronized (fillEventListeners) {
+            fillEventListeners.add(listener);
+        }
+    }
+
+    @Override
+    public void removeFillEventListener(FillEventListener listener) {
+        synchronized (fillEventListeners) {
+            fillEventListeners.remove(listener);
         }
     }
 
@@ -147,6 +163,20 @@ public abstract class AbstractBasicBroker implements IBroker {
                 eventExecutor.submit(() -> {
                     try {
                         listener.availableFundsUpdated(availableFunds);
+                    } catch (Exception ex) {
+                        logger.error(ex.getMessage(), ex);
+                    }
+                });
+            }
+        }
+    }
+
+    protected void fireFillEvent(Fill fill) {
+        synchronized (fillEventListeners) {
+            for (FillEventListener listener : fillEventListeners) {
+                eventExecutor.submit(() -> {
+                    try {
+                        listener.fillReceived(fill);
                     } catch (Exception ex) {
                         logger.error(ex.getMessage(), ex);
                     }
