@@ -93,7 +93,7 @@ public class HyperliquidConfiguration {
 
         // read the private key from the keystore path if specified
         String privateKey = readPrivateKeyFromKeystore();
-        properties.setProperty(HYPERLIQUID_PRIVATE_KEY, privateKey);
+        properties.setProperty(HYPERLIQUID_PRIVATE_KEY, privateKey != null ? privateKey : "");
 
         return env;
     }
