@@ -1,14 +1,10 @@
 package com.sumzerotrading.hyperliquid.ws.listeners.userfills;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sumzerotrading.data.SumZeroException;
 import com.sumzerotrading.websocket.AbstractWebSocketProcessor;
 import com.sumzerotrading.websocket.IWebSocketClosedListener;
 
@@ -38,13 +34,16 @@ public class WsUserFillsWebSocketProcessor extends AbstractWebSocketProcessor<Ws
                 return null;
             }
 
+            // Support both root-level and 'data' object for user/fills
+            JSONObject dataObject = jsonObject.has("data") ? jsonObject.getJSONObject("data") : jsonObject;
+
             WsUserFill userFill = new WsUserFill();
             if (jsonObject.has("isSnapshot")) {
                 userFill.setSnapshot(jsonObject.getBoolean("isSnapshot"));
             }
-            userFill.setUser(jsonObject.optString("user", null));
+            userFill.setUser(dataObject.optString("user", null));
 
-            JSONArray fillsArray = jsonObject.optJSONArray("fills");
+            JSONArray fillsArray = dataObject.optJSONArray("fills");
             if (fillsArray != null) {
                 for (int i = 0; i < fillsArray.length(); i++) {
                     JSONObject fillObj = fillsArray.getJSONObject(i);

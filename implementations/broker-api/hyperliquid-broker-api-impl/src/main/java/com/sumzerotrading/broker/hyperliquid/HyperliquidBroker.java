@@ -62,6 +62,7 @@ import com.sumzerotrading.hyperliquid.ws.listeners.accountinfo.IAccountUpdate;
 import com.sumzerotrading.hyperliquid.ws.listeners.orderupdates.WsOrderUpdate;
 import com.sumzerotrading.hyperliquid.ws.listeners.orderupdates.WsOrderWebSocketProcessor;
 import com.sumzerotrading.hyperliquid.ws.listeners.userfills.WsUserFill;
+import com.sumzerotrading.hyperliquid.ws.listeners.userfills.WsUserFillsWebSocketProcessor;
 import com.sumzerotrading.marketdata.ILevel1Quote;
 import com.sumzerotrading.marketdata.Level1QuoteListener;
 import com.sumzerotrading.marketdata.QuoteEngine;
@@ -91,6 +92,7 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
     protected HyperliquidWebSocketClient orderStatusWSClient;
     protected AccountWebSocketProcessor accountWebSocketProcessor;
     protected WsOrderWebSocketProcessor orderStatusWebSocketProcessor;
+    protected WsUserFillsWebSocketProcessor fillWebSocketProcessor;
 
     protected Set<OrderTicket> currencyOrderList = new HashSet<>();
     protected BlockingQueue<Integer> nextIdQueue = new LinkedBlockingQueue<>();
@@ -192,6 +194,7 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
         orderEventExecutor = Executors.newCachedThreadPool();
         startAccountInfoWSClient();
         startOrderStatusWSClient();
+        startFillWSClient();
 
         connected = true;
     }
@@ -298,6 +301,29 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
 
     }
 
+    public void startFillWSClient() {
+        logger.info("Starting fill WebSocket client");
+        String wsUrl = HyperliquidConfiguration.getInstance().getWebSocketUrl();
+        String userAddress = HyperliquidConfiguration.getInstance().getAccountAddress();
+
+        try {
+            fillWebSocketProcessor = new WsUserFillsWebSocketProcessor(() -> {
+                logger.info("Fill WebSocket closed, trying to restart...");
+                startFillWSClient();
+            });
+            fillWebSocketProcessor.addEventListener((WsUserFill event) -> {
+                fillEventWsReceived(event);
+            });
+            HyperliquidWebSocketClient fillWSClient = HyperliquidWebSocketClientBuilder.buildUserFillsClient(wsUrl,
+                    userAddress, fillWebSocketProcessor);
+
+            fillWSClient.connect();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+
+    }
+
     @Override
     public void cancelAllOrders(Ticker ticker) {
         throw new UnsupportedOperationException("Cancel all orders by ticker not implemented yet");
@@ -383,8 +409,9 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
         }
     }
 
-    public void fillEventWsReceived(WsUserFill wsUserFill) {
-        List<Fill> fills = translator.translateFill(wsUserFill);
+    public void fillEventWsReceived(WsUserFill wsUserFills) {
+        logger.info("Fill event received: {}", wsUserFills);
+        List<Fill> fills = translator.translateFill(wsUserFills);
         for (Fill fill : fills) {
             logger.info("Fill received: {}", fill);
             String clientOrderId = exchangeIdToCloidMap.get(fill.getOrderId());

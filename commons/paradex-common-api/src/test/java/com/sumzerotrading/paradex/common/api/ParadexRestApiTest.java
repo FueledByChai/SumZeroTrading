@@ -26,7 +26,7 @@ class ParadexRestApiTest {
 
     @BeforeEach
     void setUp() {
-        paradexRestApi = new ParadexRestApi("https://api.testnet.paradex.trade/v1");
+        paradexRestApi = new ParadexRestApi("https://api.testnet.paradex.trade/v1", true);
     }
 
     @Test
@@ -549,7 +549,7 @@ class ParadexRestApiTest {
         private String lastRequestUrl;
 
         public TestableParadexRestApi(String baseUrl) {
-            super(baseUrl);
+            super(baseUrl, true);
         }
 
         public void setMockResponse(String response) {

@@ -44,6 +44,7 @@ import com.sumzerotrading.paradex.common.api.ws.ParadexWebSocketClient;
 import com.sumzerotrading.paradex.common.api.ws.accountinfo.AccountWebSocketProcessor;
 import com.sumzerotrading.paradex.common.api.ws.accountinfo.IAccountUpdate;
 import com.sumzerotrading.paradex.common.api.ws.fills.ParadexFill;
+import com.sumzerotrading.paradex.common.api.ws.fills.ParadexFillsWebSocketProcessor;
 import com.sumzerotrading.paradex.common.api.ws.orderstatus.IParadexOrderStatusUpdate;
 import com.sumzerotrading.paradex.common.api.ws.orderstatus.OrderStatusWebSocketProcessor;
 
@@ -64,6 +65,7 @@ public class ParadexBroker extends AbstractBasicBroker {
     protected ParadexWebSocketClient orderStatusWSClient;
     protected OrderStatusWebSocketProcessor orderStatusProcessor;
     protected AccountWebSocketProcessor accountWebSocketProcessor;
+    protected ParadexFillsWebSocketProcessor fillsWebSocketProcessor;
 
     protected int nextOrderId = -1;
 
@@ -133,6 +135,14 @@ public class ParadexBroker extends AbstractBasicBroker {
 
     @Override
     public void connect() {
+        accountWebSocketProcessor = new AccountWebSocketProcessor(() -> {
+            logger.info("Account info WebSocket closed, trying to restart...");
+            startFillsWSClient();
+        });
+        accountWebSocketProcessor.addEventListener(accountInfo -> {
+            onParadexAccountInfoEvent(accountInfo);
+        });
+
         orderStatusProcessor = new OrderStatusWebSocketProcessor(() -> {
             logger.info("Order status WebSocket closed, trying to restart...");
             startOrderStatusWSClient();
@@ -141,8 +151,18 @@ public class ParadexBroker extends AbstractBasicBroker {
             onParadexOrderStatusEvent(orderStatus);
         });
 
+        fillsWebSocketProcessor = new ParadexFillsWebSocketProcessor(() -> {
+            logger.info("Fills WebSocket closed, trying to restart...");
+            startFillsWSClient();
+        });
+        fillsWebSocketProcessor.addEventListener(fill -> {
+            onParadexFillEvent(fill);
+        });
+
         startAuthenticationScheduler();
+        startAccountInfoWSClient();
         startOrderStatusWSClient();
+        startFillsWSClient();
 
         connected = true;
     }
@@ -257,6 +277,22 @@ public class ParadexBroker extends AbstractBasicBroker {
         return jwtToken;
     }
 
+    public void startAccountInfoWSClient() {
+        logger.info("Starting account info WebSocket client");
+        String jwtToken = restApi.getJwtToken();
+        String wsUrl = ParadexApiFactory.getWebSocketUrl();
+
+        try {
+            accountInfoWSClient = ParadexWSClientBuilder.buildAccountInfoClient(wsUrl, accountWebSocketProcessor,
+                    jwtToken);
+            accountInfoWSClient.connect();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+
+        }
+
+    }
+
     public void startOrderStatusWSClient() {
         logger.info("Starting order status WebSocket client");
         String jwtToken = restApi.getJwtToken();
@@ -265,6 +301,29 @@ public class ParadexBroker extends AbstractBasicBroker {
         try {
             orderStatusWSClient = ParadexWSClientBuilder.buildOrderStatusClient(wsUrl, orderStatusProcessor, jwtToken);
             orderStatusWSClient.connect();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+
+        }
+
+    }
+
+    public void startFillsWSClient() {
+        logger.info("Starting fills WebSocket client");
+        String jwtToken = restApi.getJwtToken();
+        String wsUrl = ParadexApiFactory.getWebSocketUrl();
+
+        try {
+            fillsWebSocketProcessor = new ParadexFillsWebSocketProcessor(() -> {
+                logger.info("Fills WebSocket closed, trying to restart...");
+                startFillsWSClient();
+            });
+            fillsWebSocketProcessor.addEventListener(fill -> {
+                onParadexFillEvent(fill);
+            });
+
+            accountInfoWSClient = ParadexWSClientBuilder.buildFillsClient(wsUrl, fillsWebSocketProcessor, jwtToken);
+            accountInfoWSClient.connect();
         } catch (Exception e) {
             throw new IllegalStateException(e);
 

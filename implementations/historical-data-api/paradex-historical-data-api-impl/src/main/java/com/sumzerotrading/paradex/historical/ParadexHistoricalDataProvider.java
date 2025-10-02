@@ -33,6 +33,7 @@ import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.historicaldata.IHistoricalDataProvider;
 import com.sumzerotrading.paradex.common.api.HistoricalPriceKind;
 import com.sumzerotrading.paradex.common.api.IParadexRestApi;
+import com.sumzerotrading.paradex.common.api.ParadexConfiguration;
 import com.sumzerotrading.paradex.common.api.ParadexRestApi;
 import com.sumzerotrading.paradex.common.api.historical.OHLCBar;
 
@@ -58,7 +59,8 @@ public class ParadexHistoricalDataProvider implements IHistoricalDataProvider {
 
     @Override
     public void init(Properties props) {
-        paradoxApi = ParadexRestApi.getPublicOnlyApi(props.getProperty("paradex.rest.url"));
+        ParadexConfiguration config = ParadexConfiguration.getInstance();
+        paradoxApi = ParadexRestApi.getPublicOnlyApi(config.getRestUrl(), !config.isProductionEnvironment());
         connected = true;
     }
 

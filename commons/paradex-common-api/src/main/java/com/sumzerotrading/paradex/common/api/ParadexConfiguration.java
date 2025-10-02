@@ -7,6 +7,8 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sumzerotrading.data.SumZeroException;
+
 /**
  * Centralized configuration management for Paradex API settings. Supports
  * loading configuration from properties files, system properties, environment
@@ -19,27 +21,33 @@ public class ParadexConfiguration {
     private static final Object lock = new Object();
 
     // Configuration keys
-    public static final String PARADEX_REST_URL = "paradex.rest.url";
-    public static final String PARADEX_WS_URL = "paradex.ws.url";
+    public static final String PARADEX_TESTNET_REST_URL = "paradex.testnet.rest.url";
+    public static final String PARADEX_TESTNET_WS_URL = "paradex.testnet.ws.url";
+    public static final String PARADEX_MAINNET_REST_URL = "paradex.mainnet.rest.url";
+    public static final String PARADEX_MAINNET_WS_URL = "paradex.mainnet.ws.url";
     public static final String PARADEX_ACCOUNT_ADDRESS = "paradex.account.address";
     public static final String PARADEX_PRIVATE_KEY = "paradex.private.key";
     public static final String PARADEX_ENVIRONMENT = "paradex.environment";
     public static final String PARADEX_CHAIN_ID = "paradex.chain.id";
     public static final String PARADEX_JWT_REFRESH_SECONDS = "paradex.jwt.refresh.seconds";
+    public static final String PARADEX_KEYSTORE_PATH = "paradex.keystore.path";
 
     // Default values
     // private static final String DEFAULT_ENVIRONMENT = "testnet";
     private static final String DEFAULT_ENVIRONMENT = "prod";
     private static final String DEFAULT_TESTNET_REST_URL = "https://api.testnet.paradex.trade/v1";
-    private static final String DEFAULT_TESTNET_WS_URL = "wss://ws.testnet.paradex.trade/v1";
+    private static final String DEFAULT_TESTNET_WS_URL = "wss://ws.api.testnet.paradex.trade/v1";
     private static final String DEFAULT_PROD_REST_URL = "https://api.prod.paradex.trade/v1";
-    private static final String DEFAULT_PROD_WS_URL = "wss://ws.prod.paradex.trade/v1";
+    private static final String DEFAULT_PROD_WS_URL = "wss://ws.api.prod.paradex.trade/v1";
     private static final String DEFAULT_TESTNET_CHAIN_ID = "7693264728749915528729180568779831130134670232771119425";
     private static final String DEFAULT_PROD_CHAIN_ID = "8458834024819506728615521019831122032732688838300957472069977523540";
     private static final int DEFAULT_JWT_REFRESH_SECONDS = 60;
 
     private final Properties properties;
     private final String environment;
+
+    protected String wsUrl;
+    protected String restUrl;
 
     private ParadexConfiguration() {
         this.properties = new Properties();
@@ -89,6 +97,11 @@ public class ParadexConfiguration {
         String env = properties.getProperty(PARADEX_ENVIRONMENT, DEFAULT_ENVIRONMENT);
         setEnvironmentDefaults(env);
 
+        if (!properties.containsKey(PARADEX_PRIVATE_KEY)) {
+            String privateKey = readPrivateKeyFromKeystore();
+            properties.setProperty(PARADEX_PRIVATE_KEY, privateKey != null ? privateKey : "");
+        }
+
         logger.info("Paradex configuration loaded for environment: {}", env);
         return env;
     }
@@ -117,13 +130,16 @@ public class ParadexConfiguration {
 
     private void loadFromEnvironmentVariables() {
         // Convert property keys to environment variable format
-        setIfPresent(PARADEX_REST_URL, System.getenv("PARADEX_REST_URL"));
-        setIfPresent(PARADEX_WS_URL, System.getenv("PARADEX_WS_URL"));
+        setIfPresent(PARADEX_TESTNET_REST_URL, System.getenv("PARADEX_TESTNET_REST_URL"));
+        setIfPresent(PARADEX_TESTNET_WS_URL, System.getenv("PARADEX_TESTNET_WS_URL"));
+        setIfPresent(PARADEX_MAINNET_REST_URL, System.getenv("PARADEX_MAINNET_REST_URL"));
+        setIfPresent(PARADEX_MAINNET_WS_URL, System.getenv("PARADEX_MAINNET_WS_URL"));
         setIfPresent(PARADEX_ACCOUNT_ADDRESS, System.getenv("PARADEX_ACCOUNT_ADDRESS"));
         setIfPresent(PARADEX_PRIVATE_KEY, System.getenv("PARADEX_PRIVATE_KEY"));
         setIfPresent(PARADEX_ENVIRONMENT, System.getenv("PARADEX_ENVIRONMENT"));
         setIfPresent(PARADEX_CHAIN_ID, System.getenv("PARADEX_CHAIN_ID"));
         setIfPresent(PARADEX_JWT_REFRESH_SECONDS, System.getenv("PARADEX_JWT_REFRESH_SECONDS"));
+        setIfPresent(PARADEX_KEYSTORE_PATH, System.getenv("PARADEX_KEYSTORE_PATH"));
     }
 
     private void loadFromSystemProperties() {
@@ -143,13 +159,12 @@ public class ParadexConfiguration {
     private void setEnvironmentDefaults(String env) {
         boolean isProduction = "prod".equalsIgnoreCase(env) || "production".equalsIgnoreCase(env);
 
-        // Set default URLs if not specified
-        if (!properties.containsKey(PARADEX_REST_URL)) {
-            properties.setProperty(PARADEX_REST_URL, isProduction ? DEFAULT_PROD_REST_URL : DEFAULT_TESTNET_REST_URL);
-        }
-
-        if (!properties.containsKey(PARADEX_WS_URL)) {
-            properties.setProperty(PARADEX_WS_URL, isProduction ? DEFAULT_PROD_WS_URL : DEFAULT_TESTNET_WS_URL);
+        if (isProduction) {
+            restUrl = properties.getProperty(PARADEX_MAINNET_REST_URL, DEFAULT_PROD_REST_URL);
+            wsUrl = properties.getProperty(PARADEX_MAINNET_WS_URL, DEFAULT_PROD_WS_URL);
+        } else {
+            restUrl = properties.getProperty(PARADEX_TESTNET_REST_URL, DEFAULT_TESTNET_REST_URL);
+            wsUrl = properties.getProperty(PARADEX_TESTNET_WS_URL, DEFAULT_TESTNET_WS_URL);
         }
 
         if (!properties.containsKey(PARADEX_CHAIN_ID)) {
@@ -163,11 +178,11 @@ public class ParadexConfiguration {
 
     // Getter methods
     public String getRestUrl() {
-        return properties.getProperty(PARADEX_REST_URL);
+        return restUrl;
     }
 
     public String getWebSocketUrl() {
-        return properties.getProperty(PARADEX_WS_URL);
+        return wsUrl;
     }
 
     public String getAccountAddress() {
@@ -227,6 +242,32 @@ public class ParadexConfiguration {
      */
     public Properties getAllProperties() {
         return new Properties(properties);
+    }
+
+    public String getKeystorePath() {
+        return properties.getProperty(PARADEX_KEYSTORE_PATH);
+    }
+
+    protected String readPrivateKeyFromKeystore() {
+        String keystorePath = getKeystorePath();
+        if (keystorePath != null && !keystorePath.trim().isEmpty()) {
+            // the private key is the only thing in the file
+            try (InputStream is = new FileInputStream(keystorePath)) {
+                byte[] keyBytes = is.readAllBytes();
+                String privateKey = new String(keyBytes).trim();
+                if (!privateKey.isEmpty()) {
+                    properties.setProperty(PARADEX_PRIVATE_KEY, privateKey);
+                    logger.info("Loaded private key from keystore path: {}", keystorePath);
+                } else {
+                    logger.warn("Keystore file is empty: {}", keystorePath);
+                }
+                return privateKey;
+            } catch (IOException e) {
+                logger.error("Error reading keystore file: {}", keystorePath, e);
+                throw new SumZeroException("Error reading keystore file: " + keystorePath, e);
+            }
+        }
+        return null;
     }
 
     @Override

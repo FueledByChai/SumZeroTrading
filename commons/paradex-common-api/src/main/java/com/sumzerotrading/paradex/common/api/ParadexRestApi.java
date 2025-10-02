@@ -40,6 +40,7 @@ import com.swmansion.starknet.data.TypedData;
 import com.swmansion.starknet.data.types.Felt;
 import com.swmansion.starknet.signer.StarkCurveSigner;
 
+import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -54,16 +55,19 @@ public class ParadexRestApi implements IParadexRestApi {
     protected static IParadexRestApi publicOnlyApi;
     protected static IParadexRestApi privateApi;
 
-    public static IParadexRestApi getPublicOnlyApi(String baseUrl) {
+    protected String starkPublicKeyHex = null;
+
+    public static IParadexRestApi getPublicOnlyApi(String baseUrl, boolean isTestnet) {
         if (publicOnlyApi == null) {
-            publicOnlyApi = new ParadexRestApi(baseUrl);
+            publicOnlyApi = new ParadexRestApi(baseUrl, isTestnet);
         }
         return publicOnlyApi;
     }
 
-    public static IParadexRestApi getPrivateApi(String baseUrl, String accountAddress, String privateKey) {
+    public static IParadexRestApi getPrivateApi(String baseUrl, String accountAddress, String privateKey,
+            boolean isTestnet) {
         if (privateApi == null) {
-            privateApi = new ParadexRestApi(baseUrl, accountAddress, privateKey);
+            privateApi = new ParadexRestApi(baseUrl, accountAddress, privateKey, isTestnet);
         }
         return privateApi;
     }
@@ -79,16 +83,19 @@ public class ParadexRestApi implements IParadexRestApi {
     protected String privateKeyString;
     protected boolean publicApiOnly = true;
 
-    protected BigInteger prodChainId = new BigInteger(
+    // Mainnet and testnet chain IDs see the /config API endpoint for the text value
+    // of these.
+    public static final BigInteger prodChainId = new BigInteger(
             "8458834024819506728615521019831122032732688838300957472069977523540");
-    protected BigInteger testnetChainId = new BigInteger("7693264728749915528729180568779831130134670232771119425");
+    public static final BigInteger testnetChainId = new BigInteger(
+            "7693264728749915528729180568779831130134670232771119425");
     protected BigInteger chainID = prodChainId;
 
-    public ParadexRestApi(String baseUrl) {
-        this(baseUrl, null, null);
+    public ParadexRestApi(String baseUrl, boolean isTestnet) {
+        this(baseUrl, null, null, isTestnet);
     }
 
-    public ParadexRestApi(String baseUrl, String accountAddressString, String privateKeyString) {
+    public ParadexRestApi(String baseUrl, String accountAddressString, String privateKeyString, boolean isTestnet) {
         this.client = new OkHttpClient();
         this.baseUrl = baseUrl;
         this.accountAddressString = accountAddressString;
@@ -96,6 +103,54 @@ public class ParadexRestApi implements IParadexRestApi {
         // Register the custom adapter
         this.gson = new GsonBuilder().registerTypeAdapter(ZonedDateTime.class, new ZonedDateTimeAdapter()).create();
         publicApiOnly = accountAddressString == null || privateKeyString == null;
+        if (isTestnet) {
+            chainID = testnetChainId;
+        }
+    }
+
+    @Override
+    public boolean onboardAccount(String ethereumAddress, String starketAddress, boolean isTestnet) throws Exception {
+
+        // String jwtToken = getJwtToken();
+
+        BigInteger chainId = isTestnet ? testnetChainId : prodChainId;
+        String chainIdHex = "0x" + chainId.toString(16).toUpperCase();
+        String message = createOnboardingMessage(chainIdHex);
+        String signatureString = getOrderMessageSignature(message);
+
+        String path = "/onboarding";
+        String url = baseUrl + path;
+
+        Headers headers = new Headers.Builder().add("PARADEX-ETHEREUM-ACCOUNT", ethereumAddress)
+                .add("PARADEX-STARKNET-ACCOUNT", starketAddress).add("PARADEX-STARKNET-SIGNATURE", signatureString)
+                // .add("Authorization", "Bearer " + jwtToken)
+                .build();
+
+        RequestBody requestBody = RequestBody.create("{\"public_key\": \"" + starkPublicKeyHex + "\"}",
+                MediaType.get("application/json; charset=utf-8"));
+
+        Request request = new Request.Builder().headers(headers).url(url).post(requestBody).build();
+        logger.info("Request: " + request);
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                logger.error("Error response: " + response.body().string());
+                throw new IOException("Unexpected code " + response);
+            }
+
+            String responseBody = response.body().string();
+            logger.info("Response output: " + responseBody);
+            JsonObject jsonResponse = JsonParser.parseString(responseBody).getAsJsonObject();
+            if (jsonResponse.has("success")) {
+                return jsonResponse.get("success").getAsBoolean();
+            } else {
+                return false;
+            }
+
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -487,6 +542,8 @@ public class ParadexRestApi implements IParadexRestApi {
 
     protected String getJwtTokenSingleTry() throws Exception {
 
+        logger.info("Getting JWT token for account: " + accountAddressString);
+        logger.info("Chain ID: " + chainID);
         // Convert the account address and private key to Felt types
         Felt accountAddress = Felt.fromHex(accountAddressString);
         Felt privateKey = Felt.fromHex(privateKeyString);
@@ -517,15 +574,6 @@ public class ParadexRestApi implements IParadexRestApi {
         List<BigInteger> signatureBigInt = signature.stream().map(Felt::getValue).collect(Collectors.toList());
         String signatureStr = convertBigIntListToString(signatureBigInt);
 
-        // Log the values being sent
-        // System.out.println("Account Address: " + accountAddressString);
-        // System.out.println("Signature: " + signatureStr);
-        // System.out.println("Message Hash: " + messageHash.hexString().toString());
-        // System.out.println("Timestamp: " + timestamp);
-        // System.out.println("Signature Expiration: " + expiry);
-
-        // System.out.println("Signature Header: " + signatureStr);
-
         // Call the auth endpoint
 
         Map<String, String> requestHeaders = new HashMap<>();
@@ -545,6 +593,9 @@ public class ParadexRestApi implements IParadexRestApi {
         // Convert the account address and private key to Felt types
         Felt accountAddress = Felt.fromHex(accountAddressString);
         Felt privateKey = Felt.fromHex(privateKeyString);
+
+        logger.info("Using account: " + accountAddressString.toString());
+        logger.info("Chain ID: " + chainID);
         // System.out.println("Key value: " + privateKey.getValue());
 
         // Get current timestamp in seconds
@@ -557,6 +608,9 @@ public class ParadexRestApi implements IParadexRestApi {
 
         // Create new StarkCurveSigner with the private key
         StarkCurveSigner scSigner = new StarkCurveSigner(privateKey);
+
+        Felt publicKey = scSigner.getPublicKey();
+        starkPublicKeyHex = publicKey.hexString();
 
         // Sign the typed data
         List<Felt> signature = scSigner.signTypedData(typedData, accountAddress);
@@ -614,6 +668,29 @@ public class ParadexRestApi implements IParadexRestApi {
                      }
                  }
                  """, timestamp, expiration, chainIdHex);
+    }
+
+    private static String createOnboardingMessage(String chainIdHex) {
+        logger.info("Using chainId: " + chainIdHex);
+        return String.format("""
+                {
+                     "message": {
+                        "action": "Onboarding"
+                     },
+                     "domain": {"name": "Paradex", "chainId": "%s", "version": "1"},
+                     "primaryType": "Constant",
+                     "types": {
+                         "StarkNetDomain": [
+                             {"name": "name", "type": "felt"},
+                             {"name": "chainId", "type": "felt"},
+                             {"name": "version", "type": "felt"}
+                         ],
+                         "Constant": [
+                             {"name": "action", "type": "felt"}
+                         ]
+                     }
+                 }
+                 """, chainIdHex);
     }
 
     private static String createOrderMessage(long timestamp, String chainIdHex, ParadexOrder order) {

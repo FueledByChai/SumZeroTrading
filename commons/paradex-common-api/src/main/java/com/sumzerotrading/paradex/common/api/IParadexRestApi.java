@@ -47,4 +47,6 @@ public interface IParadexRestApi {
 
     InstrumentDescriptor[] getAllInstrumentsForType(InstrumentType instrumentType);
 
+    boolean onboardAccount(String ethereumAddress, String starketAddress, boolean isTestnet) throws Exception;
+
 }

@@ -96,6 +96,7 @@ public class HyperliquidBrokerTest {
 
         doNothing().when(broker).startAccountInfoWSClient();
         doNothing().when(broker).startOrderStatusWSClient();
+        doNothing().when(broker).startFillWSClient();
 
         broker.connect();
         assertTrue(broker.connected);
@@ -108,6 +109,7 @@ public class HyperliquidBrokerTest {
     public void testDisconnectSetsConnectedFalse() {
         doNothing().when(broker).startAccountInfoWSClient();
         doNothing().when(broker).startOrderStatusWSClient();
+        doNothing().when(broker).startFillWSClient();
         broker.connect();
         broker.disconnect();
         assertFalse(broker.connected);

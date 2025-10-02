@@ -30,7 +30,7 @@ public class ParadexApiFactory {
             synchronized (lock) {
                 if (publicApiInstance == null) {
                     ParadexConfiguration config = ParadexConfiguration.getInstance();
-                    publicApiInstance = new ParadexRestApi(config.getRestUrl());
+                    publicApiInstance = new ParadexRestApi(config.getRestUrl(), !config.isProductionEnvironment());
                     logger.info("Created public ParadexRestApi instance for URL: {}", config.getRestUrl());
                 }
             }
@@ -58,7 +58,7 @@ public class ParadexApiFactory {
                     }
 
                     privateApiInstance = new ParadexRestApi(config.getRestUrl(), config.getAccountAddress(),
-                            config.getPrivateKey());
+                            config.getPrivateKey(), !config.isProductionEnvironment());
                     logger.info("Created private ParadexRestApi instance for URL: {} and address: {}",
                             config.getRestUrl(), config.getAccountAddress());
                 }
