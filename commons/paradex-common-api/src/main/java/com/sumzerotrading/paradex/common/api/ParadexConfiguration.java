@@ -114,7 +114,7 @@ public class ParadexConfiguration {
             logger.info("Loaded configuration from file: {}", configFile);
             return;
         } catch (IOException e) {
-            logger.debug("External config file not found: {}", configFile);
+            logger.warn("External config file not found: {}", configFile);
         }
 
         // Try classpath resource
@@ -124,7 +124,7 @@ public class ParadexConfiguration {
                 logger.info("Loaded configuration from classpath: paradex.properties");
             }
         } catch (IOException e) {
-            logger.debug("Could not load paradex.properties from classpath", e);
+            logger.warn("Could not load paradex.properties from classpath", e);
         }
     }
 

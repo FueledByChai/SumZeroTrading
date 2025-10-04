@@ -155,6 +155,7 @@ public class ParadexRestApi implements IParadexRestApi {
 
     @Override
     public List<Position> getPositionInfo(String jwtToken) {
+        checkPrivateApi();
         return executeWithRetry(() -> {
 
             String path = "/positions";
@@ -240,6 +241,7 @@ public class ParadexRestApi implements IParadexRestApi {
 
     @Override
     public List<OrderTicket> getOpenOrders(String jwtToken, String market) {
+        checkPrivateApi();
         return executeWithRetry(() -> {
 
             String path = "/orders";
@@ -274,6 +276,7 @@ public class ParadexRestApi implements IParadexRestApi {
 
     @Override
     public RestResponse cancelOrder(String jwtToken, String orderId) {
+        checkPrivateApi();
         return executeWithRetry(() -> {
 
             String path = "/orders/" + orderId;
@@ -344,6 +347,7 @@ public class ParadexRestApi implements IParadexRestApi {
     }
 
     protected void cancelAllOrders(String jwtToken, String market) {
+        checkPrivateApi();
         executeWithRetry(() -> {
             String path = "/orders";
             String url = baseUrl + path;
@@ -376,6 +380,7 @@ public class ParadexRestApi implements IParadexRestApi {
 
     @Override
     public String placeOrder(String jwtToken, OrderTicket tradeOrder) {
+        checkPrivateApi();
         return executeWithRetry(() -> {
             ParadexOrder order = ParadexUtil.translateOrder(tradeOrder);
             String path = "/orders";
@@ -434,6 +439,7 @@ public class ParadexRestApi implements IParadexRestApi {
 
     @Override
     public String getJwtToken() {
+        checkPrivateApi();
         return executeWithRetry(() -> {
 
             // Fallback to single try if no headers are used
@@ -444,7 +450,7 @@ public class ParadexRestApi implements IParadexRestApi {
 
     @Override
     public String getJwtToken(Map<String, String> headers) throws IOException {
-
+        checkPrivateApi();
         String path = "/auth";
         String url = baseUrl + path;
         Request.Builder requestBuilder = new Request.Builder().url(url)
@@ -968,6 +974,12 @@ public class ParadexRestApi implements IParadexRestApi {
         @Override
         public ZonedDateTime read(JsonReader in) throws IOException {
             return ZonedDateTime.parse(in.nextString(), FORMATTER);
+        }
+    }
+
+    protected void checkPrivateApi() {
+        if (privateKeyString == null || privateKeyString.isEmpty()) {
+            throw new SumZeroException("Private key not set, public API only mode enabled.");
         }
     }
 
