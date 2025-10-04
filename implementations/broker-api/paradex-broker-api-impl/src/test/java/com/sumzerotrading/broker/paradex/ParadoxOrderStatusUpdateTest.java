@@ -115,7 +115,7 @@ public class ParadoxOrderStatusUpdateTest {
                                 status, "INVALID_REASON", averageFillPrice, orderType, side, timestamp);
 
                 // Assert
-                assertEquals(CancelReason.NONE, orderStatusUpdate.getCancelReason());
+                assertEquals(CancelReason.UNKNOWN, orderStatusUpdate.getCancelReason());
                 assertEquals("INVALID_REASON", orderStatusUpdate.getCancelReasonString());
         }
 

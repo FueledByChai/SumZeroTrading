@@ -273,8 +273,8 @@ public class ParadexRestApi implements IParadexRestApi {
     }
 
     @Override
-    public void cancelOrder(String jwtToken, String orderId) {
-        executeWithRetry(() -> {
+    public RestResponse cancelOrder(String jwtToken, String orderId) {
+        return executeWithRetry(() -> {
 
             String path = "/orders/" + orderId;
             String url = baseUrl + path;
@@ -285,7 +285,18 @@ public class ParadexRestApi implements IParadexRestApi {
             logger.info("Request: " + request);
 
             try (Response response = client.newCall(request).execute()) {
-                if (!response.isSuccessful()) {
+                /**
+                 * 2025-10-03T17:03:29.662+0000 [pool-3-thread-1] INFO
+                 * c.f.service.MarketDataService - Canceling expired buy order:
+                 * 1759510877650201709231040002 (age: 132289ms) 2025-10-03T17:03:29.764+0000
+                 * [pool-3-thread-1] ERROR c.s.p.common.api.ParadexRestApi - Error response:
+                 * {"error":"ORDER_IS_CLOSED","message":"order is closed:
+                 * 1759510877650201709231040002"}
+                 */
+                if (response.code() == 400) {
+                    RestResponse restResponse = new RestResponse(response.code(), response.body().string());
+                    return restResponse;
+                } else if (!response.isSuccessful()) {
                     logger.error("Error response: " + response.body().string());
                     throw new IOException("Unexpected code " + response);
                 }
@@ -293,7 +304,9 @@ public class ParadexRestApi implements IParadexRestApi {
                 String responseBody = response.body().string();
                 logger.info("Response output: " + responseBody);
 
-            } catch (IOException e) {
+                return new RestResponse(response.code(), responseBody);
+
+            } catch (Exception e) {
                 logger.error(e.getMessage(), e);
                 throw new RuntimeException(e);
             }

@@ -48,6 +48,7 @@ public class Ticker implements Serializable {
     protected BigDecimal contractMultiplier = BigDecimal.ONE;
     protected BigDecimal orderSizeIncrement = new BigDecimal("1");
     protected BigDecimal minimumOrderSize = null;
+    protected BigDecimal minimumOrderSizeNotional = null;
     protected int expiryMonth = 0;
     protected int expiryYear = 0;
     protected int expiryDay = 0;
@@ -257,6 +258,24 @@ public class Ticker implements Serializable {
         return this;
     }
 
+    public BigDecimal getMinimumOrderSize() {
+        return minimumOrderSize;
+    }
+
+    public BigDecimal getMinimumOrderSizeNotional() {
+        return minimumOrderSizeNotional;
+    }
+
+    public Ticker setMinimumOrderSize(BigDecimal minimumOrderSize) {
+        this.minimumOrderSize = minimumOrderSize;
+        return this;
+    }
+
+    public Ticker setMinimumOrderSizeNotional(BigDecimal minimumOrderSizeNotional) {
+        this.minimumOrderSizeNotional = minimumOrderSizeNotional;
+        return this;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -277,6 +296,7 @@ public class Ticker implements Serializable {
         result = prime * result + ((strike == null) ? 0 : strike.hashCode());
         result = prime * result + ((right == null) ? 0 : right.hashCode());
         result = prime * result + fundingRateInterval;
+        result = prime * result + ((minimumOrderSizeNotional == null) ? 0 : minimumOrderSizeNotional.hashCode());
         return result;
     }
 
@@ -351,6 +371,11 @@ public class Ticker implements Serializable {
             return false;
         if (fundingRateInterval != other.fundingRateInterval)
             return false;
+        if (minimumOrderSizeNotional == null) {
+            if (other.minimumOrderSizeNotional != null)
+                return false;
+        } else if (!minimumOrderSizeNotional.equals(other.minimumOrderSizeNotional))
+            return false;
         return true;
     }
 
@@ -361,7 +386,8 @@ public class Ticker implements Serializable {
                 + minimumTickSize + ", contractMultiplier=" + contractMultiplier + ", orderSizeIncrement="
                 + orderSizeIncrement + ", minimumOrderSize=" + minimumOrderSize + ", expiryMonth=" + expiryMonth
                 + ", expiryYear=" + expiryYear + ", expiryDay=" + expiryDay + ", strike=" + strike + ", right=" + right
-                + ", fundingRateInterval=" + fundingRateInterval + "]";
+                + ", fundingRateInterval=" + fundingRateInterval + ", minimumOrderSizeNotional="
+                + minimumOrderSizeNotional + "]";
     }
 
 }

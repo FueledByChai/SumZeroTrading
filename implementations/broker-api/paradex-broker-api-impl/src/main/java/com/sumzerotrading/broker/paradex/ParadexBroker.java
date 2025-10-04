@@ -17,6 +17,7 @@
  */
 package com.sumzerotrading.broker.paradex;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,13 +33,16 @@ import org.slf4j.LoggerFactory;
 
 import com.sumzerotrading.broker.AbstractBasicBroker;
 import com.sumzerotrading.broker.Position;
+import com.sumzerotrading.broker.order.Fill;
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderStatus;
 import com.sumzerotrading.broker.order.OrderTicket;
+import com.sumzerotrading.broker.order.OrderStatus.CancelReason;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.paradex.common.api.IParadexRestApi;
 import com.sumzerotrading.paradex.common.api.ParadexApiFactory;
 import com.sumzerotrading.paradex.common.api.ParadexConfiguration;
+import com.sumzerotrading.paradex.common.api.RestResponse;
 import com.sumzerotrading.paradex.common.api.ws.ParadexWSClientBuilder;
 import com.sumzerotrading.paradex.common.api.ws.ParadexWebSocketClient;
 import com.sumzerotrading.paradex.common.api.ws.accountinfo.AccountWebSocketProcessor;
@@ -111,7 +115,33 @@ public class ParadexBroker extends AbstractBasicBroker {
     @Override
     public void cancelOrder(String id) {
         checkConnected();
-        restApi.cancelOrder(jwtToken, id);
+        logger.info("Canceling order with ID: {}", id);
+        RestResponse cancelOrderResponse = restApi.cancelOrder(jwtToken, id);
+
+        if (!cancelOrderResponse.isSuccessful()) {
+            String errormessage = cancelOrderResponse.getBody();
+            logger.error("Failed to cancel order {}: {}", id, errormessage);
+            logger.error("Removing order from active list since it is likely already closed.");
+
+            if (errormessage != null && errormessage.contains("ORDER_IS_CLOSED")) {
+                String closedOrderId = errormessage.replaceAll(".*?(\\d+).*", "$1");
+                OrderTicket order = tradeOrderMap.get(closedOrderId);
+                if (order != null) {
+                    order.setCurrentStatus(OrderStatus.Status.CANCELED);
+                    OrderStatus status = new OrderStatus(OrderStatus.Status.CANCELED, order.getOrderId(),
+                            order.getFilledSize(), order.getSize().subtract(order.getFilledSize()),
+                            order.getFilledPrice(), order.getTicker(), getCurrentTime());
+                    status.setCancelReason(CancelReason.USER_CANCELED);
+
+                    OrderEvent event = new OrderEvent(order, status);
+
+                    tradeOrderMap.remove(closedOrderId);
+                    super.fireOrderEvent(event);
+                }
+            }
+        } else {
+            logger.info("Cancel order request for {} successful.", id);
+        }
     }
 
     @Override
@@ -123,7 +153,9 @@ public class ParadexBroker extends AbstractBasicBroker {
     @Override
     public void placeOrder(OrderTicket order) {
         checkConnected();
+        order.setOrderEntryTime(getCurrentTime());
         String orderId = restApi.placeOrder(jwtToken, order);
+        logger.info("{} Order for {} placed with ID: {}", order.getDirection(), order.getTicker().getSymbol(), orderId);
         order.setOrderId(orderId);
         tradeOrderMap.put(orderId, order);
     }
@@ -207,8 +239,16 @@ public class ParadexBroker extends AbstractBasicBroker {
     }
 
     protected void onParadexOrderStatusEvent(IParadexOrderStatusUpdate orderStatus) {
+        logger.info("Received order status update: {}", orderStatus);
         OrderStatus status = translator.translateOrderStatus(orderStatus);
         OrderTicket order = tradeOrderMap.get(orderStatus.getOrderId());
+        if (order == null) {
+            order = completedOrderMap.get(orderStatus.getOrderId());
+            if (order == null) {
+                logger.warn("Received order status update for unknown order ID: {}", orderStatus.getOrderId());
+                return;
+            }
+        }
         order.setCurrentStatus(status.getStatus());
         order.setFilledPrice(status.getFillPrice());
         order.setFilledSize(status.getFilled());
@@ -222,11 +262,14 @@ public class ParadexBroker extends AbstractBasicBroker {
         super.fireOrderEvent(event);
     }
 
-    protected void onParadexFillEvent(ParadexFill fill) {
-
+    protected void onParadexFillEvent(ParadexFill paradexFill) {
+        logger.info("Received fill event: {}", paradexFill);
+        Fill fill = translator.translateFill(paradexFill);
+        fireFillEvent(fill);
     }
 
     protected void onParadexAccountInfoEvent(IAccountUpdate accountInfo) {
+        fireAccountEquityUpdated(accountInfo.getAccountValue());
 
     }
 

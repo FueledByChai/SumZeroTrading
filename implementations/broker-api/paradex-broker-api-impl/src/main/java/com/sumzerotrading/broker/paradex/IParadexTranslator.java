@@ -2,8 +2,10 @@ package com.sumzerotrading.broker.paradex;
 
 import java.math.BigDecimal;
 
+import com.sumzerotrading.broker.order.Fill;
 import com.sumzerotrading.broker.order.OrderStatus;
 import com.sumzerotrading.broker.order.OrderStatus.Status;
+import com.sumzerotrading.paradex.common.api.ws.fills.ParadexFill;
 import com.sumzerotrading.paradex.common.api.ws.orderstatus.CancelReason;
 import com.sumzerotrading.paradex.common.api.ws.orderstatus.IParadexOrderStatusUpdate;
 import com.sumzerotrading.paradex.common.api.ws.orderstatus.ParadexOrderStatus;
@@ -14,5 +16,7 @@ public interface IParadexTranslator {
 
     Status translateStatusCode(ParadexOrderStatus paradexStatus, CancelReason cancelReason, BigDecimal originalSize,
             BigDecimal remainingSize);
+
+    Fill translateFill(ParadexFill paradexFill);
 
 }

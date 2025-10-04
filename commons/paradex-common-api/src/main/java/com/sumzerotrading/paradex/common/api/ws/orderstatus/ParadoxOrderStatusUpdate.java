@@ -33,7 +33,7 @@ public class ParadoxOrderStatusUpdate implements IParadexOrderStatusUpdate {
                 this.cancelReason = CancelReason.valueOf(cancelReasonAsString);
             } catch (IllegalArgumentException e) {
                 // Handle the case when cancelReasonAsString is not a valid enum value
-                this.cancelReason = CancelReason.NONE;
+                this.cancelReason = CancelReason.UNKNOWN;
             }
         } else {
             this.cancelReason = CancelReason.NONE;

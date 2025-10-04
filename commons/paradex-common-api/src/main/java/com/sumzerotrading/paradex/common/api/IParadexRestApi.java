@@ -31,7 +31,7 @@ public interface IParadexRestApi {
 
     List<OrderTicket> getOpenOrders(String jwtToken, String market);
 
-    void cancelOrder(String jwtToken, String orderId);
+    RestResponse cancelOrder(String jwtToken, String orderId);
 
     String placeOrder(String jwtToken, OrderTicket tradeOrder);
 

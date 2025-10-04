@@ -56,6 +56,21 @@ import com.sumzerotrading.time.TimeUpdatedListener;
 
 public class PaperBroker extends AbstractBasicBroker implements Level1QuoteListener, OrderFlowListener {
 
+    @Override
+    protected void fireFillEvent(Fill fill) {
+        // Synchronously notify all fill event listeners before any order update
+        // listeners
+        synchronized (fillEventListeners) {
+            for (com.sumzerotrading.broker.order.FillEventListener listener : fillEventListeners) {
+                try {
+                    listener.fillReceived(fill);
+                } catch (Exception ex) {
+                    logger.error(ex.getMessage(), ex);
+                }
+            }
+        }
+    }
+
     protected Logger logger = LoggerFactory.getLogger(PaperBroker.class);
 
     private final ExecutorService executorService = Executors.newFixedThreadPool(10); // Thread pool with 10 threads

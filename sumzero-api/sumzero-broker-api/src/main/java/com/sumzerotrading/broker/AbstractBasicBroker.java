@@ -5,6 +5,7 @@
  */
 package com.sumzerotrading.broker;
 
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -116,6 +117,7 @@ public abstract class AbstractBasicBroker implements IBroker {
     }
 
     protected void fireOrderEvent(OrderEvent event) {
+        logger.info("Firing order event: {}", event);
         synchronized (orderEventListeners) {
             for (OrderEventListener listener : orderEventListeners) {
                 eventExecutor.submit(() -> {
@@ -172,6 +174,7 @@ public abstract class AbstractBasicBroker implements IBroker {
     }
 
     protected void fireFillEvent(Fill fill) {
+        logger.info("Firing fill event: {}", fill);
         synchronized (fillEventListeners) {
             for (FillEventListener listener : fillEventListeners) {
                 eventExecutor.submit(() -> {
@@ -206,8 +209,7 @@ public abstract class AbstractBasicBroker implements IBroker {
 
     @Override
     public ZonedDateTime getCurrentTime() {
-        throw new UnsupportedOperationException("Not supported"); // To change body of generated methods, choose Tools |
-                                                                  // Templates.
+        return ZonedDateTime.now(ZoneId.of("UTC"));
     }
 
     @Override

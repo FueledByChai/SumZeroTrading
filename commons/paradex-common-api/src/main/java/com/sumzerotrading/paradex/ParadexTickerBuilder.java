@@ -18,7 +18,8 @@ public class ParadexTickerBuilder implements ITickerBuilder {
                     .setMinimumTickSize(descriptor.getPriceTickSize())
                     .setOrderSizeIncrement(descriptor.getOrderSizeIncrement())
                     .setPrimaryExchange(descriptor.getExchange()).setSymbol(descriptor.getExchangeSymbol())
-                    .setFundingRateInterval(descriptor.getFundingPeriodHours());
+                    .setFundingRateInterval(descriptor.getFundingPeriodHours())
+                    .setMinimumOrderSizeNotional(BigDecimal.valueOf(descriptor.getMinNotionalOrderSize()));
 
             return ticker;
         } else {
