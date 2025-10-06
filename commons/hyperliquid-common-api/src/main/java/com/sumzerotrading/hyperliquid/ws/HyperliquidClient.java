@@ -146,10 +146,7 @@ public class HyperliquidClient {
 
     public static void main(String[] args) throws Exception {
 
-        HyperliquidConfiguration config = HyperliquidConfiguration.getInstance();
-        String wsUrl = config.getProperty(HyperliquidConfiguration.HYPERLIQUID_WS_URL);
-        String privKey = config.getProperty(HyperliquidConfiguration.HYPERLIQUID_PRIVATE_KEY);
-        IHyperliquidWebsocketApi api = new HyperliquidWebsocketApi(wsUrl, privKey);
+        IHyperliquidWebsocketApi api = new HyperliquidWebsocketApi();
 
         api.connect();
         OrderJson buy = new OrderJson();

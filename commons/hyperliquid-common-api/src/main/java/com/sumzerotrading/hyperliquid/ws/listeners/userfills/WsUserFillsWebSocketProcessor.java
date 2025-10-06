@@ -38,8 +38,8 @@ public class WsUserFillsWebSocketProcessor extends AbstractWebSocketProcessor<Ws
             JSONObject dataObject = jsonObject.has("data") ? jsonObject.getJSONObject("data") : jsonObject;
 
             WsUserFill userFill = new WsUserFill();
-            if (jsonObject.has("isSnapshot")) {
-                userFill.setSnapshot(jsonObject.getBoolean("isSnapshot"));
+            if (dataObject.has("isSnapshot")) {
+                userFill.setSnapshot(dataObject.getBoolean("isSnapshot"));
             }
             userFill.setUser(dataObject.optString("user", null));
 

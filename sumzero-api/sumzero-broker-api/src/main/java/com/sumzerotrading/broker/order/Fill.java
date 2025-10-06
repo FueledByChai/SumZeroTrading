@@ -7,6 +7,7 @@ import com.sumzerotrading.data.Ticker;
 
 public class Fill {
 
+    protected boolean isSnapshot = false;
     protected Ticker ticker;
     protected BigDecimal price;
     protected BigDecimal size;
@@ -98,6 +99,14 @@ public class Fill {
         this.isTaker = isTaker;
     }
 
+    public boolean isSnapshot() {
+        return isSnapshot;
+    }
+
+    public void setSnapshot(boolean isSnapshot) {
+        this.isSnapshot = isSnapshot;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -112,6 +121,7 @@ public class Fill {
         result = prime * result + ((commission == null) ? 0 : commission.hashCode());
         result = prime * result + ((fillId == null) ? 0 : fillId.hashCode());
         result = prime * result + (isTaker ? 1231 : 1237);
+        result = prime * result + (isSnapshot ? 1231 : 1237);
         return result;
     }
 
@@ -168,6 +178,8 @@ public class Fill {
             return false;
         if (isTaker != other.isTaker)
             return false;
+        if (isSnapshot != other.isSnapshot)
+            return false;
         return true;
     }
 
@@ -175,7 +187,7 @@ public class Fill {
     public String toString() {
         return "Fill [ticker=" + ticker + ", price=" + price + ", size=" + size + ", side=" + side + ", time=" + time
                 + ", orderId=" + orderId + ", clientOrderId=" + clientOrderId + ", commission=" + commission
-                + ", fillId=" + fillId + ", isTaker=" + isTaker + "]";
+                + ", fillId=" + fillId + ", isTaker=" + isTaker + ", isSnapshot=" + isSnapshot + "]";
     }
 
 }

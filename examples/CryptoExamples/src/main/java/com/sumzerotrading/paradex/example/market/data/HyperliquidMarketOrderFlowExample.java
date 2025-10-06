@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.hyperliquid.ws.HyperliquidTickerRegistry;
 import com.sumzerotrading.marketdata.OrderFlow;
+import com.sumzerotrading.marketdata.QuoteEngine;
 import com.sumzerotrading.marketdata.hyperliquid.HyperliquidQuoteEngine;
 
 public class HyperliquidMarketOrderFlowExample {
@@ -34,7 +35,7 @@ public class HyperliquidMarketOrderFlowExample {
 
         Ticker ticker = HyperliquidTickerRegistry.getInstance().lookupByBrokerSymbol("BTC");
 
-        HyperliquidQuoteEngine quoteEngine = new HyperliquidQuoteEngine();
+        QuoteEngine quoteEngine = QuoteEngine.getInstance(HyperliquidQuoteEngine.class);
 
         quoteEngine.subscribeOrderFlow(ticker, (OrderFlow orderFlow) -> {
             logger.info("Received Order Flow: {}", orderFlow);

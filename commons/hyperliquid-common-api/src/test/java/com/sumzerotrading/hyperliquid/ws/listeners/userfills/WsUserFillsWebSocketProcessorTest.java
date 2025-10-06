@@ -138,4 +138,34 @@ class WsUserFillsWebSocketProcessorTest {
         assertEquals("testuser", userFill.getUser());
         assertTrue(userFill.getFills().isEmpty());
     }
+
+    @Test
+    void testParseMessage_isSnapshotWithDataWrapper_ShouldReadFromDataObject() {
+        // This test demonstrates the bug: when JSON has a "data" wrapper,
+        // isSnapshot should be read from the data object, not the root object
+        String json = "{" + "\"channel\":\"userFills\"," + "\"data\":{" + "  \"isSnapshot\":true,"
+                + "  \"user\":\"testuser\"," + "  \"fills\":[]" + "}" + "}";
+
+        WsUserFillsWebSocketProcessor processor = new WsUserFillsWebSocketProcessor(null);
+        WsUserFill userFill = processor.parseMessage(json);
+
+        assertNotNull(userFill);
+        assertEquals("testuser", userFill.getUser());
+        // This assertion should pass but currently fails due to the bug
+        assertTrue(userFill.isSnapshot(), "isSnapshot should be true when present in data object");
+    }
+
+    @Test
+    void testParseMessage_isSnapshotWithoutDataWrapper_ShouldReadFromRootObject() {
+        // This test shows the correct behavior when there's no data wrapper
+        String json = "{" + "\"channel\":\"userFills\"," + "\"isSnapshot\":false," + "\"user\":\"testuser\","
+                + "\"fills\":[]" + "}";
+
+        WsUserFillsWebSocketProcessor processor = new WsUserFillsWebSocketProcessor(null);
+        WsUserFill userFill = processor.parseMessage(json);
+
+        assertNotNull(userFill);
+        assertEquals("testuser", userFill.getUser());
+        assertFalse(userFill.isSnapshot(), "isSnapshot should be false when set to false in root object");
+    }
 }

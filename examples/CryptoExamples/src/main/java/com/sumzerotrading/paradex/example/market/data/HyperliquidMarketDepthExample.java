@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.hyperliquid.ws.HyperliquidTickerRegistry;
+import com.sumzerotrading.marketdata.QuoteEngine;
 import com.sumzerotrading.marketdata.hyperliquid.HyperliquidQuoteEngine;
 import com.sumzerotrading.util.ITickerRegistry;
 
@@ -33,7 +34,7 @@ public class HyperliquidMarketDepthExample {
     public void start() {
 
         ITickerRegistry registry = HyperliquidTickerRegistry.getInstance();
-        HyperliquidQuoteEngine quoteEngine = new HyperliquidQuoteEngine();
+        QuoteEngine quoteEngine = QuoteEngine.getInstance(HyperliquidQuoteEngine.class);
         quoteEngine.startEngine();
 
         Ticker btcTicker = registry.lookupByCommonSymbol("BTC");

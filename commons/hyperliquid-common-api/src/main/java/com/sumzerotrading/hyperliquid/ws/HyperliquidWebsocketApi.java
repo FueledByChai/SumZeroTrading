@@ -29,10 +29,22 @@ public class HyperliquidWebsocketApi implements IWebSocketEventListener<SubmitPo
     protected final ConcurrentHashMap<Integer, CompletableFuture<SubmitPostResponse>> pendingRequests = new ConcurrentHashMap<>();
     protected String wsUrl;
 
-    public HyperliquidWebsocketApi(String wsUrl, String apiWalletPrivKeyHex) {
-        this.signer = new HLSigner(apiWalletPrivKeyHex);
-        this.wsUrl = wsUrl;
+    protected HyperliquidConfiguration config = HyperliquidConfiguration.getInstance();
+    protected boolean isMainnet;
+    // protected String signingAddress = null;
+    // protected String tradingAddress = null;
+    protected String subAccountAddress = null;
 
+    public HyperliquidWebsocketApi() {
+
+        this.signer = new HLSigner(config.getPrivateKey());
+        this.wsUrl = config.getWebSocketUrl();
+        this.subAccountAddress = config.getSubAccountAddress();
+        // this.signingAddress = config.getAccountAddress();
+        // this.tradingAddress = config.getTradingAccount();
+        this.isMainnet = config.getEnvironment().equals("prod");
+        logger.info("Hyperliquid WebSocket API initialized with URL: {}", wsUrl);
+        logger.info("Websocket API is using Mainnet: {}", isMainnet);
         connectToWebSocket();
     }
 
@@ -41,6 +53,10 @@ public class HyperliquidWebsocketApi implements IWebSocketEventListener<SubmitPo
         SignableExchangeOrderRequest signable = new SignableExchangeOrderRequest();
         signable.action = orderAction;
         signable.nonceMs = System.currentTimeMillis();
+        if (subAccountAddress != null) {
+            signable.vaultAddress = subAccountAddress;
+        }
+
         SubmitExchangeRequest request = getSignedRequest(signable);
         WebServicePostMessage wsRequest = new WebServicePostMessage();
         wsRequest.id = requestId++;
@@ -111,10 +127,6 @@ public class HyperliquidWebsocketApi implements IWebSocketEventListener<SubmitPo
             signable.nonceMs = System.currentTimeMillis();
         }
 
-        // Sign
-        // boolean isMainnet = apiBaseUrl.equals("https://api.hyperliquid.xyz"); // or
-        // however you determine this
-        boolean isMainnet = false; // Change as needed
         SignatureFields sig = signer.signL1OrderAction(signable.action, // ActionPayload
                 signable.nonceMs, // ms epoch
                 signable.vaultAddress, // null or "0x..."

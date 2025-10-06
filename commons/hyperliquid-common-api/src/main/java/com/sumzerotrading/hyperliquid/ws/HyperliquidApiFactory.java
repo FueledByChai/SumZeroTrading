@@ -43,8 +43,7 @@ public class HyperliquidApiFactory {
             synchronized (lock) {
                 if (websocketApiInstance == null) {
                     HyperliquidConfiguration config = HyperliquidConfiguration.getInstance();
-                    websocketApiInstance = new HyperliquidWebsocketApi(config.getWebSocketUrl(),
-                            config.getPrivateKey());
+                    websocketApiInstance = new HyperliquidWebsocketApi();
                     logger.info("Created HyperliquidWebsocketApi instance for URL: {}", config.getWebSocketUrl());
                 }
             }

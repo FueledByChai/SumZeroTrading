@@ -226,4 +226,22 @@ public class TranslatorTest {
         OrderJson orderJson = translator.translateOrderTicketToOrderJson(ticket, bestBidOffer);
         assertTrue(orderJson.reduceOnly);
     }
+
+    @Test
+    public void testGetBuySlippage() {
+        // id=207, instrumentType=PERPETUAL_FUTURES, symbol=ASTER,
+        // exchange=Exchange{exchangeName=HYPERLIQUID},
+        // primaryExchange=Exchange{exchangeName=HYPERLIQUID}, currency=USD,
+        // minimumTickSize=0.000001, contractMultiplier=1, orderSizeIncrement=1,
+        // minimumOrderSize=null, expiryMonth=0, expiryYear=0, expiryDay=0, strike=null,
+        // right=NONE, fundingRateInterval=1, minimumOrderSizeNotional=null],
+        // price=1.8599, size=296.0, side=SELL, time=2025-09-21T04:47:17.208Z[GMT],
+        // orderId=168725
+
+        Ticker ticker = mock(Ticker.class);
+        when(ticker.getMinimumTickSize()).thenReturn(new BigDecimal("0.00001"));
+        Translator.SLIPPAGE_PERCENTAGE = 0;
+        String price = Translator.getInstance().getBuySlippage(ticker, new BigDecimal("1.23456789"));
+        assertEquals("1.2345", price);
+    }
 }

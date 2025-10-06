@@ -24,7 +24,9 @@ import com.sumzerotrading.util.Util;
 
 public class Translator implements ITranslator {
 
-    protected static final double SLIPPAGE_PERCENTAGE = 0.05; // 0.25%
+    protected static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Translator.class);
+
+    protected static double SLIPPAGE_PERCENTAGE = 0.05; // 0.25%
     protected static ITranslator instance;
 
     public static ITranslator getInstance() {
@@ -79,7 +81,7 @@ public class Translator implements ITranslator {
             } else {
                 order.price = getSellSlippage(ticket.getTicker(), bestBidOffer.getBid());
             }
-            order.type = new LimitType(LimitType.TimeInForce.IOC);
+            order.type = new LimitType(LimitType.TimeInForce.GTC);
         } else if (ticket.getType() == OrderTicket.Type.LIMIT) {
             order.price = ticket.getLimitPrice() != null
                     ? HyperliquidUtil.formatPriceAsString(ticket.getTicker(), ticket.getLimitPrice())
@@ -100,6 +102,10 @@ public class Translator implements ITranslator {
         if (ticket.getModifiers().contains(OrderTicket.Modifier.REDUCE_ONLY)) {
             order.reduceOnly = true;
         }
+        logger.info("Translating order ticket: " + ticket);
+        logger.info("Best bid/offer: " + bestBidOffer);
+        logger.info("Translated order: " + order);
+
         return order;
     }
 
@@ -122,14 +128,14 @@ public class Translator implements ITranslator {
 
     @Override
     public String getBuySlippage(Ticker ticker, BigDecimal currentAsk) {
-        BigDecimal slippage = currentAsk.multiply(BigDecimal.valueOf(SLIPPAGE_PERCENTAGE / 100));
-        return HyperliquidUtil.formatPriceAsString(ticker, currentAsk.add(slippage));
+        double slippage = currentAsk.doubleValue() * (SLIPPAGE_PERCENTAGE / 100);
+        return HyperliquidUtil.formatPriceAsString(ticker, currentAsk.add(BigDecimal.valueOf(slippage)));
     }
 
     @Override
     public String getSellSlippage(Ticker ticker, BigDecimal currentBid) {
-        BigDecimal slippage = currentBid.multiply(BigDecimal.valueOf(SLIPPAGE_PERCENTAGE / 100));
-        return HyperliquidUtil.formatPriceAsString(ticker, currentBid.subtract(slippage));
+        double slippage = currentBid.doubleValue() * (SLIPPAGE_PERCENTAGE / 100);
+        return HyperliquidUtil.formatPriceAsString(ticker, currentBid.subtract(BigDecimal.valueOf(slippage)));
     }
 
     @Override
@@ -143,6 +149,7 @@ public class Translator implements ITranslator {
             Ticker ticker = HyperliquidTickerRegistry.getInstance().lookupByBrokerSymbol(wsFill.getCoin());
             Fill fill = new Fill();
             fill.setTicker(ticker);
+            fill.setSnapshot(wsUserFill.isSnapshot());
             fill.setPrice(new BigDecimal(wsFill.getPrice()));
             fill.setSize(new BigDecimal(wsFill.getSize()));
             fill.setFillId(wsFill.getTradeId() + "");

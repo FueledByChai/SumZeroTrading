@@ -29,4 +29,10 @@ public class OrderJson {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public String clientOrderId = null; // clientId/cloid (optional)
 
+    @Override
+    public String toString() {
+        return "OrderJson [assetId=" + assetId + ", isBuy=" + isBuy + ", price=" + price + ", size=" + size
+                + ", reduceOnly=" + reduceOnly + ", type=" + type + ", clientOrderId=" + clientOrderId + "]";
+    }
+
 }

@@ -23,50 +23,54 @@ public class HyperliquidUtil {
     }
 
     /**
-     * Formats a price for Hyperliquid: up to 5 significant figures (unless
-     * integer), no more than (maxDecimals - szDecimals) decimal places,
-     * integer-only for prices >= 100,000.
+     * Formats a price for Hyperliquid according to their pricing rules: - Up to 5
+     * significant figures (unless integer) - No more than MAX_DECIMALS - szDecimals
+     * decimal places (MAX_DECIMALS = 6 for perps) - Integer prices are always
+     * allowed regardless of significant figures
      */
     public static String formatPriceAsString(Ticker ticker, BigDecimal price) {
-        int maxDecimals = 6; // Hyperliquid max decimals is 6 for perps, 8 for spot
+        // Step 1: Check if this is effectively an integer price
+        BigDecimal stripped = price.stripTrailingZeros();
+        if (stripped.scale() <= 0) {
+            // Integer prices are always allowed regardless of significant figures
+            return stripped.toPlainString();
+        }
+
+        // Step 2: Apply 5 significant figures limit - this is the PRIMARY constraint
+        String priceStr = price.toPlainString();
+        String absPrice = priceStr.replace("-", "");
+        int decimalIndex = absPrice.indexOf(".");
+
+        // Count integer digits (excluding leading zeros)
+        String integerPart = decimalIndex == -1 ? absPrice : absPrice.substring(0, decimalIndex);
+        integerPart = integerPart.replaceFirst("^0+", "");
+        if (integerPart.isEmpty())
+            integerPart = "0";
+        int significantIntegerDigits = integerPart.equals("0") ? 0 : integerPart.length();
+
+        // Calculate max decimals allowed for 5 sig figs
+        int decimalsForSigFigs = Math.max(0, 5 - significantIntegerDigits);
+
+        // Always apply the 5 sig figs limit
+        BigDecimal rounded = price.setScale(decimalsForSigFigs, RoundingMode.DOWN);
+
+        // Step 3: Apply Hyperliquid decimal places limit based on szDecimals
+        // Both the 5 sig figs rule AND the decimal constraint should apply
+        // Use the more restrictive of the two
         BigDecimal priceTickSize = ticker.getMinimumTickSize();
-        // int priceDecimals = priceTickSize.stripTrailingZeros().scale(); // unused
-        int szDecimals = priceTickSize.scale(); // szDecimals is the scale of tick size
-        int allowedDecimals = maxDecimals - szDecimals; // Update allowedDecimals calculation
-        // BigDecimal absPrice = price.abs(); // unused
+        int szDecimals = priceTickSize.scale();
+        int maxDecimals = 6; // Hyperliquid max decimals is 6 for perps
+        int allowedDecimalPlaces = Math.max(0, maxDecimals - szDecimals);
 
-        // Always allow integer prices
-        if (price.stripTrailingZeros().scale() <= 0) {
-            return price.setScale(0, RoundingMode.DOWN).toPlainString();
+        // Apply both constraints - use the more restrictive
+        int currentDecimals = rounded.scale();
+        int finalDecimals = Math.min(currentDecimals, allowedDecimalPlaces);
+
+        if (finalDecimals < currentDecimals) {
+            rounded = rounded.setScale(finalDecimals, RoundingMode.DOWN);
         }
 
-        // Truncate to allowed decimals first
-        BigDecimal rounded = price.setScale(allowedDecimals, RoundingMode.DOWN);
-        String plain = rounded.stripTrailingZeros().toPlainString();
-
-        // Count significant figures
-        int sigFigs = countSignificantFigures(plain);
-        if (sigFigs > 5) {
-            int intDigits = plain.contains(".") ? plain.indexOf(".") : plain.length();
-            int decimalsToKeep = Math.max(0, 5 - intDigits);
-            // Only further truncate if decimalsToKeep < allowedDecimals
-            if (decimalsToKeep < allowedDecimals) {
-                rounded = price.setScale(decimalsToKeep, RoundingMode.DOWN);
-                plain = rounded.stripTrailingZeros().toPlainString();
-            }
-        }
-        return plain;
+        return rounded.stripTrailingZeros().toPlainString();
     }
 
-    private static int countSignificantFigures(String s) {
-        // Remove leading zeros, decimal point, and trailing zeros after decimal
-        String digits = s.replaceFirst("^-?0*", "");
-        if (digits.contains(".")) {
-            digits = digits.replaceFirst("\\.", "");
-            digits = digits.replaceFirst("0+$", "");
-        }
-        // Remove negative sign if present
-        digits = digits.replace("-", "");
-        return digits.length();
-    }
 }

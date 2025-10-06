@@ -71,7 +71,7 @@ public class HyperliquidWebSocketClient extends AbstractWebSocketClient {
     }
 
     public void postMessage(String message) {
-        logger.info("Sending POST message: " + message);
+        logger.info("WS: " + super.getURI().getHost() + " Sending POST message: " + message);
         send(message);
     }
 

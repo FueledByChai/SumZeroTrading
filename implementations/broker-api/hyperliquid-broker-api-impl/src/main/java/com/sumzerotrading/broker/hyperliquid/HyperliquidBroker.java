@@ -98,6 +98,8 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
     protected BlockingQueue<Integer> nextIdQueue = new LinkedBlockingQueue<>();
 
     protected int nextOrderId = 1;
+    protected String accountAddress;
+    protected String wsUrl;
 
     protected ScheduledExecutorService authenticationScheduler;
     protected ExecutorService orderEventExecutor;
@@ -124,6 +126,8 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
         this.quoteEngine = QuoteEngine.getInstance(HyperliquidQuoteEngine.class);
         this.quoteEngine.startEngine();
         this.quoteEngine.subscribeGlobalLevel1(this);
+        this.accountAddress = HyperliquidConfiguration.getInstance().getTradingAccount();
+        this.wsUrl = HyperliquidConfiguration.getInstance().getWebSocketUrl();
 
         logger.info("HyperliquidBroker initialized with configuration: {}",
                 HyperliquidApiFactory.getConfigurationInfo());
@@ -258,7 +262,6 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
 
     protected void startAccountInfoWSClient() {
         logger.info("Starting account info WebSocket client");
-        String wsUrl = HyperliquidConfiguration.getInstance().getWebSocketUrl();
 
         try {
             accountWebSocketProcessor = new AccountWebSocketProcessor(() -> {
@@ -268,8 +271,8 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
             accountWebSocketProcessor.addEventListener((IAccountUpdate event) -> {
                 accountUpdateWsEventReceived(event);
             });
-            accountInfoWSClient = HyperliquidWebSocketClientBuilder.buildAccountInfoClient(wsUrl,
-                    HyperliquidConfiguration.getInstance().getAccountAddress(), accountWebSocketProcessor);
+            accountInfoWSClient = HyperliquidWebSocketClientBuilder.buildAccountInfoClient(wsUrl, accountAddress,
+                    accountWebSocketProcessor);
 
             accountInfoWSClient.connect();
         } catch (Exception e) {
@@ -280,8 +283,6 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
 
     protected void startOrderStatusWSClient() {
         logger.info("Starting order status WebSocket client");
-        String wsUrl = HyperliquidConfiguration.getInstance().getWebSocketUrl();
-        String userAddress = HyperliquidConfiguration.getInstance().getAccountAddress();
 
         try {
             orderStatusWebSocketProcessor = new WsOrderWebSocketProcessor(() -> {
@@ -291,7 +292,7 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
             orderStatusWebSocketProcessor.addEventListener((List<WsOrderUpdate> event) -> {
                 ordersUpdateWsEventReceived(event);
             });
-            orderStatusWSClient = HyperliquidWebSocketClientBuilder.buildOrderUpdateClient(wsUrl, userAddress,
+            orderStatusWSClient = HyperliquidWebSocketClientBuilder.buildOrderUpdateClient(wsUrl, accountAddress,
                     orderStatusWebSocketProcessor);
 
             orderStatusWSClient.connect();
@@ -303,8 +304,6 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
 
     public void startFillWSClient() {
         logger.info("Starting fill WebSocket client");
-        String wsUrl = HyperliquidConfiguration.getInstance().getWebSocketUrl();
-        String userAddress = HyperliquidConfiguration.getInstance().getAccountAddress();
 
         try {
             fillWebSocketProcessor = new WsUserFillsWebSocketProcessor(() -> {
@@ -315,7 +314,7 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
                 fillEventWsReceived(event);
             });
             HyperliquidWebSocketClient fillWSClient = HyperliquidWebSocketClientBuilder.buildUserFillsClient(wsUrl,
-                    userAddress, fillWebSocketProcessor);
+                    accountAddress, fillWebSocketProcessor);
 
             fillWSClient.connect();
         } catch (Exception e) {

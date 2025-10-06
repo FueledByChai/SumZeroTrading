@@ -22,10 +22,12 @@ public class HyperliquidConfiguration {
     private static final Object lock = new Object();
 
     // Configuration keys
-    public static final String HYPERLIQUID_REST_URL = "hyperliquid.rest.url";
-    public static final String HYPERLIQUID_WS_URL = "hyperliquid.ws.url";
+    public static final String HYPERLIQUID_TESTNET_REST_URL = "hyperliquid.testnet.rest.url";
+    public static final String HYPERLIQUID_TESTNET_WS_URL = "hyperliquid.testnet.ws.url";
+    public static final String HYPERLIQUID_MAINNET_REST_URL = "hyperliquid.mainnet.rest.url";
+    public static final String HYPERLIQUID_MAINNET_WS_URL = "hyperliquid.mainnet.ws.url";
     public static final String HYPERLIQUID_ACCOUNT_ADDRESS = "hyperliquid.account.address";
-    public static final String HYPERLIQUID_API_ADDRESS = "hyperliquid.api.address";
+    public static final String HYPERLIQUID_SUB_ADDRESS = "hyperliquid.sub.address";
     public static final String HYPERLIQUID_PRIVATE_KEY = "hyperliquid.private.key";
     public static final String HYPERLIQUID_ENVIRONMENT = "hyperliquid.environment";
     public static final String HYPERLIQUID_KEYSTORE_PATH = "hyperliquid.keystore.path";
@@ -35,8 +37,8 @@ public class HyperliquidConfiguration {
     private static final String DEFAULT_ENVIRONMENT = "prod";
     private static final String DEFAULT_TESTNET_REST_URL = "https://api.hyperliquid-testnet.xyz";
     private static final String DEFAULT_TESTNET_WS_URL = "wss://api.hyperliquid-testnet.xyz/ws";
-    private static final String DEFAULT_PROD_REST_URL = "https://api.hyperliquid.xyz";
-    private static final String DEFAULT_PROD_WS_URL = "wss://api.hyperliquid.xyz/ws";
+    private static final String DEFAULT_MAINNET_REST_URL = "https://api.hyperliquid.xyz";
+    private static final String DEFAULT_MAINNET_WS_URL = "wss://api.hyperliquid.xyz/ws";
 
     private final Properties properties;
     private final String environment;
@@ -92,8 +94,10 @@ public class HyperliquidConfiguration {
         logger.info("Hyperliquid configuration loaded for environment: {}", env);
 
         // read the private key from the keystore path if specified
-        String privateKey = readPrivateKeyFromKeystore();
-        properties.setProperty(HYPERLIQUID_PRIVATE_KEY, privateKey != null ? privateKey : "");
+        if (!properties.contains(HYPERLIQUID_PRIVATE_KEY)) {
+            String privateKey = readPrivateKeyFromKeystore();
+            properties.setProperty(HYPERLIQUID_PRIVATE_KEY, privateKey != null ? privateKey : "");
+        }
 
         return env;
     }
@@ -123,8 +127,10 @@ public class HyperliquidConfiguration {
 
     private void loadFromEnvironmentVariables() {
         // Convert property keys to environment variable format
-        setIfPresent(HYPERLIQUID_REST_URL, System.getenv("HYPERLIQUID_REST_URL"));
-        setIfPresent(HYPERLIQUID_WS_URL, System.getenv("HYPERLIQUID_WS_URL"));
+        setIfPresent(HYPERLIQUID_MAINNET_REST_URL, System.getenv("HYPERLIQUID_MAINNET_REST_URL"));
+        setIfPresent(HYPERLIQUID_MAINNET_WS_URL, System.getenv("HYPERLIQUID_MAINNET_WS_URL"));
+        setIfPresent(HYPERLIQUID_TESTNET_REST_URL, System.getenv("HYPERLIQUID_TESTNET_REST_URL"));
+        setIfPresent(HYPERLIQUID_TESTNET_WS_URL, System.getenv("HYPERLIQUID_TESTNET_WS_URL"));
         setIfPresent(HYPERLIQUID_ACCOUNT_ADDRESS, System.getenv("HYPERLIQUID_ACCOUNT_ADDRESS"));
         setIfPresent(HYPERLIQUID_ENVIRONMENT, System.getenv("HYPERLIQUID_ENVIRONMENT"));
         setIfPresent(HYPERLIQUID_KEYSTORE_PATH, System.getenv("HYPERLIQUID_KEYSTORE_PATH"));
@@ -148,36 +154,48 @@ public class HyperliquidConfiguration {
         boolean isProduction = "prod".equalsIgnoreCase(env) || "production".equalsIgnoreCase(env);
 
         // Set default URLs if not specified
-        if (!properties.containsKey(HYPERLIQUID_REST_URL)) {
-            properties.setProperty(HYPERLIQUID_REST_URL,
-                    isProduction ? DEFAULT_PROD_REST_URL : DEFAULT_TESTNET_REST_URL);
+        if (!properties.containsKey(HYPERLIQUID_MAINNET_REST_URL)) {
+            properties.setProperty(HYPERLIQUID_MAINNET_REST_URL,
+                    isProduction ? DEFAULT_MAINNET_REST_URL : DEFAULT_TESTNET_REST_URL);
         }
 
-        if (!properties.containsKey(HYPERLIQUID_WS_URL)) {
-            properties.setProperty(HYPERLIQUID_WS_URL, isProduction ? DEFAULT_PROD_WS_URL : DEFAULT_TESTNET_WS_URL);
+        if (!properties.containsKey(HYPERLIQUID_MAINNET_WS_URL)) {
+            properties.setProperty(HYPERLIQUID_MAINNET_WS_URL,
+                    isProduction ? DEFAULT_MAINNET_WS_URL : DEFAULT_TESTNET_WS_URL);
         }
 
     }
 
     // Getter methods
     public String getRestUrl() {
-        return properties.getProperty(HYPERLIQUID_REST_URL);
+        if ("prod".equalsIgnoreCase(environment) || "production".equalsIgnoreCase(environment)) {
+            return properties.getProperty(HYPERLIQUID_MAINNET_REST_URL);
+        }
+        return properties.getProperty(HYPERLIQUID_TESTNET_REST_URL);
     }
 
     public String getWebSocketUrl() {
-        return properties.getProperty(HYPERLIQUID_WS_URL);
+        if ("prod".equalsIgnoreCase(environment) || "production".equalsIgnoreCase(environment)) {
+            return properties.getProperty(HYPERLIQUID_MAINNET_WS_URL);
+        }
+        return properties.getProperty(HYPERLIQUID_TESTNET_WS_URL);
     }
 
     public String getAccountAddress() {
         return properties.getProperty(HYPERLIQUID_ACCOUNT_ADDRESS);
     }
 
-    public String getApiAddress() {
-        return properties.getProperty(HYPERLIQUID_API_ADDRESS);
+    public String getSubAccountAddress() {
+        return properties.getProperty(HYPERLIQUID_SUB_ADDRESS);
     }
 
     public String getPrivateKey() {
         return properties.getProperty(HYPERLIQUID_PRIVATE_KEY);
+    }
+
+    public String getTradingAccount() {
+        String subAccount = getSubAccountAddress();
+        return (subAccount != null && !subAccount.trim().isEmpty()) ? subAccount : getAccountAddress();
     }
 
     public String getEnvironment() {
