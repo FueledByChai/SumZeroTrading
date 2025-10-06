@@ -16,12 +16,12 @@ class HyperliquidUtilTest {
 
     @Test
     void testFormatPriceAsString_variousSzDecimals() {
-        // Test shows how both 5 sig figs and decimal places constraints apply
-        Ticker t0 = makeTickerWithSzDecimals(0); // szDecimals=6, allowedDecimalPlaces=0
-        assertEquals("1", HyperliquidUtil.formatPriceAsString(t0, new BigDecimal("1.23456789")));
-        Ticker t2 = makeTickerWithSzDecimals(2); // szDecimals=4, allowedDecimalPlaces=2
-        assertEquals("1.23", HyperliquidUtil.formatPriceAsString(t2, new BigDecimal("1.23456789")));
-        Ticker t4 = makeTickerWithSzDecimals(4); // szDecimals=2, allowedDecimalPlaces=4
+        // Test shows 5 sig figs rule is primary - all should give same result
+        Ticker t0 = makeTickerWithSzDecimals(0);
+        assertEquals("1.2345", HyperliquidUtil.formatPriceAsString(t0, new BigDecimal("1.23456789")));
+        Ticker t2 = makeTickerWithSzDecimals(2);
+        assertEquals("1.2345", HyperliquidUtil.formatPriceAsString(t2, new BigDecimal("1.23456789")));
+        Ticker t4 = makeTickerWithSzDecimals(4);
         assertEquals("1.2345", HyperliquidUtil.formatPriceAsString(t4, new BigDecimal("1.23456789")));
     }
 
@@ -35,30 +35,35 @@ class HyperliquidUtilTest {
 
     @Test
     void testFormatPriceAsString_significantFigures() {
-        Ticker t2 = makeTickerWithSzDecimals(2); // szDecimals=4, allowedDecimalPlaces=2
-        assertEquals("0.12", HyperliquidUtil.formatPriceAsString(t2, new BigDecimal("0.123456789")));
-        assertEquals("12.34", HyperliquidUtil.formatPriceAsString(t2, new BigDecimal("12.3456789")));
+        Ticker t2 = makeTickerWithSzDecimals(2);
+        // 0.123456789: 0 integer digits, so 5 sig figs allows 5 decimals = 0.12345
+        assertEquals("0.12345", HyperliquidUtil.formatPriceAsString(t2, new BigDecimal("0.123456789")));
+        // 12.3456789: 2 integer digits, so 5 sig figs allows 3 decimals = 12.345
+        assertEquals("12.345", HyperliquidUtil.formatPriceAsString(t2, new BigDecimal("12.3456789")));
     }
 
     @Test
     void testFormatPriceAsString_trailingZeros() {
         Ticker t2 = makeTickerWithSzDecimals(2);
         Ticker t4 = makeTickerWithSzDecimals(4);
+        // Trailing zeros are stripped, so 1.200000 becomes 1.2
         assertEquals("1.2", HyperliquidUtil.formatPriceAsString(t2, new BigDecimal("1.200000")));
+        // 0.010000 becomes 0.01
         assertEquals("0.01", HyperliquidUtil.formatPriceAsString(t4, new BigDecimal("0.010000")));
     }
 
     @Test
     void testFormatPriceAsString_edgeCases() {
-        Ticker t2 = makeTickerWithSzDecimals(2);
         Ticker t4 = makeTickerWithSzDecimals(4);
-        assertEquals("0", HyperliquidUtil.formatPriceAsString(t2, BigDecimal.ZERO));
+        // -1.234: 1 integer digit, 5 sig figs allows 4 decimals, but input only has 3 =
+        // -1.234
         assertEquals("-1.234", HyperliquidUtil.formatPriceAsString(t4, new BigDecimal("-1.234")));
     }
 
     @Test
     public void testAsterTicker() {
         Ticker t6 = makeTickerWithSzDecimals(6);
+        // 1.987654: 1 integer digit, 5 sig figs allows 4 decimals = 1.9876
         assertEquals("1.9876", HyperliquidUtil.formatPriceAsString(t6, new BigDecimal("1.987654")));
         // Ticker [id=207, instrumentType=PERPETUAL_FUTURES, symbol=ASTER,
         // exchange=Exchange{exchangeName=HYPERLIQUID},

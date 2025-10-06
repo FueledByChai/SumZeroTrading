@@ -124,7 +124,7 @@ public class TranslatorTest {
     public void testTranslateOrderTicketToOrderJson_MarketBuy() {
         Ticker ticker = mock(Ticker.class);
         when(ticker.getIdAsInt()).thenReturn(123);
-        when(ticker.getMinimumTickSize()).thenReturn(new BigDecimal("0.01"));
+        // when(ticker.getMinimumTickSize()).thenReturn(new BigDecimal("0.01"));
         OrderTicket ticket = new OrderTicket();
         ticket.setTicker(ticker);
         ticket.setTradeDirection(TradeDirection.BUY);
@@ -149,7 +149,7 @@ public class TranslatorTest {
     public void testTranslateOrderTicketToOrderJson_LimitSell_PostOnly() {
         Ticker ticker = mock(Ticker.class);
         when(ticker.getIdAsInt()).thenReturn(456);
-        when(ticker.getMinimumTickSize()).thenReturn(new BigDecimal("0.01"));
+        // when(ticker.getMinimumTickSize()).thenReturn(new BigDecimal("0.01"));
         OrderTicket ticket = new OrderTicket();
         ticket.setTicker(ticker);
         ticket.setTradeDirection(TradeDirection.SELL);
@@ -178,10 +178,10 @@ public class TranslatorTest {
     public void testTranslateOrderTicket_MultipleTickets() {
         Ticker ticker1 = mock(Ticker.class);
         when(ticker1.getIdAsInt()).thenReturn(1);
-        when(ticker1.getMinimumTickSize()).thenReturn(new BigDecimal("0.01"));
+        // when(ticker1.getMinimumTickSize()).thenReturn(new BigDecimal("0.01"));
         Ticker ticker2 = mock(Ticker.class);
         when(ticker2.getIdAsInt()).thenReturn(2);
-        when(ticker2.getMinimumTickSize()).thenReturn(new BigDecimal("0.01"));
+        // when(ticker2.getMinimumTickSize()).thenReturn(new BigDecimal("0.01"));
         OrderTicket ticket1 = new OrderTicket();
         ticket1.setTicker(ticker1);
         ticket1.setTradeDirection(TradeDirection.BUY);
@@ -212,7 +212,7 @@ public class TranslatorTest {
     public void testTranslateOrderTicket_ReduceOnlyModifier() {
         Ticker ticker = mock(Ticker.class);
         when(ticker.getIdAsInt()).thenReturn(789);
-        when(ticker.getMinimumTickSize()).thenReturn(new BigDecimal("0.01"));
+        // when(ticker.getMinimumTickSize()).thenReturn(new BigDecimal("0.01"));
         OrderTicket ticket = new OrderTicket();
         ticket.setTicker(ticker);
         ticket.setTradeDirection(TradeDirection.BUY);
@@ -238,8 +238,8 @@ public class TranslatorTest {
         // price=1.8599, size=296.0, side=SELL, time=2025-09-21T04:47:17.208Z[GMT],
         // orderId=168725
 
-        Ticker ticker = mock(Ticker.class);
-        when(ticker.getMinimumTickSize()).thenReturn(new BigDecimal("0.00001"));
+        Ticker ticker = new Ticker("TEST");
+        ticker.setMinimumTickSize(new BigDecimal("0.00001"));
         Translator.SLIPPAGE_PERCENTAGE = 0;
         String price = Translator.getInstance().getBuySlippage(ticker, new BigDecimal("1.23456789"));
         assertEquals("1.2345", price);

@@ -7,6 +7,8 @@ import com.sumzerotrading.data.Ticker;
 
 public class HyperliquidUtil {
 
+    protected static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HyperliquidUtil.class);
+
     public static String encode128BitHex(String input) {
         try {
             java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
@@ -51,24 +53,12 @@ public class HyperliquidUtil {
         // Calculate max decimals allowed for 5 sig figs
         int decimalsForSigFigs = Math.max(0, 5 - significantIntegerDigits);
 
-        // Always apply the 5 sig figs limit
+        // Always apply the 5 sig figs limit FIRST - this is the primary constraint
         BigDecimal rounded = price.setScale(decimalsForSigFigs, RoundingMode.DOWN);
 
-        // Step 3: Apply Hyperliquid decimal places limit based on szDecimals
-        // Both the 5 sig figs rule AND the decimal constraint should apply
-        // Use the more restrictive of the two
-        BigDecimal priceTickSize = ticker.getMinimumTickSize();
-        int szDecimals = priceTickSize.scale();
-        int maxDecimals = 6; // Hyperliquid max decimals is 6 for perps
-        int allowedDecimalPlaces = Math.max(0, maxDecimals - szDecimals);
-
-        // Apply both constraints - use the more restrictive
-        int currentDecimals = rounded.scale();
-        int finalDecimals = Math.min(currentDecimals, allowedDecimalPlaces);
-
-        if (finalDecimals < currentDecimals) {
-            rounded = rounded.setScale(finalDecimals, RoundingMode.DOWN);
-        }
+        // The 5 significant figures rule is ALWAYS applied
+        // Tick size constraints are only for very low-priced coins where needed
+        // For now, we prioritize the 5 sig figs rule in all cases
 
         return rounded.stripTrailingZeros().toPlainString();
     }

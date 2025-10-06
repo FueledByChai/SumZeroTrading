@@ -59,11 +59,11 @@ public class HyperliquidTradingExample {
 
         OrderTicket order = new OrderTicket();
         double size = 10;
-        double price = 1.75;
+        double price = 1.75123;
         // double size = 0.001;
         // double price = 110000;
         TradeDirection direction = TradeDirection.BUY;
-        order.setTicker(ticker).setSize(BigDecimal.valueOf(size)).setDirection(direction).setType(Type.LIMIT)
+        order.setTicker(ticker).setSize(new BigDecimal("10")).setDirection(direction).setType(Type.LIMIT)
                 .setLimitPrice(BigDecimal.valueOf(price)).addModifier(OrderTicket.Modifier.POST_ONLY);
         // order.setTicker(ticker).setSize(BigDecimal.valueOf(size)).setDirection(TradeDirection.BUY).setType(Type.MARKET);
         broker.placeOrder(order);
