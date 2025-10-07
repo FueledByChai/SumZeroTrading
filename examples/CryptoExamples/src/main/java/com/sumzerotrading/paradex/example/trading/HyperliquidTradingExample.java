@@ -13,10 +13,12 @@ import com.sumzerotrading.marketdata.QuoteEngine;
 import com.sumzerotrading.marketdata.hyperliquid.HyperliquidQuoteEngine;
 
 public class HyperliquidTradingExample {
-    protected static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(HyperliquidTradingExample.class);
+    protected static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HyperliquidTradingExample.class);
 
     public void executeTrade() throws Exception {
-        String tickerString = "ASTER";
+        String tickerString = "BTC";
+        String size = "0.01";
+        String price = "111000";
         Ticker ticker = HyperliquidTickerRegistry.getInstance().lookupByBrokerSymbol(tickerString);
 
         QuoteEngine engine = QuoteEngine.getInstance(HyperliquidQuoteEngine.class);
@@ -30,14 +32,14 @@ public class HyperliquidTradingExample {
         broker.connect();
 
         broker.addOrderEventListener((event) -> {
-            log.info("Order Event Received : {}", event);
+            logger.info("Order Event Received : {}", event);
         });
 
         broker.addFillEventListener(fill -> {
             if (fill.isSnapshot()) {
-                log.info("SNAPSHOT Fill Received : {}", fill);
+                logger.info("SNAPSHOT Fill Received : {}", fill);
             } else {
-                log.info("Fill Received : {}", fill);
+                logger.info("Fill Received : {}", fill);
             }
         });
 
@@ -45,12 +47,12 @@ public class HyperliquidTradingExample {
 
             @Override
             public void accountEquityUpdated(double equity) {
-                log.info("Account equity updated: {}", equity);
+                logger.info("Account equity updated: {}", equity);
             }
 
             @Override
             public void availableFundsUpdated(double availableFunds) {
-                log.info("Available funds updated: {}", availableFunds);
+                logger.info("Available funds updated: {}", availableFunds);
             }
 
         });
@@ -58,14 +60,15 @@ public class HyperliquidTradingExample {
         Thread.sleep(5000);
 
         OrderTicket order = new OrderTicket();
-        double size = 10;
-        double price = 1.75123;
+
         // double size = 0.001;
         // double price = 110000;
         TradeDirection direction = TradeDirection.BUY;
-        order.setTicker(ticker).setSize(new BigDecimal("10")).setDirection(direction).setType(Type.LIMIT)
-                .setLimitPrice(BigDecimal.valueOf(price)).addModifier(OrderTicket.Modifier.POST_ONLY);
-        // order.setTicker(ticker).setSize(BigDecimal.valueOf(size)).setDirection(TradeDirection.BUY).setType(Type.MARKET);
+        order.setTicker(ticker).setSize(new BigDecimal(size)).setDirection(direction)
+                // .setType(Type.LIMIT).setLimitPrice(new
+                // BigDecimal(price)).addModifier(OrderTicket.Modifier.POST_ONLY);
+                .setTicker(ticker).setSize(new BigDecimal(size)).setDirection(TradeDirection.BUY).setType(Type.MARKET);
+        logger.info("placing order");
         broker.placeOrder(order);
 
     }

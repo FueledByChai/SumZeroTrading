@@ -31,7 +31,7 @@ public class HyperliquidApiFactory {
                 if (restApiInstance == null) {
                     HyperliquidConfiguration config = HyperliquidConfiguration.getInstance();
                     restApiInstance = new HyperliquidRestApi(config.getRestUrl());
-                    logger.info("Created public ParadexRestApi instance for URL: {}", config.getRestUrl());
+                    logger.info("Created public HyperliquidRestApi instance for URL: {}", config.getRestUrl());
                 }
             }
         }
@@ -60,7 +60,7 @@ public class HyperliquidApiFactory {
             restApiInstance = null;
             websocketApiInstance = null;
             HyperliquidConfiguration.reset();
-            logger.info("Reset all ParadexApi instances and configuration");
+            logger.info("Reset all HyperliquidApi instances and configuration");
         }
     }
 

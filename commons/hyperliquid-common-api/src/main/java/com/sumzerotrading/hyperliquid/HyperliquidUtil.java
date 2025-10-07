@@ -11,8 +11,11 @@ public class HyperliquidUtil {
 
     public static String encode128BitHex(String input) {
         try {
+            logger.info("Encoding input to 128-bit hex: {}", input);
             java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
+            logger.info("Created MD5 MessageDigest instance");
             byte[] digest = md.digest(input.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            logger.info("Computed MD5 digest");
             StringBuilder sb = new StringBuilder(32);
             sb.append("0x");
             for (byte b : digest) {

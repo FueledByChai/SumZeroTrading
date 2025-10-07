@@ -56,8 +56,9 @@ public class HyperliquidWebsocketApi implements IWebSocketEventListener<SubmitPo
         if (subAccountAddress != null) {
             signable.vaultAddress = subAccountAddress;
         }
-
+        logger.info("Built order request");
         SubmitExchangeRequest request = getSignedRequest(signable);
+        logger.info("Signed order request");
         WebServicePostMessage wsRequest = new WebServicePostMessage();
         wsRequest.id = requestId++;
         pendingOrders.put(wsRequest.id, orderAction);
@@ -66,8 +67,11 @@ public class HyperliquidWebsocketApi implements IWebSocketEventListener<SubmitPo
         wsRequest.setPayload(request);
 
         try {
+            logger.info("writing to json");
             String jsonToSend = Mappers.JSON.writeValueAsString(wsRequest);
+            logger.info("Posting to websocket");
             client.postMessage(jsonToSend);
+            logger.info("Posted to websocket");
         } catch (Exception e) {
             pendingRequests.remove(wsRequest.id);
             logger.error("Error sending WebSocket request id " + wsRequest.id, e);
@@ -127,6 +131,7 @@ public class HyperliquidWebsocketApi implements IWebSocketEventListener<SubmitPo
             signable.nonceMs = System.currentTimeMillis();
         }
 
+        logger.info("Starting signing");
         SignatureFields sig = signer.signL1OrderAction(signable.action, // ActionPayload
                 signable.nonceMs, // ms epoch
                 signable.vaultAddress, // null or "0x..."

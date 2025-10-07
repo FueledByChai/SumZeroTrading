@@ -181,6 +181,7 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
         }
         HyperliquidOrderTicket hyperliquidOrderTicket = new HyperliquidOrderTicket(bbo, order);
         pendingOrderMapByCloid.put(order.getClientOrderId(), order);
+        logger.info("Created order ticket: ");
         SubmitPostResponse submittedOrders = websocketApi
                 .submitOrders(translator.translateOrderTickets(hyperliquidOrderTicket));
         updateOrderIds(order, submittedOrders);

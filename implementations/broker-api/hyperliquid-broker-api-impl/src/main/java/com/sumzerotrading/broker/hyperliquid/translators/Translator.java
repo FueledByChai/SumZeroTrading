@@ -26,7 +26,7 @@ public class Translator implements ITranslator {
 
     protected static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Translator.class);
 
-    protected static double SLIPPAGE_PERCENTAGE = 0.05; // 0.25%
+    protected static double SLIPPAGE_PERCENTAGE = 5.0; // 5.0%
     protected static ITranslator instance;
 
     public static ITranslator getInstance() {

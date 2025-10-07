@@ -5,9 +5,32 @@ import java.net.Proxy;
 
 public class ProxyConfig {
 
-    public static boolean runningLocally = false;
+    protected boolean runningLocally = false;
+    protected static ProxyConfig instance;
 
-    public static Proxy getProxy() {
+    public static ProxyConfig getInstance() {
+        if (instance == null) {
+            instance = new ProxyConfig();
+        }
+        return instance;
+    }
+
+    public void setRunningLocally(boolean runningLocally) {
+        this.runningLocally = runningLocally;
+        if (runningLocally) {
+            System.setProperty("socksProxyHost", "localhost");
+            System.setProperty("socksProxyPort", "1080");
+        } else {
+            System.clearProperty("socksProxyHost");
+            System.clearProperty("socksProxyPort");
+        }
+    }
+
+    public boolean isRunningLocally() {
+        return runningLocally;
+    }
+
+    public Proxy getProxy() {
         if (!runningLocally) {
             return Proxy.NO_PROXY;
         } else {

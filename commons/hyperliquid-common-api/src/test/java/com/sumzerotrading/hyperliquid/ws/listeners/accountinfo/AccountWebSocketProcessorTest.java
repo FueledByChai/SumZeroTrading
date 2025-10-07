@@ -88,10 +88,12 @@ public class AccountWebSocketProcessorTest {
     public void testParseMessage_LegacySubscription_MissingFields() {
         String json = "{" + "\"method\":\"subscription\"," + "\"params\": {" + "  \"data\": {"
                 + "    \"account_value\": \"1234.56\"}" + "  }" + "}}";
-        // Should throw exception or return null due to missing
-        // maintenance_margin_requirement
+        // With safe parsing, missing maintenance_margin_requirement should default to
+        // 0.0
         IAccountUpdate result = processor.parseMessage(json);
-        assertNull(result);
+        assertNotNull(result);
+        assertEquals(1234.56, result.getAccountValue());
+        assertEquals(0.0, result.getMaintenanceMargin()); // Should use default value
     }
 
     @Test

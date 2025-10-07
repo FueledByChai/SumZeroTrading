@@ -139,7 +139,7 @@ public class TranslatorTest {
         assertTrue(orderJson.isBuy);
         assertEquals("1.5", orderJson.size);
         assertEquals("cloid-1", orderJson.clientOrderId);
-        assertEquals("101.05", orderJson.price); // 101 + 0.05% slippage
+        assertEquals("106.05", orderJson.price); // 101 + 0.05% slippage
         assertNotNull(orderJson.type);
         assertFalse(orderJson.reduceOnly);
         assertTrue(orderJson.type instanceof com.sumzerotrading.hyperliquid.ws.json.LimitType);
@@ -240,8 +240,8 @@ public class TranslatorTest {
 
         Ticker ticker = new Ticker("TEST");
         ticker.setMinimumTickSize(new BigDecimal("0.00001"));
-        Translator.SLIPPAGE_PERCENTAGE = 0;
-        String price = Translator.getInstance().getBuySlippage(ticker, new BigDecimal("1.23456789"));
-        assertEquals("1.2345", price);
+
+        String price = Translator.getInstance().getBuySlippage(ticker, new BigDecimal("100.00"));
+        assertEquals("105", price);
     }
 }

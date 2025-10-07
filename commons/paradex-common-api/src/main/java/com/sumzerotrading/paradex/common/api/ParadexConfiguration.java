@@ -4,10 +4,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sumzerotrading.data.SumZeroException;
+import com.sumzerotrading.websocket.ProxyConfig;
 
 /**
  * Centralized configuration management for Paradex API settings. Supports
@@ -31,6 +33,7 @@ public class ParadexConfiguration {
     public static final String PARADEX_CHAIN_ID = "paradex.chain.id";
     public static final String PARADEX_JWT_REFRESH_SECONDS = "paradex.jwt.refresh.seconds";
     public static final String PARADEX_KEYSTORE_PATH = "paradex.keystore.path";
+    public static final String RUN_PROXY = "run.proxy";
 
     // Default values
     // private static final String DEFAULT_ENVIRONMENT = "testnet";
@@ -42,6 +45,7 @@ public class ParadexConfiguration {
     private static final String DEFAULT_TESTNET_CHAIN_ID = "7693264728749915528729180568779831130134670232771119425";
     private static final String DEFAULT_PROD_CHAIN_ID = "8458834024819506728615521019831122032732688838300957472069977523540";
     private static final int DEFAULT_JWT_REFRESH_SECONDS = 60;
+    private static final boolean DEFAULT_RUN_PROXY = false;
 
     private final Properties properties;
     private final String environment;
@@ -102,6 +106,8 @@ public class ParadexConfiguration {
             properties.setProperty(PARADEX_PRIVATE_KEY, privateKey != null ? privateKey : "");
         }
 
+        setProxySetting();
+
         logger.info("Paradex configuration loaded for environment: {}", env);
         return env;
     }
@@ -140,6 +146,7 @@ public class ParadexConfiguration {
         setIfPresent(PARADEX_CHAIN_ID, System.getenv("PARADEX_CHAIN_ID"));
         setIfPresent(PARADEX_JWT_REFRESH_SECONDS, System.getenv("PARADEX_JWT_REFRESH_SECONDS"));
         setIfPresent(PARADEX_KEYSTORE_PATH, System.getenv("PARADEX_KEYSTORE_PATH"));
+        setIfPresent(RUN_PROXY, System.getenv("PARADEX_RUN_PROXY"));
     }
 
     private void loadFromSystemProperties() {
@@ -268,6 +275,16 @@ public class ParadexConfiguration {
             }
         }
         return null;
+    }
+
+    protected void setProxySetting() {
+        String runProxyStr = properties.getProperty(RUN_PROXY);
+        boolean runProxy = DEFAULT_RUN_PROXY;
+        if (runProxyStr != null && !runProxyStr.trim().isEmpty()) {
+            runProxy = Boolean.parseBoolean(runProxyStr);
+        }
+        ProxyConfig.getInstance().setRunningLocally(runProxy);
+        logger.info("Proxy setting - runningLocally: {}", ProxyConfig.getInstance().isRunningLocally());
     }
 
     @Override

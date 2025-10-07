@@ -17,7 +17,7 @@ public abstract class AbstractWebSocketClient extends WebSocketClient {
 
     public AbstractWebSocketClient(String serverUri, String channel, IWebSocketProcessor processor) throws Exception {
         super(new URI(serverUri));
-        setProxy(ProxyConfig.getProxy());
+        setProxy(ProxyConfig.getInstance().getProxy());
         this.processor = processor;
         this.channel = channel;
     }

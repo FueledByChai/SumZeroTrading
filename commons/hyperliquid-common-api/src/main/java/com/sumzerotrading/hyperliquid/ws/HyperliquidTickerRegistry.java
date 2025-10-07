@@ -31,7 +31,7 @@ public class HyperliquidTickerRegistry implements ITickerBuilder, ITickerRegistr
                 buildTicker(descriptor);
             }
         } catch (Exception e) {
-            throw new RuntimeException("Failed to initialize ParadexTickerRegistry", e);
+            throw new RuntimeException("Failed to initialize HyperliquidTickerRegistry", e);
         }
     }
 

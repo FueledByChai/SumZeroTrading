@@ -15,10 +15,10 @@ class ProxyConfigTest {
     @Test
     void testGetProxyWhenRunningLocally() {
         // Given
-        ProxyConfig.runningLocally = true;
+        ProxyConfig.getInstance().setRunningLocally(true);
 
         // When
-        Proxy proxy = ProxyConfig.getProxy();
+        Proxy proxy = ProxyConfig.getInstance().getProxy();
 
         // Then
         assertNotNull(proxy);
@@ -32,10 +32,10 @@ class ProxyConfigTest {
     @Test
     void testGetProxyWhenNotRunningLocally() {
         // Given
-        ProxyConfig.runningLocally = false;
+        ProxyConfig.getInstance().setRunningLocally(false);
 
         // When
-        Proxy proxy = ProxyConfig.getProxy();
+        Proxy proxy = ProxyConfig.getInstance().getProxy();
 
         // Then
         assertNotNull(proxy);
@@ -45,6 +45,6 @@ class ProxyConfigTest {
     @Test
     void testRunningLocallyDefaultValue() {
         // The default value should be true
-        assertEquals(true, ProxyConfig.runningLocally);
+        assertEquals(true, ProxyConfig.getInstance().isRunningLocally());
     }
 }

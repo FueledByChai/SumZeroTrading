@@ -13,13 +13,18 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sumzerotrading.data.SumZeroException;
 
+import ch.qos.logback.classic.Logger;
+
 public final class HLSigner {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HLSigner.class);
     private final ECKeyPair keyPair;
 
     public HLSigner(String privateKeyHex) {
+        logger.info("Initializing HLSigner with provided private key.");
         this.keyPair = ECKeyPair.create(Numeric.toBigInt(privateKeyHex));
+        logger.info("HLSigner initialized.");
         String localSigner = "0x" + Keys.getAddress(keyPair.getPublicKey()).toLowerCase();
-        System.out.println("[DEBUG] Local signer address: " + localSigner);
+
     }
 
     /** Sign a user-signed exchange action (orders/TP-SL/etc.) */
@@ -40,13 +45,21 @@ public final class HLSigner {
             Long expiresAfterMsOrNull, // nullable
             boolean isMainnet // true -> source "a", false -> "b"
     ) {
+
         byte[] actionHash = computeActionHash(actionPojo, nonceMs, vaultAddressOrNull, expiresAfterMsOrNull);
+        logger.info("Computed action hash");
         ObjectNode typed = buildAgentTypedData(actionHash, isMainnet);
+        logger.info("Built typed data");
         try {
             StructuredDataEncoder enc = new StructuredDataEncoder(JSON.writeValueAsString(typed));
+            logger.info("Created structured data encoder");
             byte[] digest = enc.hashStructuredData();
+            logger.info("Computed digest");
             Sign.SignatureData sd = Sign.signMessage(digest, keyPair, false);
-            return toSig(sd);
+            logger.info("Signed message");
+            SignatureFields sig = toSig(sd);
+            logger.info("Converted to signature fields");
+            return sig;
         } catch (Exception e) {
             throw new SumZeroException("Error signing L1 order action", e);
         }

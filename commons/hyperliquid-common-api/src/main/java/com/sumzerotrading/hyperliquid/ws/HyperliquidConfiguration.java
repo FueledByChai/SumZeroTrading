@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sumzerotrading.data.SumZeroException;
+import com.sumzerotrading.websocket.ProxyConfig;
 
 /**
  * Centralized configuration management for Paradex API settings. Supports
@@ -31,6 +32,7 @@ public class HyperliquidConfiguration {
     public static final String HYPERLIQUID_PRIVATE_KEY = "hyperliquid.private.key";
     public static final String HYPERLIQUID_ENVIRONMENT = "hyperliquid.environment";
     public static final String HYPERLIQUID_KEYSTORE_PATH = "hyperliquid.keystore.path";
+    public static final String RUN_PROXY = "run.proxy";
 
     // Default values
     // private static final String DEFAULT_ENVIRONMENT = "testnet";
@@ -39,6 +41,7 @@ public class HyperliquidConfiguration {
     private static final String DEFAULT_TESTNET_WS_URL = "wss://api.hyperliquid-testnet.xyz/ws";
     private static final String DEFAULT_MAINNET_REST_URL = "https://api.hyperliquid.xyz";
     private static final String DEFAULT_MAINNET_WS_URL = "wss://api.hyperliquid.xyz/ws";
+    private static final boolean DEFAULT_RUN_PROXY = false;
 
     private final Properties properties;
     private final String environment;
@@ -99,6 +102,8 @@ public class HyperliquidConfiguration {
             properties.setProperty(HYPERLIQUID_PRIVATE_KEY, privateKey != null ? privateKey : "");
         }
 
+        setProxySetting();
+
         return env;
     }
 
@@ -134,11 +139,14 @@ public class HyperliquidConfiguration {
         setIfPresent(HYPERLIQUID_ACCOUNT_ADDRESS, System.getenv("HYPERLIQUID_ACCOUNT_ADDRESS"));
         setIfPresent(HYPERLIQUID_ENVIRONMENT, System.getenv("HYPERLIQUID_ENVIRONMENT"));
         setIfPresent(HYPERLIQUID_KEYSTORE_PATH, System.getenv("HYPERLIQUID_KEYSTORE_PATH"));
+        setIfPresent(HYPERLIQUID_SUB_ADDRESS, System.getenv("HYPERLIQUID_SUB_ADDRESS"));
+        setIfPresent(HYPERLIQUID_PRIVATE_KEY, System.getenv("HYPERLIQUID_PRIVATE_KEY"));
+        setIfPresent(RUN_PROXY, System.getenv("RUN_PROXY"));
     }
 
     private void loadFromSystemProperties() {
         for (String key : System.getProperties().stringPropertyNames()) {
-            if (key.startsWith("paradex.")) {
+            if (key.startsWith("hyperliquid.")) {
                 properties.setProperty(key, System.getProperty(key));
             }
         }
@@ -262,9 +270,20 @@ public class HyperliquidConfiguration {
         return null;
     }
 
+    protected void setProxySetting() {
+        String runProxyStr = properties.getProperty(RUN_PROXY);
+        boolean runProxy = DEFAULT_RUN_PROXY;
+        if (runProxyStr != null && !runProxyStr.trim().isEmpty()) {
+            runProxy = Boolean.parseBoolean(runProxyStr);
+        }
+        ProxyConfig.getInstance().setRunningLocally(runProxy);
+        logger.info("Proxy setting - runningLocally: {}", ProxyConfig.getInstance().isRunningLocally());
+
+    }
+
     @Override
     public String toString() {
-        return String.format("ParadexConfiguration{environment='%s', restUrl='%s', wsUrl='%s', hasPrivateKey=%s}",
+        return String.format("HyperliquidConfiguration{environment='%s', restUrl='%s', wsUrl='%s', hasPrivateKey=%s}",
                 environment, getRestUrl(), getWebSocketUrl(), hasPrivateKeyConfiguration());
     }
 }
