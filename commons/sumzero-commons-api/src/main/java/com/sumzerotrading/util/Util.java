@@ -35,7 +35,7 @@ public class Util {
     }
 
     public static ZonedDateTime convertEpochToZonedDateTime(long epochMillis) {
-        return ZonedDateTime.ofInstant(java.time.Instant.ofEpochMilli(epochMillis), java.time.ZoneId.of("GMT"));
+        return ZonedDateTime.ofInstant(java.time.Instant.ofEpochMilli(epochMillis), java.time.ZoneId.of("UTC"));
     }
 
 }

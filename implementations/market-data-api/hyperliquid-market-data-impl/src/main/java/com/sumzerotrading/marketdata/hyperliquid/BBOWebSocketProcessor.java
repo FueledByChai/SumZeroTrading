@@ -89,7 +89,7 @@ public class BBOWebSocketProcessor implements IWebSocketProcessor {
 
             // Convert timestamp to ZonedDateTime
             ZonedDateTime timestamp = ZonedDateTime.ofInstant(java.time.Instant.ofEpochMilli(timestampMillis),
-                    ZoneId.of("GMT"));
+                    ZoneId.of("UTC"));
 
             // Parse the levels - first array is bids, second is asks
             BigDecimal bidPrice = null;

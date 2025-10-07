@@ -188,7 +188,7 @@ public class ParadexQuoteEngine extends QuoteEngine
     }
 
     protected ZonedDateTime convertToZonedDateTime(long timestamp) {
-        return ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.of("GMT"));
+        return ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.of("UTC"));
     }
 
 }

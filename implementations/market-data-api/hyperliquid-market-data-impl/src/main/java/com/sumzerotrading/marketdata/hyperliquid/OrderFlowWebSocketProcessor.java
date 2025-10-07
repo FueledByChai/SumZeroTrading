@@ -95,7 +95,7 @@ public class OrderFlowWebSocketProcessor implements IWebSocketProcessor {
 
             // Convert timestamp to ZonedDateTime
             ZonedDateTime timestamp = ZonedDateTime.ofInstant(java.time.Instant.ofEpochMilli(timestampMillis),
-                    ZoneId.of("GMT"));
+                    ZoneId.of("UTC"));
 
             // Notify listeners asynchronously
             OrderFlow orderFlow = new OrderFlow(ticker, price, size, orderSide, timestamp);

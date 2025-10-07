@@ -71,5 +71,11 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             <version>5.3.1</version>
             <scope>test</scope>
         </dependency>
+
+            <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>3.1.8</version> <!-- or latest -->
+            </dependency>           
     </dependencies>
 </project>

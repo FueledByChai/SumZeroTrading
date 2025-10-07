@@ -51,6 +51,7 @@ import com.sumzerotrading.paradex.common.api.ws.fills.ParadexFill;
 import com.sumzerotrading.paradex.common.api.ws.fills.ParadexFillsWebSocketProcessor;
 import com.sumzerotrading.paradex.common.api.ws.orderstatus.IParadexOrderStatusUpdate;
 import com.sumzerotrading.paradex.common.api.ws.orderstatus.OrderStatusWebSocketProcessor;
+import com.sumzerotrading.util.FillDeduper;
 
 /**
  */
@@ -85,6 +86,8 @@ public class ParadexBroker extends AbstractBasicBroker {
     protected Map<String, OrderTicket> tradeOrderMap = new HashMap<>();
 
     protected Map<String, OrderTicket> completedOrderMap = new HashMap<>();
+
+    protected FillDeduper fillDeduper = new FillDeduper();
 
     /**
      * Default constructor - uses centralized configuration for API initialization.
@@ -265,7 +268,11 @@ public class ParadexBroker extends AbstractBasicBroker {
     protected void onParadexFillEvent(ParadexFill paradexFill) {
         logger.info("Received fill event: {}", paradexFill);
         Fill fill = translator.translateFill(paradexFill);
-        fireFillEvent(fill);
+        if (fill.isSnapshot() || fillDeduper.firstTime(fill.getFillId())) {
+            fireFillEvent(fill);
+        } else {
+            logger.warn("Duplicate fill received, ignoring: {}", fill);
+        }
     }
 
     protected void onParadexAccountInfoEvent(IAccountUpdate accountInfo) {

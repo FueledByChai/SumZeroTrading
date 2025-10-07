@@ -59,12 +59,12 @@ public class MarketBookWebSocketProcessor implements IWebSocketProcessor {
                 JSONObject data = params.getJSONObject("data");
                 String updateType = data.getString("update_type");
                 long timestampMillis = data.getLong("last_updated_at");
-                ZonedDateTime timestamp = ZonedDateTime.now(java.time.ZoneId.of("GMT")); // Default to now if not
+                ZonedDateTime timestamp = ZonedDateTime.now(java.time.ZoneId.of("UTC")); // Default to now if not
                                                                                          // provided
 
                 if (timestampMillis > 0) {
                     timestamp = ZonedDateTime.ofInstant(java.time.Instant.ofEpochMilli(timestampMillis),
-                            java.time.ZoneId.of("GMT"));
+                            java.time.ZoneId.of("UTC"));
                 }
 
                 if ("s".equals(updateType)) {

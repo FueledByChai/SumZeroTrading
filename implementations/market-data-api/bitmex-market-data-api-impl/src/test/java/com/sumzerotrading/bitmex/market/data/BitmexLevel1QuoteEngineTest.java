@@ -110,7 +110,7 @@ public class BitmexLevel1QuoteEngineTest {
         Ticker ticker = new Ticker("ABC");
         testQuoteEngine.tickerMap.put("ABC", ticker);
         String timestampString = "2018-07-24T16:45:32.739Z";
-        ZonedDateTime timestamp = ZonedDateTime.of(2018, 7, 24, 16, 45, 32, 739, ZoneId.of("GMT"));
+        ZonedDateTime timestamp = ZonedDateTime.of(2018, 7, 24, 16, 45, 32, 739, ZoneId.of("UTC"));
         // doReturn(timestamp).when(testQuoteEngine).getTimestamp();
         doNothing().when(testQuoteEngine).fireLevel1Quote(any(Level1Quote.class));
 
@@ -153,7 +153,7 @@ public class BitmexLevel1QuoteEngineTest {
         Ticker ticker = new Ticker("ABC");
         testQuoteEngine.tickerMap.put("ABC", ticker);
         String timestampString = "2018-07-24T16:45:32.739Z";
-        ZonedDateTime timestamp = ZonedDateTime.of(2018, 7, 24, 16, 45, 32, 739, ZoneId.of("GMT"));
+        ZonedDateTime timestamp = ZonedDateTime.of(2018, 7, 24, 16, 45, 32, 739, ZoneId.of("UTC"));
         doNothing().when(testQuoteEngine).fireLevel1Quote(any(Level1Quote.class));
 
         double last = 123.44;

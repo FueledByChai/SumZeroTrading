@@ -294,4 +294,13 @@ public class ParadexFill {
         return true;
     }
 
+    @Override
+    public String toString() {
+        return "ParadexFill [account=" + account + ", clientId=" + clientId + ", createdAt=" + createdAt + ", fee="
+                + fee + ", feeCurrency=" + feeCurrency + ", fillType=" + fillType + ", flags=" + flags + ", id=" + id
+                + ", liquidity=" + liquidity + ", market=" + market + ", orderId=" + orderId + ", price=" + price
+                + ", realizedFunding=" + realizedFunding + ", realizedPnl=" + realizedPnl + ", remainingSize="
+                + remainingSize + ", side=" + side + ", size=" + size + ", underlyingPrice=" + underlyingPrice + "]";
+    }
+
 }

@@ -29,7 +29,7 @@ public class OrderBookSnapshotTest {
         ticker = new Ticker("TEST");
         ticker.setMinimumTickSize(new BigDecimal("0.01"));
         orderBook = new OrderBook(ticker);
-        timestamp = ZonedDateTime.now(ZoneId.of("GMT"));
+        timestamp = ZonedDateTime.now(ZoneId.of("UTC"));
     }
 
     @Test

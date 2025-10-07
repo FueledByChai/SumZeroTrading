@@ -154,7 +154,7 @@ public class IntradayTradingStrategy implements OrderEventListener, BrokerErrorL
             exitDirection = TradeDirection.BUY;
         }
 
-        ZonedDateTime zdt = ZonedDateTime.of(LocalDate.now(ZoneId.of("GMT")), closeTime, ZoneId.of("GMT"));
+        ZonedDateTime zdt = ZonedDateTime.of(LocalDate.now(ZoneId.of("UTC")), closeTime, ZoneId.of("UTC"));
 
         OrderTicket entryOrder = new OrderTicket(ibClient.getNextOrderId(), ticker, BigDecimal.valueOf(size),
                 direction);

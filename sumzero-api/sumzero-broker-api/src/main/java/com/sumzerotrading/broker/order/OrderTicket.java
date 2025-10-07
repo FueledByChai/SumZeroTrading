@@ -300,6 +300,13 @@ public class OrderTicket implements Serializable {
     }
 
     public BigDecimal getFilledSize() {
+        if (filledSize == null || filledSize.compareTo(BigDecimal.ZERO) < 0) {
+            if (fills.isEmpty()) {
+                return BigDecimal.ZERO;
+            } else {
+                return getFilledSizeFromFills();
+            }
+        }
         return filledSize;
     }
 
@@ -309,6 +316,13 @@ public class OrderTicket implements Serializable {
     }
 
     public BigDecimal getFilledPrice() {
+        if (filledPrice == null || filledPrice.compareTo(BigDecimal.ZERO) < 0) {
+            if (fills.isEmpty()) {
+                return BigDecimal.ZERO;
+            } else {
+                return getAverageFillPriceFromFills();
+            }
+        }
         return filledPrice;
     }
 
@@ -345,13 +359,14 @@ public class OrderTicket implements Serializable {
     }
 
     public BigDecimal getRemainingSize() {
+        BigDecimal fs = getFilledSize();
         if (size == null) {
             return BigDecimal.ZERO;
         }
-        if (filledSize == null) {
+        if (fs == null || fs.compareTo(BigDecimal.ZERO) < 0) {
             return size;
         }
-        return size.subtract(filledSize);
+        return size.subtract(fs);
     }
 
     public List<Modifier> getModifiers() {
@@ -397,6 +412,37 @@ public class OrderTicket implements Serializable {
             fills.add(fill);
         }
         return this;
+    }
+
+    public BigDecimal getFilledSizeFromFills() {
+        if (fills.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal totalFilledSize = BigDecimal.ZERO;
+        for (Fill fill : fills) {
+            totalFilledSize = totalFilledSize.add(fill.getSize());
+        }
+        return totalFilledSize;
+    }
+
+    public BigDecimal getAverageFillPriceFromFills() {
+        if (fills.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal totalCost = BigDecimal.ZERO;
+        BigDecimal totalSize = BigDecimal.ZERO;
+        for (Fill fill : fills) {
+            totalCost = totalCost.add(fill.getPrice().multiply(fill.getSize()));
+            totalSize = totalSize.add(fill.getSize());
+        }
+
+        if (totalSize.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+
+        return totalCost.divide(totalSize, java.math.RoundingMode.HALF_UP);
     }
 
     @Override

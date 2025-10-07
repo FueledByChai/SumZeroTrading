@@ -171,7 +171,7 @@ public class ParadexOrder implements Comparable<ParadexOrder> {
         if (this.submittedTime != null && timeToLiveInMs > 0) {
             // Set the expiration time based on the TTL
             this.orderTTLExpiration = this.submittedTime.plus(timeToLiveInMs, java.time.temporal.ChronoUnit.MILLIS);
-            this.orderTTLExpiration = this.orderTTLExpiration.withZoneSameInstant(java.time.ZoneId.of("GMT"));
+            this.orderTTLExpiration = this.orderTTLExpiration.withZoneSameInstant(java.time.ZoneId.of("UTC"));
         } else {
             this.orderTTLExpiration = null; // Clear it out if no TTL
         }
@@ -182,12 +182,12 @@ public class ParadexOrder implements Comparable<ParadexOrder> {
     }
 
     public void setSubmittedTime(ZonedDateTime submittedTime) {
-        this.submittedTime = submittedTime.withZoneSameInstant(java.time.ZoneId.of("GMT"));
+        this.submittedTime = submittedTime.withZoneSameInstant(java.time.ZoneId.of("UTC"));
 
         if (timeToLiveInMs > 0 && submittedTime != null) {
             // Set the expiration time based on the TTL
             this.orderTTLExpiration = submittedTime.plus(timeToLiveInMs, java.time.temporal.ChronoUnit.MILLIS);
-            this.orderTTLExpiration = this.orderTTLExpiration.withZoneSameInstant(java.time.ZoneId.of("GMT"));
+            this.orderTTLExpiration = this.orderTTLExpiration.withZoneSameInstant(java.time.ZoneId.of("UTC"));
         } else {
             this.orderTTLExpiration = null; // Clear it out if no TTL
         }
@@ -196,7 +196,7 @@ public class ParadexOrder implements Comparable<ParadexOrder> {
 
     public void setFilledTime(ZonedDateTime orderFilledTime) {
 
-        filledAt = orderFilledTime.withZoneSameInstant(java.time.ZoneId.of("GMT"));
+        filledAt = orderFilledTime.withZoneSameInstant(java.time.ZoneId.of("UTC"));
     }
 
     public ZonedDateTime getFilledTime() {
@@ -209,7 +209,7 @@ public class ParadexOrder implements Comparable<ParadexOrder> {
 
     public void setCancelledTime(ZonedDateTime cancelledTime) {
 
-        canceledAt = cancelledTime.withZoneSameInstant(java.time.ZoneId.of("GMT"));
+        canceledAt = cancelledTime.withZoneSameInstant(java.time.ZoneId.of("UTC"));
 
     }
 

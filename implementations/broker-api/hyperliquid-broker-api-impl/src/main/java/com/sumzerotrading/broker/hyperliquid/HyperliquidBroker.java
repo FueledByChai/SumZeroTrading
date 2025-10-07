@@ -17,7 +17,6 @@
  */
 package com.sumzerotrading.broker.hyperliquid;
 
-import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -68,6 +67,7 @@ import com.sumzerotrading.marketdata.Level1QuoteListener;
 import com.sumzerotrading.marketdata.QuoteEngine;
 import com.sumzerotrading.marketdata.QuoteType;
 import com.sumzerotrading.marketdata.hyperliquid.HyperliquidQuoteEngine;
+import com.sumzerotrading.util.FillDeduper;
 
 /**
  * Supported Order types are: Market, Stop and Limit Supported order parameters
@@ -115,6 +115,8 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
 
     protected Map<String, OrderTicket> pendingOrderMapByCloid = new HashMap<>();
     protected Map<String, String> exchangeIdToCloidMap = new HashMap<>();
+
+    protected FillDeduper fillDeduper = new FillDeduper();
 
     /**
      * Default constructor - uses centralized configuration for API initialization.
@@ -179,6 +181,7 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
         if (bbo == null) {
             throw new SumZeroException("No market data available for " + order.getTicker() + ", cannot place order");
         }
+        order.setOrderEntryTime(getCurrentTime());
         HyperliquidOrderTicket hyperliquidOrderTicket = new HyperliquidOrderTicket(bbo, order);
         pendingOrderMapByCloid.put(order.getClientOrderId(), order);
         logger.info("Created order ticket: ");
@@ -384,10 +387,10 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
             }
 
             ZonedDateTime timestamp = ZonedDateTime.ofInstant(
-                    java.time.Instant.ofEpochMilli(orderUpdate.getStatusTimestamp()), java.time.ZoneId.of("GMT"));
+                    java.time.Instant.ofEpochMilli(orderUpdate.getStatusTimestamp()), java.time.ZoneId.of("UTC"));
 
-            OrderStatus orderStatus = new OrderStatus(status, orderTicket.getOrderId(), BigDecimal.ZERO,
-                    BigDecimal.ZERO, BigDecimal.ZERO, orderTicket.getTicker(), timestamp);
+            OrderStatus orderStatus = new OrderStatus(status, orderTicket.getOrderId(), orderTicket.getFilledSize(),
+                    orderTicket.getRemainingSize(), orderTicket.getFilledPrice(), orderTicket.getTicker(), timestamp);
             orderStatus.setCancelReason(cancelReason);
 
             OrderEvent orderEvent = new OrderEvent(orderTicket, orderStatus);
@@ -413,20 +416,26 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
         logger.info("Fill event received: {}", wsUserFills);
         List<Fill> fills = translator.translateFill(wsUserFills);
         for (Fill fill : fills) {
-            logger.info("Fill received: {}", fill);
-            String clientOrderId = exchangeIdToCloidMap.get(fill.getOrderId());
-            fill.setClientOrderId(clientOrderId != null ? clientOrderId : "");
-            OrderTicket orderTicket = pendingOrderMapByCloid.get(clientOrderId);
-            if (orderTicket != null) {
-                orderTicket.setFilledSize(orderTicket.getFilledSize().add(fill.getSize()));
-                orderTicket.addFill(fill);
-                if (orderTicket.getFilledSize().compareTo(orderTicket.getSize()) >= 0) {
-                    orderTicket.setCurrentStatus(OrderStatus.Status.FILLED);
-                } else {
-                    orderTicket.setCurrentStatus(OrderStatus.Status.PARTIAL_FILL);
+            if (fill.isSnapshot() || fillDeduper.firstTime(fill.getFillId())) {
+
+                logger.info("Fill received: {}", fill);
+                String clientOrderId = exchangeIdToCloidMap.get(fill.getOrderId());
+                fill.setClientOrderId(clientOrderId != null ? clientOrderId : "");
+                OrderTicket orderTicket = pendingOrderMapByCloid.get(clientOrderId);
+                if (orderTicket != null) {
+                    orderTicket.setFilledSize(orderTicket.getFilledSize().add(fill.getSize()));
+                    orderTicket.setCommission(fill.getCommission().add(orderTicket.getCommission()));
+                    orderTicket.addFill(fill);
+                    if (orderTicket.getFilledSize().compareTo(orderTicket.getSize()) >= 0) {
+                        orderTicket.setCurrentStatus(OrderStatus.Status.FILLED);
+                    } else {
+                        orderTicket.setCurrentStatus(OrderStatus.Status.PARTIAL_FILL);
+                    }
                 }
+                fireFillEvent(fill);
+            } else {
+                logger.warn("Duplicate fill received, ignoring: {}", fill);
             }
-            fireFillEvent(fill);
         }
     }
 

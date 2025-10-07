@@ -273,7 +273,7 @@ public class HyperliquidQuoteEngineOld extends QuoteEngine implements Runnable {
                         }
                     }
 
-                    Level1Quote quote = new Level1Quote(ticker, ZonedDateTime.now(ZoneId.of("GMT")), quoteMap);
+                    Level1Quote quote = new Level1Quote(ticker, ZonedDateTime.now(ZoneId.of("UTC")), quoteMap);
                     fireLevel1Quote(quote);
                 }
             } catch (Exception ex) {
