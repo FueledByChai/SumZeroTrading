@@ -389,6 +389,10 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
 
             ZonedDateTime timestamp = ZonedDateTime.ofInstant(
                     java.time.Instant.ofEpochMilli(orderUpdate.getStatusTimestamp()), java.time.ZoneId.of("UTC"));
+            if (status == Status.FILLED) {
+                orderTicket.setOrderFilledTime(timestamp);
+                orderTicket.setCurrentStatus(Status.FILLED);
+            }
 
             OrderStatus orderStatus = new OrderStatus(status, orderTicket.getOrderId(), orderTicket.getFilledSize(),
                     orderTicket.getRemainingSize(), orderTicket.getFilledPrice(), orderTicket.getTicker(), timestamp);
@@ -421,6 +425,7 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
 
                 logger.info("Fill received: {}", fill);
                 String clientOrderId = exchangeIdToCloidMap.get(fill.getOrderId());
+                logger.info("Client order ID for exchange order ID {} is {}", fill.getOrderId(), clientOrderId);
                 fill.setClientOrderId(clientOrderId != null ? clientOrderId : "");
                 OrderTicket orderTicket = pendingOrderMapByCloid.get(clientOrderId);
                 if (orderTicket != null) {
@@ -461,6 +466,7 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
         }
 
         order.setOrderId(String.valueOf(hyperliquidOrderId));
+        exchangeIdToCloidMap.put(String.valueOf(hyperliquidOrderId), order.getClientOrderId());
 
     }
 

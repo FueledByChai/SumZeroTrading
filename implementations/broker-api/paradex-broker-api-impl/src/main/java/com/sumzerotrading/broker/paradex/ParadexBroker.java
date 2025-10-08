@@ -17,7 +17,6 @@
  */
 package com.sumzerotrading.broker.paradex;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,8 +36,9 @@ import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.order.Fill;
 import com.sumzerotrading.broker.order.OrderEvent;
 import com.sumzerotrading.broker.order.OrderStatus;
-import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.broker.order.OrderStatus.CancelReason;
+import com.sumzerotrading.broker.order.OrderStatus.Status;
+import com.sumzerotrading.broker.order.OrderTicket;
 import com.sumzerotrading.data.Ticker;
 import com.sumzerotrading.paradex.common.api.IParadexRestApi;
 import com.sumzerotrading.paradex.common.api.ParadexApiFactory;
@@ -265,6 +265,10 @@ public class ParadexBroker extends AbstractBasicBroker {
         OrderEvent event = new OrderEvent(order, status);
         if (status.getStatus() == OrderStatus.Status.FILLED || status.getStatus() == OrderStatus.Status.CANCELED) {
             tradeOrderMap.remove(orderStatus.getOrderId());
+        }
+
+        if (status.getStatus() == OrderStatus.Status.FILLED) {
+            order.setOrderFilledTime(status.getTimestamp());
         }
 
         super.fireOrderEvent(event);

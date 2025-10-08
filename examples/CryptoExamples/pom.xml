@@ -42,7 +42,34 @@
         </dependency>                
     </dependencies>
     <properties>
-
+        <!-- Documentation generation properties -->
+        <docs.output.dir>${project.basedir}/../../docs/generated</docs.output.dir>
     </properties>
+    
+    <build>
+        <plugins>
+            <!-- Plugin for running documentation generation -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>com.sumzerotrading.documentation.GenerateBrokerDocumentation</mainClass>
+                    <args>
+                        <arg>${docs.output.dir}</arg>
+                    </args>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>generate-docs</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
    
 </project>
