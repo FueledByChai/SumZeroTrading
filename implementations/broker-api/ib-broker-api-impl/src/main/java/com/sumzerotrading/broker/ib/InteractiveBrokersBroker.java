@@ -61,6 +61,7 @@ import com.ib.client.OrderState;
 import com.sumzerotrading.broker.BrokerAccountInfoListener;
 import com.sumzerotrading.broker.BrokerError;
 import com.sumzerotrading.broker.BrokerErrorListener;
+import com.sumzerotrading.broker.BrokerRequestResult;
 import com.sumzerotrading.broker.IBroker;
 import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.order.FillEventListener;
@@ -325,16 +326,18 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
         }
     }
 
-    public void cancelOrder(String idString) {
+    public BrokerRequestResult cancelOrder(String idString) {
         int id = Integer.parseInt(idString);
         // ibConnection.cancelOrder(id);
         IbUtils.throwUnsupportedException();
+        return new BrokerRequestResult();
     }
 
-    public void cancelOrder(OrderTicket order) {
+    public BrokerRequestResult cancelOrder(OrderTicket order) {
         int id = Integer.parseInt(order.getOrderId());
         // ibConnection.cancelOrder(id);
         IbUtils.throwUnsupportedException();
+        return new BrokerRequestResult();
     }
 
     public ZonedDateTime getCurrentTime() {
@@ -674,12 +677,12 @@ public class InteractiveBrokersBroker extends BaseIBConnectionDelegate implement
     }
 
     @Override
-    public void cancelAllOrders(Ticker ticker) {
+    public BrokerRequestResult cancelAllOrders(Ticker ticker) {
         throw new UnsupportedOperationException("Cancel all orders by ticker not implemented yet");
     }
 
     @Override
-    public void cancelAllOrders() {
+    public BrokerRequestResult cancelAllOrders() {
         throw new UnsupportedOperationException("Cancel all orders not implemented yet");
 
     }

@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sumzerotrading.BestBidOffer;
 import com.sumzerotrading.broker.AbstractBasicBroker;
+import com.sumzerotrading.broker.BrokerRequestResult;
 import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.hyperliquid.translators.ITranslator;
 import com.sumzerotrading.broker.hyperliquid.translators.Translator;
@@ -145,13 +146,13 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
     }
 
     @Override
-    public void cancelOrder(String id) {
+    public BrokerRequestResult cancelOrder(String id) {
         checkConnected();
         throw new UnsupportedOperationException("Cancel order by ID not implemented yet");
     }
 
     @Override
-    public void cancelOrder(OrderTicket order) {
+    public BrokerRequestResult cancelOrder(OrderTicket order) {
         checkConnected();
         throw new UnsupportedOperationException("Cancel order by OrderTicket not implemented yet");
     }
@@ -328,12 +329,12 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
     }
 
     @Override
-    public void cancelAllOrders(Ticker ticker) {
+    public BrokerRequestResult cancelAllOrders(Ticker ticker) {
         throw new UnsupportedOperationException("Cancel all orders by ticker not implemented yet");
     }
 
     @Override
-    public void cancelAllOrders() {
+    public BrokerRequestResult cancelAllOrders() {
         throw new UnsupportedOperationException("Cancel all orders not implemented yet");
 
     }

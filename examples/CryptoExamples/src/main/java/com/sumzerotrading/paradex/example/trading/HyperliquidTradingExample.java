@@ -18,7 +18,7 @@ public class HyperliquidTradingExample {
     public void executeTrade() throws Exception {
         String tickerString = "BTC";
         String size = "0.01";
-        String price = "111000";
+        String price = "120000";
         Ticker ticker = HyperliquidTickerRegistry.getInstance().lookupByBrokerSymbol(tickerString);
 
         QuoteEngine engine = QuoteEngine.getInstance(HyperliquidQuoteEngine.class);
@@ -64,13 +64,31 @@ public class HyperliquidTradingExample {
         // double size = 0.001;
         // double price = 110000;
         TradeDirection direction = TradeDirection.BUY;
-        order.setTicker(ticker).setSize(new BigDecimal(size)).setDirection(direction)
-                // .setType(Type.LIMIT).setLimitPrice(new
-                // BigDecimal(price)).addModifier(OrderTicket.Modifier.POST_ONLY);
-                .setTicker(ticker).setSize(new BigDecimal(size)).setDirection(TradeDirection.BUY).setType(Type.MARKET);
-        logger.info("placing order");
-        broker.placeOrder(order);
+        order.setTicker(ticker).setSize(new BigDecimal(size)).setDirection(direction).setType(Type.LIMIT)
+                .setLimitPrice(new BigDecimal(price)).addModifier(OrderTicket.Modifier.POST_ONLY);
+        // .setTicker(ticker).setSize(new
+        // BigDecimal(size)).setDirection(TradeDirection.BUY).setType(Type.MARKET);
 
+        BigDecimal priceToUse = new BigDecimal(price);
+        for (int i = 0; i < 3; i++) {
+            logger.info("placing order");
+            try {
+                broker.placeOrder(getOrder(ticker, priceToUse));
+                priceToUse = priceToUse.subtract(new BigDecimal("1000"));
+            } catch (Exception e) {
+                logger.error("Error placing order", e);
+            }
+
+            Thread.sleep(2000);
+        }
+
+    }
+
+    protected OrderTicket getOrder(Ticker ticker, BigDecimal price) {
+        OrderTicket order = new OrderTicket();
+        order.setTicker(ticker).setSize(new BigDecimal("0.001")).setDirection(TradeDirection.BUY).setType(Type.LIMIT)
+                .setLimitPrice(price).addModifier(OrderTicket.Modifier.POST_ONLY);
+        return order;
     }
 
     public static void main(String[] args) throws Exception {

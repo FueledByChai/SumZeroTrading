@@ -10,8 +10,6 @@
         <appender-ref ref="STDOUT" />
     </root>
 
-    <!-- Example for setting a specific logger to DEBUG -->
-    <!--
-    <logger name="com.sumzerotrading" level="DEBUG" />
-    -->
+    <!-- Enable DEBUG for HLSigner performance analysis -->
+    <logger name="com.sumzerotrading.hyperliquid.ws.json.HLSigner" level="DEBUG" />
 </configuration>

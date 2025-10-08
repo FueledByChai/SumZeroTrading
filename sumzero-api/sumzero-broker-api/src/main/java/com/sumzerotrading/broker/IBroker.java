@@ -39,26 +39,26 @@ public interface IBroker {
      *
      * @param id The id of the order to cancel
      */
-    public abstract void cancelOrder(String id);
+    public abstract BrokerRequestResult cancelOrder(String id);
 
     /**
      * Cancels the specified order
      *
      * @param order The order to cancel
      */
-    public abstract void cancelOrder(OrderTicket order);
+    public abstract BrokerRequestResult cancelOrder(OrderTicket order);
 
     /**
      * Cancels all orders for the specified ticker.
      * 
      * @param ticker The ticker for which to cancel all orders.
      */
-    void cancelAllOrders(Ticker ticker);
+    BrokerRequestResult cancelAllOrders(Ticker ticker);
 
     /**
      * Cancels all open orders.
      */
-    void cancelAllOrders();
+    BrokerRequestResult cancelAllOrders();
 
     /**
      * places the specified order with the broker

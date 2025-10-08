@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sumzerotrading.broker.AbstractBasicBroker;
+import com.sumzerotrading.broker.BrokerRequestResult;
 import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.order.Fill;
 import com.sumzerotrading.broker.order.OrderEvent;
@@ -116,7 +117,7 @@ public class ParadexBroker extends AbstractBasicBroker {
     }
 
     @Override
-    public void cancelOrder(String id) {
+    public BrokerRequestResult cancelOrder(String id) {
         checkConnected();
         logger.info("Canceling order with ID: {}", id);
         RestResponse cancelOrderResponse = restApi.cancelOrder(jwtToken, id);
@@ -124,9 +125,9 @@ public class ParadexBroker extends AbstractBasicBroker {
         if (!cancelOrderResponse.isSuccessful()) {
             String errormessage = cancelOrderResponse.getBody();
             logger.error("Failed to cancel order {}: {}", id, errormessage);
-            logger.error("Removing order from active list since it is likely already closed.");
 
             if (errormessage != null && errormessage.contains("ORDER_IS_CLOSED")) {
+                logger.error("Removing order {} from active list since it is likely already closed.", id);
                 String closedOrderId = errormessage.replaceAll(".*?(\\d+).*", "$1");
                 OrderTicket order = tradeOrderMap.get(closedOrderId);
                 if (order != null) {
@@ -140,17 +141,21 @@ public class ParadexBroker extends AbstractBasicBroker {
 
                     tradeOrderMap.remove(closedOrderId);
                     super.fireOrderEvent(event);
+
                 }
+                return new BrokerRequestResult(false, errormessage);
             }
         } else {
             logger.info("Cancel order request for {} successful.", id);
+
         }
+        return new BrokerRequestResult();
     }
 
     @Override
-    public void cancelOrder(OrderTicket order) {
+    public BrokerRequestResult cancelOrder(OrderTicket order) {
         checkConnected();
-        cancelOrder(order.getOrderId());
+        return cancelOrder(order.getOrderId());
     }
 
     @Override
@@ -382,12 +387,12 @@ public class ParadexBroker extends AbstractBasicBroker {
     }
 
     @Override
-    public void cancelAllOrders(Ticker ticker) {
+    public BrokerRequestResult cancelAllOrders(Ticker ticker) {
         throw new UnsupportedOperationException("Cancel all orders by ticker not implemented yet");
     }
 
     @Override
-    public void cancelAllOrders() {
+    public BrokerRequestResult cancelAllOrders() {
         throw new UnsupportedOperationException("Cancel all orders not implemented yet");
 
     }

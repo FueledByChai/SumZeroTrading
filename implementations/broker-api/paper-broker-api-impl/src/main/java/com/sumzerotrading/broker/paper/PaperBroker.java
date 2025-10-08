@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import com.sumzerotrading.broker.AbstractBasicBroker;
 import com.sumzerotrading.broker.BrokerAccountInfoListener;
 import com.sumzerotrading.broker.BrokerErrorListener;
+import com.sumzerotrading.broker.BrokerRequestResult;
 import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.order.Fill;
 import com.sumzerotrading.broker.order.OrderEvent;
@@ -251,7 +252,7 @@ public class PaperBroker extends AbstractBasicBroker implements Level1QuoteListe
     }
 
     @Override
-    public synchronized void cancelAllOrders(Ticker ticker) {
+    public synchronized BrokerRequestResult cancelAllOrders(Ticker ticker) {
         executorService.submit(() -> {
             delay(); // Simulate network delay
             Iterator<Map.Entry<String, OrderTicket>> bidIterator = openBids.entrySet().iterator();
@@ -277,13 +278,15 @@ public class PaperBroker extends AbstractBasicBroker implements Level1QuoteListe
                 }
             }
         });
+        return new BrokerRequestResult();
     }
 
     @Override
-    public synchronized void cancelOrder(String orderId) {
+    public synchronized BrokerRequestResult cancelOrder(String orderId) {
         executorService.submit(() -> {
             cancelOrderSubmitWithDelay(orderId, true); // Call the method with no delay
         });
+        return new BrokerRequestResult();
     }
 
     public void cancelOrderSubmitWithDelay(String orderId, boolean shouldDelay) {
@@ -385,7 +388,7 @@ public class PaperBroker extends AbstractBasicBroker implements Level1QuoteListe
     }
 
     @Override
-    public void cancelAllOrders() {
+    public BrokerRequestResult cancelAllOrders() {
         throw new UnsupportedOperationException("Not supported yet.");
 
     }
@@ -833,8 +836,9 @@ public class PaperBroker extends AbstractBasicBroker implements Level1QuoteListe
     }
 
     @Override
-    public void cancelOrder(OrderTicket order) {
+    public BrokerRequestResult cancelOrder(OrderTicket order) {
         cancelOrder(order.getOrderId());
+        return new BrokerRequestResult();
 
     }
 

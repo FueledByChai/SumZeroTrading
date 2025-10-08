@@ -13,18 +13,25 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sumzerotrading.data.SumZeroException;
 
-import ch.qos.logback.classic.Logger;
-
 public final class HLSigner {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HLSigner.class);
     private final ECKeyPair keyPair;
 
+    // Pre-computed reusable components
+    private final ObjectNode cachedTypedDataMainnet;
+    private final ObjectNode cachedTypedDataTestnet;
+    private final String addressHex;
+
     public HLSigner(String privateKeyHex) {
         logger.info("Initializing HLSigner with provided private key.");
         this.keyPair = ECKeyPair.create(Numeric.toBigInt(privateKeyHex));
-        logger.info("HLSigner initialized.");
-        String localSigner = "0x" + Keys.getAddress(keyPair.getPublicKey()).toLowerCase();
+        this.addressHex = "0x" + Keys.getAddress(keyPair.getPublicKey()).toLowerCase();
 
+        // Pre-compute typed data structures for both networks
+        this.cachedTypedDataMainnet = buildAgentTypedDataTemplate(true);
+        this.cachedTypedDataTestnet = buildAgentTypedDataTemplate(false);
+
+        logger.info("HLSigner initialized with address: {}", addressHex);
     }
 
     /** Sign a user-signed exchange action (orders/TP-SL/etc.) */
@@ -45,20 +52,49 @@ public final class HLSigner {
             Long expiresAfterMsOrNull, // nullable
             boolean isMainnet // true -> source "a", false -> "b"
     ) {
+        long start = System.nanoTime();
 
         byte[] actionHash = computeActionHash(actionPojo, nonceMs, vaultAddressOrNull, expiresAfterMsOrNull);
-        logger.info("Computed action hash");
+        if (logger.isDebugEnabled()) {
+            long elapsed = (System.nanoTime() - start) / 1000000;
+            logger.debug("Computed action hash in {}ms", elapsed);
+        }
+
+        long typeStart = System.nanoTime();
         ObjectNode typed = buildAgentTypedData(actionHash, isMainnet);
-        logger.info("Built typed data");
+        if (logger.isDebugEnabled()) {
+            long elapsed = (System.nanoTime() - typeStart) / 1000000;
+            logger.debug("Built typed data in {}ms", elapsed);
+        }
+
         try {
+            long encStart = System.nanoTime();
             StructuredDataEncoder enc = new StructuredDataEncoder(JSON.writeValueAsString(typed));
-            logger.info("Created structured data encoder");
+            if (logger.isDebugEnabled()) {
+                long elapsed = (System.nanoTime() - encStart) / 1000000;
+                logger.debug("Created structured data encoder in {}ms", elapsed);
+            }
+
+            long digestStart = System.nanoTime();
             byte[] digest = enc.hashStructuredData();
-            logger.info("Computed digest");
+            if (logger.isDebugEnabled()) {
+                long elapsed = (System.nanoTime() - digestStart) / 1000000;
+                logger.debug("Computed digest in {}ms", elapsed);
+            }
+
+            long signStart = System.nanoTime();
             Sign.SignatureData sd = Sign.signMessage(digest, keyPair, false);
-            logger.info("Signed message");
+            if (logger.isDebugEnabled()) {
+                long elapsed = (System.nanoTime() - signStart) / 1000000;
+                logger.debug("Signed message in {}ms", elapsed);
+            }
+
             SignatureFields sig = toSig(sd);
-            logger.info("Converted to signature fields");
+            if (logger.isDebugEnabled()) {
+                long totalElapsed = (System.nanoTime() - start) / 1000000;
+                logger.debug("Total signing completed in {}ms", totalElapsed);
+            }
+
             return sig;
         } catch (Exception e) {
             throw new SumZeroException("Error signing L1 order action", e);
@@ -134,11 +170,10 @@ public final class HLSigner {
         }
     }
 
-    private static ObjectNode buildAgentTypedData(byte[] actionHash, boolean isMainnet) {
-        ObjectNode message = JSON.createObjectNode();
-        message.put("source", isMainnet ? "a" : "b");
-        message.put("connectionId", "0x" + Numeric.toHexStringNoPrefix(actionHash));
-
+    /**
+     * Build template typed data without connectionId (for caching)
+     */
+    private static ObjectNode buildAgentTypedDataTemplate(boolean isMainnet) {
         ObjectNode domain = JSON.createObjectNode();
         domain.put("name", "Exchange");
         domain.put("version", "1");
@@ -157,11 +192,30 @@ public final class HLSigner {
         eip712.add(field("verifyingContract", "address"));
         types.set("EIP712Domain", eip712);
 
-        ObjectNode data = JSON.createObjectNode();
-        data.set("types", types);
-        data.set("domain", domain);
-        data.put("primaryType", "Agent");
+        ObjectNode template = JSON.createObjectNode();
+        template.set("types", types);
+        template.set("domain", domain);
+        template.put("primaryType", "Agent");
+        // Store source separately for use in message construction
+        template.put("_source", isMainnet ? "a" : "b");
+        return template;
+    }
+
+    /**
+     * Optimized version using cached template
+     */
+    private ObjectNode buildAgentTypedData(byte[] actionHash, boolean isMainnet) {
+        // Use cached template and only set the dynamic connectionId
+        ObjectNode template = isMainnet ? cachedTypedDataMainnet : cachedTypedDataTestnet;
+        ObjectNode data = template.deepCopy();
+
+        // Remove the temporary _source field and create proper message
+        String source = data.remove("_source").asText();
+        ObjectNode message = JSON.createObjectNode();
+        message.put("source", source);
+        message.put("connectionId", "0x" + Numeric.toHexStringNoPrefix(actionHash));
         data.set("message", message);
+
         return data;
     }
 
