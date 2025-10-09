@@ -46,6 +46,13 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>com.sumzerotrading</groupId>
+      <artifactId>sumzero-commons-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+
+    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-collections4</artifactId>
       <version>4.1</version>

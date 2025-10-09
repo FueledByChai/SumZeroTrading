@@ -29,6 +29,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import com.sumzerotrading.broker.Position;
 import com.sumzerotrading.broker.order.OrderTicket;
+import com.sumzerotrading.broker.order.OrderTicket.Modifier;
 import com.sumzerotrading.data.Exchange;
 import com.sumzerotrading.data.InstrumentDescriptor;
 import com.sumzerotrading.data.InstrumentType;
@@ -402,6 +403,12 @@ public class ParadexRestApi implements IParadexRestApi {
             if (order.getOrderType().equals(OrderType.LIMIT)) {
                 orderJson.addProperty("price", order.getLimitPrice().toString());
                 orderJson.addProperty("instruction", "POST_ONLY");
+            }
+            if (tradeOrder.getModifiers().contains(Modifier.REDUCE_ONLY)) {
+                // add an array to the orderJson and then add reduce_only to the array
+                JsonArray flags = new JsonArray();
+                flags.add("REDUCE_ONLY");
+                orderJson.add("flags", flags);
             }
             orderJson.addProperty("signature", signatureString);
 
