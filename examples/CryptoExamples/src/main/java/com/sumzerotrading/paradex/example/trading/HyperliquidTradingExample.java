@@ -70,10 +70,11 @@ public class HyperliquidTradingExample {
         // BigDecimal(size)).setDirection(TradeDirection.BUY).setType(Type.MARKET);
 
         BigDecimal priceToUse = new BigDecimal(price);
-        for (int i = 0; i < 3; i++) {
+        int orders = 1;
+        for (int i = 0; i < orders; i++) {
             logger.info("placing order");
             try {
-                broker.placeOrder(getOrder(ticker, priceToUse));
+                broker.placeOrder(getMarketOrder(ticker, priceToUse));
                 priceToUse = priceToUse.subtract(new BigDecimal("1000"));
             } catch (Exception e) {
                 logger.error("Error placing order", e);
@@ -84,10 +85,16 @@ public class HyperliquidTradingExample {
 
     }
 
-    protected OrderTicket getOrder(Ticker ticker, BigDecimal price) {
+    protected OrderTicket getPostOrder(Ticker ticker, BigDecimal price) {
         OrderTicket order = new OrderTicket();
         order.setTicker(ticker).setSize(new BigDecimal("0.001")).setDirection(TradeDirection.BUY).setType(Type.LIMIT)
                 .setLimitPrice(price).addModifier(OrderTicket.Modifier.POST_ONLY);
+        return order;
+    }
+
+    protected OrderTicket getMarketOrder(Ticker ticker, BigDecimal price) {
+        OrderTicket order = new OrderTicket();
+        order.setTicker(ticker).setSize(new BigDecimal("0.001")).setDirection(TradeDirection.BUY).setType(Type.MARKET);
         return order;
     }
 
