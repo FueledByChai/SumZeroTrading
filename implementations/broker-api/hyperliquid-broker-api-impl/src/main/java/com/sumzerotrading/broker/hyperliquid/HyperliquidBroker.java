@@ -344,6 +344,11 @@ public class HyperliquidBroker extends AbstractBasicBroker implements Level1Quot
         for (WsOrderUpdate orderUpdate : event) {
             logger.info("Order Update: {}", orderUpdate);
             OrderTicket orderTicket = pendingOrderMapByCloid.get(orderUpdate.getClientOrderId());
+            if (orderTicket == null) {
+                logger.warn("NO ORDER TICKET FOUND for client order ID {}, ignoring order update",
+                        orderUpdate.getClientOrderId());
+                continue;
+            }
             Status status;
             CancelReason cancelReason = CancelReason.NONE;
             switch (orderUpdate.getStatus()) {

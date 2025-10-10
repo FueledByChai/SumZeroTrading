@@ -1,6 +1,7 @@
 package com.sumzerotrading.broker.hyperliquid.translators;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -65,10 +66,14 @@ public class Translator implements ITranslator {
 
     @Override
     public OrderJson translateOrderTicketToOrderJson(OrderTicket ticket, BestBidOffer bestBidOffer) {
+        Ticker ticker = ticket.getTicker();
+        BigDecimal orderSizeIncrement = ticker.getOrderSizeIncrement();
         OrderJson order = new OrderJson();
-        order.assetId = ticket.getTicker().getIdAsInt();
+        order.assetId = ticker.getIdAsInt();
         order.isBuy = ticket.isBuyOrder();
-        order.size = ticket.getSize().toPlainString();
+
+        // Need to round size to correct precision based on orderSizeIncrement
+        order.size = formatOrderSize(ticket.getSize(), orderSizeIncrement);
         order.clientOrderId = ticket.getClientOrderId();
         order.reduceOnly = false;
 
@@ -162,5 +167,27 @@ public class Translator implements ITranslator {
             fills.add(fill);
         }
         return fills;
+    }
+
+    /**
+     * Formats order size according to the orderSizeIncrement rules. This ensures
+     * proper precision and handles the case where whole numbers should not have
+     * decimal places (e.g., ZORA: 500 is valid, 500.0 is not).
+     */
+    public String formatOrderSize(BigDecimal orderSize, BigDecimal orderSizeIncrement) {
+        if (orderSizeIncrement == null) {
+            return orderSize.toPlainString();
+        }
+
+        // Determine the correct scale from the increment
+        // Use stripTrailingZeros to get the actual precision needed
+        BigDecimal strippedIncrement = orderSizeIncrement.stripTrailingZeros();
+        int targetScale = Math.max(0, strippedIncrement.scale());
+
+        // Round the order size to the correct scale
+        BigDecimal roundedSize = orderSize.setScale(targetScale, RoundingMode.DOWN);
+
+        // Strip trailing zeros to avoid "500.0" -> return "500" for integer values
+        return roundedSize.stripTrailingZeros().toPlainString();
     }
 }

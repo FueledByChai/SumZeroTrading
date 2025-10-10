@@ -244,4 +244,85 @@ public class TranslatorTest {
         String price = Translator.getInstance().getBuySlippage(ticker, new BigDecimal("100.00"));
         assertEquals("105", price);
     }
+
+    @Test
+    public void testFormatOrderSize_WholeNumberIncrement() {
+        // Test ZORA token scenario - increment=1 should produce whole numbers without
+        // decimals
+        Translator testTranslator = new Translator();
+
+        // Test case 1: 500.0 with increment=1 should return "500" (not "500.0")
+        BigDecimal orderSize1 = new BigDecimal("500.0");
+        BigDecimal increment1 = new BigDecimal("1");
+        String result1 = testTranslator.formatOrderSize(orderSize1, increment1);
+        assertEquals("500", result1, "Order size 500.0 with increment 1 should format as '500'");
+
+        // Test case 2: 500.0 with increment=1.0 should also return "500" (handles bad
+        // increment definition)
+        BigDecimal increment2 = new BigDecimal("1.0");
+        String result2 = testTranslator.formatOrderSize(orderSize1, increment2);
+        assertEquals("500", result2, "Order size 500.0 with increment 1.0 should format as '500'");
+
+        // Test case 3: Fractional input should be truncated to whole number
+        BigDecimal orderSize3 = new BigDecimal("500.789");
+        String result3 = testTranslator.formatOrderSize(orderSize3, increment1);
+        assertEquals("500", result3, "Order size 500.789 with increment 1 should truncate to '500'");
+    }
+
+    @Test
+    public void testFormatOrderSize_DecimalIncrement() {
+        Translator testTranslator = new Translator();
+
+        // Test BTC-like token with 5 decimal places
+        BigDecimal orderSize = new BigDecimal("1.123456789");
+        BigDecimal btcIncrement = new BigDecimal("0.00001");
+        String result = testTranslator.formatOrderSize(orderSize, btcIncrement);
+        assertEquals("1.12345", result, "Order size should be rounded to 5 decimal places for BTC increment");
+
+        // Test ETH-like token with 4 decimal places
+        BigDecimal ethIncrement = new BigDecimal("0.0001");
+        String result2 = testTranslator.formatOrderSize(orderSize, ethIncrement);
+        assertEquals("1.1234", result2, "Order size should be rounded to 4 decimal places for ETH increment");
+
+        // Test whole number with decimal increment - should still strip trailing zeros
+        BigDecimal wholeOrderSize = new BigDecimal("5.0");
+        String result3 = testTranslator.formatOrderSize(wholeOrderSize, ethIncrement);
+        assertEquals("5", result3, "Whole number should not show unnecessary decimal places");
+    }
+
+    @Test
+    public void testFormatOrderSize_NullIncrement() {
+        Translator testTranslator = new Translator();
+
+        // When increment is null, should return original size as string
+        BigDecimal orderSize = new BigDecimal("123.456");
+        String result = testTranslator.formatOrderSize(orderSize, null);
+        assertEquals("123.456", result, "Null increment should return original size");
+    }
+
+    @Test
+    public void testFormatOrderSize_EdgeCases() {
+        Translator testTranslator = new Translator();
+
+        // Test very small increment
+        BigDecimal orderSize = new BigDecimal("0.123456789");
+        BigDecimal smallIncrement = new BigDecimal("0.000000001"); // 9 decimal places
+        String result = testTranslator.formatOrderSize(orderSize, smallIncrement);
+        assertEquals("0.123456789", result, "Should handle very small increments");
+
+        // Test zero order size
+        BigDecimal zeroSize = new BigDecimal("0.0");
+        BigDecimal increment = new BigDecimal("1");
+        String result2 = testTranslator.formatOrderSize(zeroSize, increment);
+        assertEquals("0", result2, "Zero order size should format correctly");
+
+        // Test increment with trailing zeros in different ways
+        BigDecimal orderSize3 = new BigDecimal("100.5555");
+        BigDecimal increment3a = new BigDecimal("0.10"); // scale=2, but logically 1 decimal place
+        BigDecimal increment3b = new BigDecimal("0.1"); // scale=1
+        String result3a = testTranslator.formatOrderSize(orderSize3, increment3a);
+        String result3b = testTranslator.formatOrderSize(orderSize3, increment3b);
+        assertEquals(result3a, result3b, "Increments 0.10 and 0.1 should produce same result");
+        assertEquals("100.5", result3a, "Should round to 1 decimal place and strip trailing zeros");
+    }
 }
