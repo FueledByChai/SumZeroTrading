@@ -47,7 +47,9 @@ public class ParadexUtil {
         }
 
         if (order.getType() == OrderTicket.Type.LIMIT) {
-            paradoxOrder.setLimitPrice(order.getLimitPrice());
+            // need to format the limit price based on the minimum tick size for the symbol.
+            BigDecimal limitPrice = formatPrice(order.getLimitPrice(), order.getTicker().getMinimumTickSize());
+            paradoxOrder.setLimitPrice(limitPrice);
         }
 
         return paradoxOrder;
@@ -72,6 +74,14 @@ public class ParadexUtil {
     public static String commonSymbolToParadexSymbol(String commonSymbol) {
         String paradexSymbol = commonSymbol.toUpperCase() + "-USD-PERP"; // Placeholder for actual conversion logic
         return paradexSymbol;
+    }
+
+    public static BigDecimal formatPrice(BigDecimal price, BigDecimal tickSize) {
+        if (price == null || tickSize == null || tickSize.compareTo(BigDecimal.ZERO) <= 0) {
+            return price;
+        }
+        BigDecimal divided = price.divide(tickSize, 0, java.math.RoundingMode.DOWN);
+        return divided.multiply(tickSize);
     }
 
 }
