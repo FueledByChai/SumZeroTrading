@@ -69,6 +69,7 @@ public class ParadexBroker extends AbstractBasicBroker {
 
     protected ParadexWebSocketClient accountInfoWSClient;
     protected ParadexWebSocketClient orderStatusWSClient;
+    protected ParadexWebSocketClient fillsWSClient;
     protected OrderStatusWebSocketProcessor orderStatusProcessor;
     protected AccountWebSocketProcessor accountWebSocketProcessor;
     protected ParadexFillsWebSocketProcessor fillsWebSocketProcessor;
@@ -177,7 +178,7 @@ public class ParadexBroker extends AbstractBasicBroker {
     public void connect() {
         accountWebSocketProcessor = new AccountWebSocketProcessor(() -> {
             logger.info("Account info WebSocket closed, trying to restart...");
-            startFillsWSClient();
+            startAccountInfoWSClient();
         });
         accountWebSocketProcessor.addEventListener(accountInfo -> {
             onParadexAccountInfoEvent(accountInfo);
@@ -381,8 +382,8 @@ public class ParadexBroker extends AbstractBasicBroker {
                 onParadexFillEvent(fill);
             });
 
-            accountInfoWSClient = ParadexWSClientBuilder.buildFillsClient(wsUrl, fillsWebSocketProcessor, jwtToken);
-            accountInfoWSClient.connect();
+            fillsWSClient = ParadexWSClientBuilder.buildFillsClient(wsUrl, fillsWebSocketProcessor, jwtToken);
+            fillsWSClient.connect();
         } catch (Exception e) {
             throw new IllegalStateException(e);
 
