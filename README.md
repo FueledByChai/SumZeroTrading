@@ -43,4 +43,3 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Issues: GitHub Issues
 - Discussions: GitHub Discussions
 
-*Powered by caffeine and algorithmic trading passion* ☕📈
