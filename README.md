@@ -1,6 +1,6 @@
 # ⚠️ MIGRATED: This project has moved to FueledByChai Trading Framework
 
-## 🚀 **New Location: [fueledbychai-org/FueledByChaiTrading](https://github.com/fueledbychai-org/FueledByChaiTrading)**
+## 🚀 **New Location: [fueledbychai-org/FueledByChaiTrading](https://github.com/fueledbychai/FueledByChaiTrading)**
 
 **This repository is now in maintenance mode. All new development happens in the FueledByChai framework.**
 
