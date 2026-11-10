@@ -30,7 +30,7 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.11</version>
+      <version>4.13.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -41,7 +41,7 @@
 <dependency>
     <groupId>com.fasterxml.jackson.core</groupId>
     <artifactId>jackson-databind</artifactId>
-    <version>2.15.2</version> <!-- Use the latest version -->
+    <version>2.18.11</version> <!-- Use the latest version -->
 </dependency>
 <dependency>
     <groupId>com.squareup.okhttp3</groupId>
@@ -51,7 +51,7 @@
 <dependency>
     <groupId>org.json</groupId>
     <artifactId>json</artifactId>
-    <version>20240303</version>
+    <version>20260719</version>
 </dependency>
 <dependency>
     <groupId>org.java-websocket</groupId>
